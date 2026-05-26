@@ -110,23 +110,22 @@ client.on(Events.InteractionCreate, async interaction => {
             
             if (commandName === 'embed') {
                 const title = options.getString('title');
-                const description = options.getString('description');
+                let description = options.getString('description');
                 const color = options.getString('color') || '#5865F2';
 
-                // Regex para i-scan kung may image link sa loob ng description
                 const imageRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
                 const match = description.match(imageRegex);
 
                 const embed = new EmbedBuilder()
                     .setTitle(title)
-                    .setDescription(description)
                     .setColor(color);
 
-                // Kung may link na image, ilalagay natin sa banner/image
                 if (match) {
                     embed.setImage(match[0]);
+                    description = description.replace(match[0], '').trim();
                 }
 
+                embed.setDescription(description);
                 return interaction.reply({ embeds: [embed] });
             }
 
