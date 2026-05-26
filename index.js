@@ -160,33 +160,34 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (interaction.isButton()) {
 
-            // --- STEP 1: PINDOT ANG TICKET SUPPORT → LALABAS ANG PAGPIPILIAN ---
+            // ✅ PINDOT TICKET SUPPORT → LALABAS ANG SELECTION MENU SA SCREEN (parang sa picture mo)
             if (interaction.customId === 'btn_ticket_support') {
-                await interaction.deferReply({ ephemeral: true });
                 const selectMenu = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
-                        .setCustomId('menu_support_choice')
-                        .setPlaceholder('Piliin ang nais niyo gawin')
+                        .setCustomId('menu_support_options')
+                        .setPlaceholder('Make a selection') // ETO YUNG NAKALAGAY SA TAAS PARANG SA MO
                         .addOptions([
                             {
                                 label: '📋 ROSTER REGISTRATION',
-                                value: 'choice_roster',
-                                description: 'Magparehistro / Ilapag Roster niyo'
+                                value: 'opt_roster',
+                                description: 'Magparehistro / Ilapag ang Roster niyo'
                             },
                             {
                                 label: '❓ GENERAL SUPPORT',
-                                value: 'choice_support',
+                                value: 'opt_support',
                                 description: 'Tulong, Tanong o Ibang usapin'
                             }
                         ])
                 );
-                return interaction.editReply({
-                    content: '🔽 **Piliin kung ano ang nais niyo gawin:**',
-                    components: [selectMenu]
+                // ✅ Ito ang magpapalabas ng menu sa screen nila, HINDI GUMAGAWA NG TICKET AGAD
+                return interaction.reply({
+                    content: '🔽 **Please choose an option below:**',
+                    components: [selectMenu],
+                    ephemeral: true // ✅ ITO LANG MAKIKITA NIYA, IBA SA IBA
                 });
             }
 
-            // --- STEP 2: APPLY STAFF → DIRETSONG GAWA NG TICKET ---
+            // ✅ APPLY STAFF → DIRETSONG GAWA
             if (interaction.customId === 'btn_ticket_staff') {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -216,7 +217,7 @@ Salamat sa pag-apply, babasahin namin agad.`,
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
 
-            // --- STEP 3: PARTNERSHIP → DIRETSONG GAWA NG TICKET ---
+            // ✅ PARTNERSHIP → DIRETSONG GAWA
             if (interaction.customId === 'btn_ticket_partner') {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -253,14 +254,14 @@ Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
 
-            // --- CLOSE TICKET ---
+            // ✅ CLOSE TICKET
             if (interaction.customId === 'close_ticket') {
                 if (!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return interaction.reply({ content: 'Only staff can close this!', ephemeral: true });
                 await interaction.reply('Closing ticket in 5 seconds...');
                 setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
             }
 
-            // --- ROLES ---
+            // ✅ ROLE SYSTEM
             const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
             const roleName = roleMap[interaction.customId];
             if (roleName) {
@@ -271,13 +272,14 @@ Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`
             }
         }
 
-        // --- STEP 2: PUMILI NA SILA (ROSTER o SUPPORT) → SAKA LANG GAGAWA NG TICKET ---
+        // ✅ PUMILI NA SILA SA MENU → SAKA LANG GAGAWA NG TICKET
         if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'menu_support_choice') {
-                await interaction.deferReply({ ephemeral: true });
+            if (interaction.customId === 'menu_support_options') {
+                await interaction.deferUpdate(); // Tatanggalin yung menu
+
                 const choice = interaction.values[0];
 
-                // GUMAWA NG TICKET CHANNEL
+                // ✅ GUMAWA NG TICKET CHANNEL DITO LANG
                 const channel = await guild.channels.create({
                     name: `support-${member.user.username}`,
                     type: ChannelType.GuildText,
@@ -291,8 +293,8 @@ Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`
                 const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket'));
                 let content = '';
 
-                // --- KUNG ROSTER ANG PINILI ---
-                if (choice === 'choice_roster') {
+                // ✅ KUNG ROSTER ANG PINILI
+                if (choice === 'opt_roster') {
                     content = `📋 — ROSTER REGISTRATION —
 ━━━━━━━━━━━━
 Ilagay ang sumusunod:
@@ -314,8 +316,8 @@ Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID N
 Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** ang lahat.`;
                 }
 
-                // --- KUNG GENERAL SUPPORT ANG PINILI ---
-                if (choice === 'choice_support') {
+                // ✅ KUNG SUPPORT ANG PINILI
+                if (choice === 'opt_support') {
                     content = `❓ — GENERAL SUPPORT —
 ━━━━━━━━━━━━
 Isulat dito kung ano ang kailangan niyo o itatanong:
@@ -329,7 +331,7 @@ Sasagutin namin kayo agad.`;
                 }
 
                 await channel.send({ content: content, components: [closeBtn] });
-                return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
+                await interaction.followUp({ content: `✅ Ticket created: ${channel}`, ephemeral: true });
             }
         }
 
