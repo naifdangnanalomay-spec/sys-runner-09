@@ -7,13 +7,18 @@ const {
     REST,
     Routes,
     Partials,
-    ChannelType
+    ChannelType,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    ButtonBuilder,
+    ButtonStyle
 } = require('discord.js');
 
 const moment = require('moment');
 const axios = require('axios');
 
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
+const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
 
 const client = new Client({
@@ -72,7 +77,7 @@ client.once('ready', async () => {
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
+    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu()) return;
     const { guild, member } = interaction;
 
     try {
@@ -81,29 +86,37 @@ client.on(Events.InteractionCreate, async interaction => {
 
             if (commandName === 'ping') return interaction.reply(`Pong: ${client.ws.ping}ms`);
             if (commandName === 'uptime') return interaction.reply(`Uptime: ${moment.duration(client.uptime).humanize()}`);
+            
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 await interaction.deferReply();
                 const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
-                const row = { type: 1, components: [
-                    { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
-                    { type: 2, style: 2, label: 'ROBLOX', custom_id: 'role_roblox' },
-                    { type: 2, style: 2, label: 'VALO', custom_id: 'role_valo' },
-                    { type: 2, style: 2, label: '18+', custom_id: 'role_18' }
-                ]};
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('FIVEM').setCustomId('role_fivem'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('ROBLOX').setCustomId('role_roblox'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('VALO').setCustomId('role_valo'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('18+').setCustomId('role_18')
+                );
                 return interaction.editReply({ embeds: [embed], components: [row] });
             }
+
             if (commandName === 'ticket-setup') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 await interaction.deferReply();
-                const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select which type of ticket you want to open \n\n ➤ – AZURA ORG SUPPORT\n ➤ – APPLY FOR STAFF \n ➤ – Partnership').setColor(0x000000).setImage('https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif');
-                const row = { type: 1, components: [
-                    { type: 2, style: 2, label: 'Ticket Support', custom_id: 'ticket_support' },
-                    { type: 2, style: 2, label: 'Apply Staff', custom_id: 'ticket_staff' },
-                    { type: 2, style: 2, label: 'Partnership', custom_id: 'ticket_partner' }
-                ]};
+                const embed = new EmbedBuilder()
+                    .setTitle('AZURA ORG TICKET SUPPORT')
+                    .setDescription('Please select which type of ticket you want to open \n\n ➤ – AZURA ORG SUPPORT\n ➤ – APPLY FOR STAFF \n ➤ – Partnership')
+                    .setColor(0x000000)
+                    .setImage(TICKET_GIF);
+                
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('ticket_support'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('ticket_staff'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('ticket_partner')
+                );
                 return interaction.editReply({ embeds: [embed], components: [row] });
             }
+
             if (commandName === 'clear') {
                 const amount = options.getInteger('amount');
                 if (amount < 1 || amount > 100) return interaction.reply({ content: 'Please provide a number between 1 and 100.', ephemeral: true });
@@ -146,7 +159,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         if (interaction.isButton()) {
-            // TICKET CREATION
+            // --- TICKET CREATION ---
             if (interaction.customId.startsWith('ticket_')) {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -154,24 +167,81 @@ client.on(Events.InteractionCreate, async interaction => {
                     type: ChannelType.GuildText,
                     permissionOverwrites: [
                         { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AttachFiles] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels] }
                     ]
                 });
-                
-                const closeRow = { type: 1, components: [{ type: 2, style: 4, label: 'Close Ticket', custom_id: 'close_ticket' }]};
-                await channel.send({ content: `Welcome <@${member.id}>! Staff will assist you shortly.`, components: [closeRow] });
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket')
+                );
+
+                let ticketContent = '';
+
+                // --- TICKET SUPPORT BUTTON ---
+                if (interaction.customId === 'ticket_support') {
+                    const selectMenu = new ActionRowBuilder().addComponents(
+                        new StringSelectMenuBuilder()
+                            .setCustomId('support_select')
+                            .setPlaceholder('Piliin kung ano ang gagawin')
+                            .addOptions([
+                                { label: '📋 ROSTER REGISTRATION', value: 'opt_roster', description: 'Magparehistro / Ilapag ang Roster niyo' },
+                                { label: '❓ GENERAL SUPPORT', value: 'opt_support', description: 'Tulong, Tanong o Ibang usapin' }
+                            ])
+                    );
+                    await channel.send({ content: `🎫 **TICKET SUPPORT**\n━━━━━━━━━━━━\nPiliin kung ano ang nais niyo gawin:`, components: [selectMenu, closeBtn] });
+                    return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
+                }
+
+                // --- PARTNERSHIP BUTTON ---
+                if (interaction.customId === 'ticket_partner') {
+                    ticketContent = `🤝 — PARTNERSHIP APPLICATION —
+━━━━━━━━━━━━
+Ilagay ang sumusunod na detalye para makipag-partnership:
+
+1️⃣ Pangalan ng Grupo:
+2️⃣ Maikling Pangalan (4-8 letra lang):
+3️⃣ Uri ng Grupo:
+4️⃣ Discord Link (Always Represent):
+5️⃣ Pangalan & Tag ng Lider:
+
+━━━━━━━━━━━━
+✅ Pag tinanggap: **ILALAGAY KO KAYO SA PARTNERSHIP CATEGORY** at ilalagay ko ang detalye at link niyo sa aming listahan.
+
+ℹ️ **WEBSITE:**
+Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID NIYO**
+
+⚠️ **PAALALA:**
+Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`;
+                }
+
+                // --- APPLY STAFF BUTTON ---
+                if (interaction.customId === 'ticket_staff') {
+                    ticketContent = `📝 — APPLY FOR STAFF —
+━━━━━━━━━━━━
+Isulat dito ang sumusunod:
+
+1️⃣ Pangalan / Discord Tag:
+2️⃣ Edad:
+3️⃣ Bakit mo gustong maging Staff?
+4️⃣ Ano ang maibibigay mo sa server?
+
+━━━━━━━━━━━━
+Salamat sa pag-apply, babasahin namin agad.`;
+                }
+
+                if (ticketContent) await channel.send({ content: ticketContent, components: [closeBtn] });
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
-            
-            // CLOSE TICKET
+
+            // --- CLOSE TICKET ---
             if (interaction.customId === 'close_ticket') {
                 if (!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return interaction.reply({ content: 'Only staff can close this!', ephemeral: true });
                 await interaction.reply('Closing ticket in 5 seconds...');
                 setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
             }
 
-            // ROLES
+            // --- ROLES ---
             const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
             const roleName = roleMap[interaction.customId];
             if (roleName) {
@@ -181,6 +251,49 @@ client.on(Events.InteractionCreate, async interaction => {
                 else { await member.roles.add(role); return interaction.reply({ content: `Added ${roleName}`, ephemeral: true }); }
             }
         }
+
+        // --- SELECT MENU HANDLER ---
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'support_select') {
+                await interaction.deferUpdate();
+                let content = '';
+                if (interaction.values[0] === 'opt_roster') {
+                    content = `📋 — ROSTER REGISTRATION —
+━━━━━━━━━━━━
+Ilagay ang sumusunod:
+
+1️⃣ Pangalan ng Grupo:
+2️⃣ Maikling Pangalan (4-8 letra lang):
+3️⃣ Uri ng Grupo:
+4️⃣ Discord Link (Always Represent):
+5️⃣ Pangalan & Tag ng Lider:
+
+━━━━━━━━━━━━
+✅ Pag tinanggap: **AKO MISMO ANG GUMAWA NG SARILI NIYONG TEXT CHANNEL AT VOICE CHANNEL**
+✅ **SA INYO LANG BUKAS — KAYO AT MIYEMBRO NIYO LANG ANG MAKAKAPASOK**
+
+ℹ️ **WEBSITE:**
+Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID NIYO**
+
+⚠️ **PAALALA:**
+Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** ang lahat.`;
+                }
+                if (interaction.values[0] === 'opt_support') {
+                    content = `❓ — GENERAL SUPPORT —
+━━━━━━━━━━━━
+Isulat dito kung ano ang kailangan niyo o itatanong:
+
+• Problema?
+• Tanong?
+• Ibang bagay?
+
+━━━━━━━━━━━━
+Sasagutin namin kayo agad.`;
+                }
+                await interaction.channel.send({ content: content });
+            }
+        }
+
     } catch (err) { console.error(err); }
 });
 
