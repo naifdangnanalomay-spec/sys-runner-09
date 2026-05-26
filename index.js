@@ -6,8 +6,7 @@ const {
     Events,
     REST,
     Routes,
-    Partials,
-    ChannelType
+    Partials
 } = require('discord.js');
 
 const moment = require('moment');
@@ -33,582 +32,182 @@ const client = new Client({
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = '1507007071634329703';
-const OWNER_ID = '1250654354344775703';
 
 const commands = [
-
     { name: 'ping', description: 'Check bot latency' },
-
     { name: 'uptime', description: 'Check bot uptime' },
-
+    { name: 'setup-roles', description: 'Send self-role panel' },
     {
         name: 'say',
         description: 'Send message as bot',
-        options: [
-            {
-                name: 'message',
-                type: 3,
-                description: 'Message content',
-                required: true
-            }
-        ]
+        options: [{ name: 'message', type: 3, description: 'Message content', required: true }]
     },
-
     {
         name: 'embed',
         description: 'Create embed',
         options: [
-            {
-                name: 'title',
-                type: 3,
-                description: 'Embed title',
-                required: true
-            },
-            {
-                name: 'description',
-                type: 3,
-                description: 'Embed description',
-                required: true
-            },
-            {
-                name: 'color',
-                type: 3,
-                description: 'Hex color',
-                required: false
-            }
+            { name: 'title', type: 3, description: 'Embed title', required: true },
+            { name: 'description', type: 3, description: 'Embed description', required: true },
+            { name: 'color', type: 3, description: 'Hex color', required: false }
         ]
     },
-
     {
         name: 'clear',
         description: 'Delete messages',
-        options: [
-            {
-                name: 'amount',
-                type: 4,
-                description: '1-100',
-                required: true
-            }
-        ]
+        options: [{ name: 'amount', type: 4, description: '1-100', required: true }]
     },
-
     {
         name: 'kick',
         description: 'Kick member',
-        options: [
-            {
-                name: 'user',
-                type: 6,
-                description: 'Target user',
-                required: true
-            }
-        ]
+        options: [{ name: 'user', type: 6, description: 'Target user', required: true }]
     },
-
     {
         name: 'ban',
         description: 'Ban member',
-        options: [
-            {
-                name: 'user',
-                type: 6,
-                description: 'Target user',
-                required: true
-            }
-        ]
+        options: [{ name: 'user', type: 6, description: 'Target user', required: true }]
     },
-
     {
         name: 'timeout',
         description: 'Timeout user',
         options: [
-            {
-                name: 'user',
-                type: 6,
-                description: 'Target user',
-                required: true
-            },
-            {
-                name: 'minutes',
-                type: 4,
-                description: 'Timeout minutes',
-                required: true
-            }
+            { name: 'user', type: 6, description: 'Target user', required: true },
+            { name: 'minutes', type: 4, description: 'Timeout minutes', required: true }
         ]
     },
-
-    {
-        name: 'lock',
-        description: 'Lock channel'
-    },
-
-    {
-        name: 'unlock',
-        description: 'Unlock channel'
-    },
-
+    { name: 'lock', description: 'Lock channel' },
+    { name: 'unlock', description: 'Unlock channel' },
     {
         name: 'userinfo',
         description: 'User information',
-        options: [
-            {
-                name: 'user',
-                type: 6,
-                description: 'Target user',
-                required: false
-            }
-        ]
+        options: [{ name: 'user', type: 6, description: 'Target user', required: false }]
     },
-
-    {
-        name: 'serverinfo',
-        description: 'Server information'
-    },
-
+    { name: 'serverinfo', description: 'Server information' },
     {
         name: 'avatar',
         description: 'Get avatar',
-        options: [
-            {
-                name: 'user',
-                type: 6,
-                description: 'Target user',
-                required: false
-            }
-        ]
+        options: [{ name: 'user', type: 6, description: 'Target user', required: false }]
     },
-
-    {
-        name: 'coinflip',
-        description: 'Flip coin'
-    },
-
-    {
-        name: 'dice',
-        description: 'Roll dice'
-    },
-
+    { name: 'coinflip', description: 'Flip coin' },
+    { name: 'dice', description: 'Roll dice' },
     {
         name: '8ball',
         description: 'Magic 8ball',
-        options: [
-            {
-                name: 'question',
-                type: 3,
-                description: 'Your question',
-                required: true
-            }
-        ]
+        options: [{ name: 'question', type: 3, description: 'Your question', required: true }]
     },
-
-    {
-        name: 'meme',
-        description: 'Random meme'
-    }
+    { name: 'meme', description: 'Random meme' }
 ];
 
 client.once('ready', async () => {
-
     console.log(`✅ ${client.user.tag} ONLINE`);
-    console.log(`⚡ Commands Loaded: ${commands.length}`);
-
-    client.user.setActivity('✨ AZURA SYSTEM');
-
     const rest = new REST({ version: '10' }).setToken(TOKEN);
-
     try {
-
-        await rest.put(
-            Routes.applicationCommands(CLIENT_ID),
-            { body: commands }
-        );
-
-        console.log('✅ Slash Commands Registered');
-
-    } catch (err) {
-        console.error(err);
-    }
+        await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    } catch (err) { console.error(err); }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-
-    if (!interaction.isChatInputCommand()) return;
-
-    const { commandName, options, guild, member } = interaction;
+    if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
+    const { guild, member } = interaction;
 
     try {
+        if (interaction.isChatInputCommand()) {
+            const { commandName, options } = interaction;
 
-        // PING
-        if (commandName === 'ping') {
-
-            return interaction.reply(
-                `🏓 Pong: ${client.ws.ping}ms`
-            );
-        }
-
-        // UPTIME
-        if (commandName === 'uptime') {
-
-            const uptime = moment
-                .duration(client.uptime)
-                .humanize();
-
-            return interaction.reply(
-                `⏰ Uptime: ${uptime}`
-            );
-        }
-
-        // SAY
-        if (commandName === 'say') {
-
-            const message = options.getString('message');
-
-            await interaction.channel.send(message);
-
-            return interaction.reply({
-                content: '✅ Message Sent',
-                ephemeral: true
-            });
-        }
-
-        // EMBED
-        if (commandName === 'embed') {
-
-            const title = options.getString('title');
-            const description = options.getString('description');
-            const color = options.getString('color') || '#5865F2';
-
-            const embed = new EmbedBuilder()
-                .setTitle(title)
-                .setDescription(description)
-                .setColor(color)
-                .setTimestamp();
-
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-
-        // CLEAR
-        if (commandName === 'clear') {
-
-            if (!member.permissions.has(
-                PermissionsBitField.Flags.ManageMessages
-            )) {
-                return interaction.reply({
-                    content: '❌ Missing Permission',
-                    ephemeral: true
-                });
+            if (commandName === 'ping') return interaction.reply(`🏓 Pong: ${client.ws.ping}ms`);
+            if (commandName === 'uptime') return interaction.reply(`⏰ Uptime: ${moment.duration(client.uptime).humanize()}`);
+            
+            if (commandName === 'setup-roles') {
+                if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
+                const embed = new EmbedBuilder()
+                    .setTitle('S E L F   R O L E')
+                    .setDescription('🔥 FIVEM\n🧱 ROBLOX\n⚔️ MOBILE LEGENDS\n🎯 VALORANT')
+                    .setColor(0x000000);
+                const row = { type: 1, components: [
+                    { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
+                    { type: 2, style: 2, label: 'ROBLOX', custom_id: 'role_roblox' },
+                    { type: 2, style: 2, label: 'ML', custom_id: 'role_ml' },
+                    { type: 2, style: 2, label: 'VALO', custom_id: 'role_valo' }
+                ]};
+                return interaction.reply({ embeds: [embed], components: [row] });
             }
 
-            const amount = options.getInteger('amount');
-
-            if (amount < 1 || amount > 100) {
-                return interaction.reply({
-                    content: '❌ Choose 1-100',
-                    ephemeral: true
-                });
+            if (commandName === 'say') {
+                await interaction.channel.send(options.getString('message'));
+                return interaction.reply({ content: 'Sent', ephemeral: true });
             }
 
-            await interaction.channel.bulkDelete(amount, true);
-
-            return interaction.reply({
-                content: `🧹 Deleted ${amount} messages`,
-                ephemeral: true
-            });
-        }
-
-        // KICK
-        if (commandName === 'kick') {
-
-            if (!member.permissions.has(
-                PermissionsBitField.Flags.KickMembers
-            )) {
-                return interaction.reply({
-                    content: '❌ Missing Permission',
-                    ephemeral: true
-                });
+            if (commandName === 'embed') {
+                const embed = new EmbedBuilder()
+                    .setTitle(options.getString('title'))
+                    .setDescription(options.getString('description'))
+                    .setColor(options.getString('color') || '#5865F2');
+                return interaction.reply({ embeds: [embed] });
             }
 
-            const target = options.getMember('user');
-
-            if (!target) {
-                return interaction.reply('❌ User not found');
+            if (commandName === 'clear') {
+                await interaction.channel.bulkDelete(options.getInteger('amount'), true);
+                return interaction.reply({ content: 'Deleted messages', ephemeral: true });
             }
 
-            await target.kick();
-
-            return interaction.reply(
-                `👢 ${target.user.tag} kicked`
-            );
-        }
-
-        // BAN
-        if (commandName === 'ban') {
-
-            if (!member.permissions.has(
-                PermissionsBitField.Flags.BanMembers
-            )) {
-                return interaction.reply({
-                    content: '❌ Missing Permission',
-                    ephemeral: true
-                });
+            if (commandName === 'kick') {
+                await options.getMember('user').kick();
+                return interaction.reply('User kicked');
             }
 
-            const target = options.getMember('user');
-
-            if (!target) {
-                return interaction.reply('❌ User not found');
+            if (commandName === 'ban') {
+                await options.getMember('user').ban();
+                return interaction.reply('User banned');
             }
 
-            await target.ban();
-
-            return interaction.reply(
-                `🔨 ${target.user.tag} banned`
-            );
-        }
-
-        // TIMEOUT
-        if (commandName === 'timeout') {
-
-            if (!member.permissions.has(
-                PermissionsBitField.Flags.ModerateMembers
-            )) {
-                return interaction.reply({
-                    content: '❌ Missing Permission',
-                    ephemeral: true
-                });
+            if (commandName === 'timeout') {
+                await options.getMember('user').timeout(options.getInteger('minutes') * 60000);
+                return interaction.reply('User timed out');
             }
 
-            const target = options.getMember('user');
-            const minutes = options.getInteger('minutes');
+            if (commandName === 'lock') {
+                await interaction.channel.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false });
+                return interaction.reply('Locked');
+            }
 
-            await target.timeout(
-                minutes * 60 * 1000
-            );
+            if (commandName === 'unlock') {
+                await interaction.channel.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: true });
+                return interaction.reply('Unlocked');
+            }
 
-            return interaction.reply(
-                `⏳ ${target.user.tag} timed out for ${minutes} minutes`
-            );
+            if (commandName === 'userinfo') {
+                const user = options.getUser('user') || interaction.user;
+                return interaction.reply({ embeds: [new EmbedBuilder().setTitle(user.tag).setColor('#5865F2')] });
+            }
+
+            if (commandName === 'serverinfo') return interaction.reply(`Server: ${guild.name}`);
+            
+            if (commandName === 'avatar') return interaction.reply(interaction.user.displayAvatarURL());
+            
+            if (commandName === 'coinflip') return interaction.reply(Math.random() > 0.5 ? 'Heads' : 'Tails');
+            
+            if (commandName === 'dice') return interaction.reply(`${Math.floor(Math.random() * 6) + 1}`);
+            
+            if (commandName === '8ball') return interaction.reply('Yes');
+
+            if (commandName === 'meme') {
+                const res = await axios.get('https://meme-api.com/gimme');
+                return interaction.reply({ embeds: [new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url)] });
+            }
         }
 
-        // LOCK
-        if (commandName === 'lock') {
-
-            await interaction.channel.permissionOverwrites.edit(
-                guild.roles.everyone,
-                {
-                    SendMessages: false
-                }
-            );
-
-            return interaction.reply('🔒 Channel Locked');
+        if (interaction.isButton()) {
+            const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_ml': 'MOBILE LEGENDS', 'role_valo': 'VALORANT' };
+            const role = guild.roles.cache.find(r => r.name === roleMap[interaction.customId]);
+            if (!role) return interaction.reply({ content: 'Role not found', ephemeral: true });
+            if (member.roles.cache.has(role.id)) {
+                await member.roles.remove(role);
+                return interaction.reply({ content: 'Removed', ephemeral: true });
+            } else {
+                await member.roles.add(role);
+                return interaction.reply({ content: 'Added', ephemeral: true });
+            }
         }
-
-        // UNLOCK
-        if (commandName === 'unlock') {
-
-            await interaction.channel.permissionOverwrites.edit(
-                guild.roles.everyone,
-                {
-                    SendMessages: true
-                }
-            );
-
-            return interaction.reply('🔓 Channel Unlocked');
-        }
-
-        // USERINFO
-        if (commandName === 'userinfo') {
-
-            const user =
-                options.getUser('user') ||
-                interaction.user;
-
-            const memberData =
-                guild.members.cache.get(user.id);
-
-            const embed = new EmbedBuilder()
-                .setAuthor({
-                    name: user.tag,
-                    iconURL: user.displayAvatarURL({
-                        dynamic: true
-                    })
-                })
-                .setThumbnail(
-                    user.displayAvatarURL({
-                        dynamic: true,
-                        size: 4096
-                    })
-                )
-                .addFields(
-                    {
-                        name: '🆔 ID',
-                        value: user.id,
-                        inline: true
-                    },
-                    {
-                        name: '📅 Created',
-                        value: `<t:${Math.floor(user.createdTimestamp / 1000)}:F>`,
-                        inline: true
-                    },
-                    {
-                        name: '📥 Joined',
-                        value: memberData
-                            ? `<t:${Math.floor(memberData.joinedTimestamp / 1000)}:F>`
-                            : 'Unknown'
-                    }
-                )
-                .setColor('#5865F2');
-
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-
-        // SERVERINFO
-        if (commandName === 'serverinfo') {
-
-            const embed = new EmbedBuilder()
-                .setTitle(guild.name)
-                .setThumbnail(
-                    guild.iconURL({ dynamic: true })
-                )
-                .addFields(
-                    {
-                        name: '👥 Members',
-                        value: `${guild.memberCount}`,
-                        inline: true
-                    },
-                    {
-                        name: '🆔 Server ID',
-                        value: guild.id,
-                        inline: true
-                    }
-                )
-                .setColor('#5865F2');
-
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-
-        // AVATAR
-        if (commandName === 'avatar') {
-
-            const user =
-                options.getUser('user') ||
-                interaction.user;
-
-            const embed = new EmbedBuilder()
-                .setTitle(`${user.tag} Avatar`)
-                .setImage(
-                    user.displayAvatarURL({
-                        dynamic: true,
-                        size: 4096
-                    })
-                )
-                .setColor('#5865F2');
-
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-
-        // COINFLIP
-        if (commandName === 'coinflip') {
-
-            const result =
-                Math.random() > 0.5
-                    ? 'Heads'
-                    : 'Tails';
-
-            return interaction.reply(
-                `🪙 ${result}`
-            );
-        }
-
-        // DICE
-        if (commandName === 'dice') {
-
-            const result =
-                Math.floor(Math.random() * 6) + 1;
-
-            return interaction.reply(
-                `🎲 ${result}`
-            );
-        }
-
-        // 8BALL
-        if (commandName === '8ball') {
-
-            const answers = [
-                'Yes',
-                'No',
-                'Maybe',
-                'Definitely',
-                'Probably',
-                'Never'
-            ];
-
-            const random =
-                answers[
-                    Math.floor(
-                        Math.random() * answers.length
-                    )
-                ];
-
-            return interaction.reply(
-                `🎱 ${random}`
-            );
-        }
-
-        // MEME
-        if (commandName === 'meme') {
-
-            const response = await axios.get(
-                'https://meme-api.com/gimme'
-            );
-
-            const embed = new EmbedBuilder()
-                .setTitle(response.data.title)
-                .setImage(response.data.url)
-                .setColor('#5865F2');
-
-            return interaction.reply({
-                embeds: [embed]
-            });
-        }
-
-    } catch (err) {
-
-        console.error(err);
-
-        if (
-            interaction.replied ||
-            interaction.deferred
-        ) {
-            return interaction.followUp({
-                content: '❌ Error executing command',
-                ephemeral: true
-            });
-        }
-
-        return interaction.reply({
-            content: '❌ Error executing command',
-            ephemeral: true
-        });
-    }
+    } catch (err) { console.error(err); }
 });
-
-process.on(
-    'unhandledRejection',
-    console.error
-);
-
-process.on(
-    'uncaughtException',
-    console.error
-);
 
 client.login(TOKEN);
