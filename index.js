@@ -110,9 +110,9 @@ client.on(Events.InteractionCreate, async interaction => {
                     .setImage(TICKET_GIF);
                 
                 const row = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('ticket_support'),
-                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('ticket_staff'),
-                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('ticket_partner')
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('btn_ticket_support'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('btn_ticket_staff'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('btn_ticket_partner')
                 );
                 return interaction.editReply({ embeds: [embed], components: [row] });
             }
@@ -159,43 +159,78 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         if (interaction.isButton()) {
-            // --- TICKET CREATION ---
-            if (interaction.customId.startsWith('ticket_')) {
+
+            // --- STEP 1: PINDOT ANG TICKET SUPPORT → LALABAS ANG PAGPIPILIAN ---
+            if (interaction.customId === 'btn_ticket_support') {
+                await interaction.deferReply({ ephemeral: true });
+                const selectMenu = new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId('menu_support_choice')
+                        .setPlaceholder('Piliin ang nais niyo gawin')
+                        .addOptions([
+                            {
+                                label: '📋 ROSTER REGISTRATION',
+                                value: 'choice_roster',
+                                description: 'Magparehistro / Ilapag Roster niyo'
+                            },
+                            {
+                                label: '❓ GENERAL SUPPORT',
+                                value: 'choice_support',
+                                description: 'Tulong, Tanong o Ibang usapin'
+                            }
+                        ])
+                );
+                return interaction.editReply({
+                    content: '🔽 **Piliin kung ano ang nais niyo gawin:**',
+                    components: [selectMenu]
+                });
+            }
+
+            // --- STEP 2: APPLY STAFF → DIRETSONG GAWA NG TICKET ---
+            if (interaction.customId === 'btn_ticket_staff') {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
-                    name: `ticket-${member.user.username}`,
+                    name: `applystaff-${member.user.username}`,
                     type: ChannelType.GuildText,
                     permissionOverwrites: [
                         { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AttachFiles] },
-                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels] }
+                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
                     ]
                 });
+                const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket'));
+                await channel.send({
+                    content: `📝 — APPLY FOR STAFF —
+━━━━━━━━━━━━
+Isulat dito ang sumusunod:
 
-                const closeBtn = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket')
-                );
+1️⃣ Pangalan / Discord Tag:
+2️⃣ Edad:
+3️⃣ Bakit mo gustong maging Staff?
+4️⃣ Ano ang maibibigay mo sa server?
 
-                let ticketContent = '';
+━━━━━━━━━━━━
+Salamat sa pag-apply, babasahin namin agad.`,
+                    components: [closeBtn]
+                });
+                return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
+            }
 
-                // --- TICKET SUPPORT BUTTON ---
-                if (interaction.customId === 'ticket_support') {
-                    const selectMenu = new ActionRowBuilder().addComponents(
-                        new StringSelectMenuBuilder()
-                            .setCustomId('support_select')
-                            .setPlaceholder('Piliin kung ano ang gagawin')
-                            .addOptions([
-                                { label: '📋 ROSTER REGISTRATION', value: 'opt_roster', description: 'Magparehistro / Ilapag ang Roster niyo' },
-                                { label: '❓ GENERAL SUPPORT', value: 'opt_support', description: 'Tulong, Tanong o Ibang usapin' }
-                            ])
-                    );
-                    await channel.send({ content: `🎫 **TICKET SUPPORT**\n━━━━━━━━━━━━\nPiliin kung ano ang nais niyo gawin:`, components: [selectMenu, closeBtn] });
-                    return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
-                }
-
-                // --- PARTNERSHIP BUTTON ---
-                if (interaction.customId === 'ticket_partner') {
-                    ticketContent = `🤝 — PARTNERSHIP APPLICATION —
+            // --- STEP 3: PARTNERSHIP → DIRETSONG GAWA NG TICKET ---
+            if (interaction.customId === 'btn_ticket_partner') {
+                await interaction.deferReply({ ephemeral: true });
+                const channel = await guild.channels.create({
+                    name: `partner-${member.user.username}`,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+                    ]
+                });
+                const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket'));
+                await channel.send({
+                    content: `🤝 — PARTNERSHIP APPLICATION —
 ━━━━━━━━━━━━
 Ilagay ang sumusunod na detalye para makipag-partnership:
 
@@ -212,25 +247,9 @@ Ilagay ang sumusunod na detalye para makipag-partnership:
 Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID NIYO**
 
 ⚠️ **PAALALA:**
-Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`;
-                }
-
-                // --- APPLY STAFF BUTTON ---
-                if (interaction.customId === 'ticket_staff') {
-                    ticketContent = `📝 — APPLY FOR STAFF —
-━━━━━━━━━━━━
-Isulat dito ang sumusunod:
-
-1️⃣ Pangalan / Discord Tag:
-2️⃣ Edad:
-3️⃣ Bakit mo gustong maging Staff?
-4️⃣ Ano ang maibibigay mo sa server?
-
-━━━━━━━━━━━━
-Salamat sa pag-apply, babasahin namin agad.`;
-                }
-
-                if (ticketContent) await channel.send({ content: ticketContent, components: [closeBtn] });
+Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`,
+                    components: [closeBtn]
+                });
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
 
@@ -252,12 +271,28 @@ Salamat sa pag-apply, babasahin namin agad.`;
             }
         }
 
-        // --- SELECT MENU HANDLER ---
+        // --- STEP 2: PUMILI NA SILA (ROSTER o SUPPORT) → SAKA LANG GAGAWA NG TICKET ---
         if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'support_select') {
-                await interaction.deferUpdate();
+            if (interaction.customId === 'menu_support_choice') {
+                await interaction.deferReply({ ephemeral: true });
+                const choice = interaction.values[0];
+
+                // GUMAWA NG TICKET CHANNEL
+                const channel = await guild.channels.create({
+                    name: `support-${member.user.username}`,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+                    ]
+                });
+
+                const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket'));
                 let content = '';
-                if (interaction.values[0] === 'opt_roster') {
+
+                // --- KUNG ROSTER ANG PINILI ---
+                if (choice === 'choice_roster') {
                     content = `📋 — ROSTER REGISTRATION —
 ━━━━━━━━━━━━
 Ilagay ang sumusunod:
@@ -269,7 +304,7 @@ Ilagay ang sumusunod:
 5️⃣ Pangalan & Tag ng Lider:
 
 ━━━━━━━━━━━━
-✅ Pag tinanggap: **AKO MISMO ANG GAGAWA NG SARILI NIYONG TEXT CHANNEL AT VOICE CHANNEL**
+✅ Pag tinanggap: **AKO MISMO ANG GUMAWA NG SARILI NIYONG TEXT CHANNEL AT VOICE CHANNEL**
 ✅ **SA INYO LANG BUKAS — KAYO AT MIYEMBRO NIYO LANG ANG MAKAKAPASOK**
 
 ℹ️ **WEBSITE:**
@@ -278,7 +313,9 @@ Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID N
 ⚠️ **PAALALA:**
 Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** ang lahat.`;
                 }
-                if (interaction.values[0] === 'opt_support') {
+
+                // --- KUNG GENERAL SUPPORT ANG PINILI ---
+                if (choice === 'choice_support') {
                     content = `❓ — GENERAL SUPPORT —
 ━━━━━━━━━━━━
 Isulat dito kung ano ang kailangan niyo o itatanong:
@@ -290,7 +327,9 @@ Isulat dito kung ano ang kailangan niyo o itatanong:
 ━━━━━━━━━━━━
 Sasagutin namin kayo agad.`;
                 }
-                await interaction.channel.send({ content: content });
+
+                await channel.send({ content: content, components: [closeBtn] });
+                return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
         }
 
