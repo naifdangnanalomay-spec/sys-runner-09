@@ -14,7 +14,7 @@ const moment = require('moment');
 const axios = require('axios');
 
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
-const STAFF_ROLE_ID = '1508714923696455740'; // Siguraduhing ito ang tama mong Staff Role ID
+const STAFF_ROLE_ID = '1508714923696455740'; 
 
 const client = new Client({
     intents: [
@@ -76,7 +76,6 @@ client.on(Events.InteractionCreate, async interaction => {
     const { guild, member } = interaction;
 
     try {
-        // --- CHAT INPUT COMMANDS (WALA KONG GINALAW DITO) ---
         if (interaction.isChatInputCommand()) {
             const { commandName, options } = interaction;
 
@@ -85,11 +84,7 @@ client.on(Events.InteractionCreate, async interaction => {
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 await interaction.deferReply();
-                const embed = new EmbedBuilder()
-                    .setTitle('S E L F   R O L E')
-                    .setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>')
-                    .setColor(0x000000)
-                    .setImage(BANNER_URL);
+                const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
                     { type: 2, style: 2, label: 'ROBLOX', custom_id: 'role_roblox' },
@@ -101,11 +96,7 @@ client.on(Events.InteractionCreate, async interaction => {
             if (commandName === 'ticket-setup') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 await interaction.deferReply();
-                const embed = new EmbedBuilder()
-                    .setTitle('AZURA ORG TICKET SUPPORT')
-                    .setDescription('Please select which type of ticket you want to open \n\n ➤ – AZURA ORG SUPPORT\n ➤ – APPLY FOR STAFF \n ➤ – Public Partnership')
-                    .setColor(0x000000)
-                    .setImage('https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif');
+                const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select which type of ticket you want to open \n\n ➤ – AZURA ORG SUPPORT\n ➤ – APPLY FOR STAFF \n ➤ – Public Partnership').setColor(0x000000).setImage('https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif');
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'Ticket Support', custom_id: 'ticket_support' },
                     { type: 2, style: 2, label: 'Shop', custom_id: 'ticket_shop' },
@@ -132,10 +123,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 const urlRegex = /(https?:\/\/[^\s]+)/gi;
                 const match = description.match(urlRegex);
                 const embed = new EmbedBuilder().setTitle(title).setColor(color);
-                if (match) {
-                    embed.setImage(match[0]);
-                    description = description.replace(urlRegex, '').trim();
-                }
+                if (match) { embed.setImage(match[0]); description = description.replace(urlRegex, '').trim(); }
                 embed.setDescription(description || ' ');
                 return interaction.editReply({ embeds: [embed] });
             }
@@ -157,8 +145,8 @@ client.on(Events.InteractionCreate, async interaction => {
             }
         }
 
-        // --- BUTTON INTERACTION (DITO LANG GUMAWA NG TICKET) ---
         if (interaction.isButton()) {
+            // TICKET CREATION
             if (interaction.customId.startsWith('ticket_')) {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -170,20 +158,27 @@ client.on(Events.InteractionCreate, async interaction => {
                         { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
                     ]
                 });
+                
+                const closeRow = { type: 1, components: [{ type: 2, style: 4, label: 'Close Ticket', custom_id: 'close_ticket' }]};
+                await channel.send({ content: `Welcome <@${member.id}>! Staff will assist you shortly.`, components: [closeRow] });
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
             
+            // CLOSE TICKET
+            if (interaction.customId === 'close_ticket') {
+                if (!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return interaction.reply({ content: 'Only staff can close this!', ephemeral: true });
+                await interaction.reply('Closing ticket in 5 seconds...');
+                setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
+            }
+
+            // ROLES
             const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
             const roleName = roleMap[interaction.customId];
-            const role = guild.roles.cache.find(r => r.name === roleName);
-            if (!role) return interaction.reply({ content: 'Role not found', ephemeral: true });
-            
-            if (member.roles.cache.has(role.id)) {
-                await member.roles.remove(role);
-                return interaction.reply({ content: `Removed ${roleName}`, ephemeral: true });
-            } else {
-                await member.roles.add(role);
-                return interaction.reply({ content: `Added ${roleName}`, ephemeral: true });
+            if (roleName) {
+                const role = guild.roles.cache.find(r => r.name === roleName);
+                if (!role) return interaction.reply({ content: 'Role not found', ephemeral: true });
+                if (member.roles.cache.has(role.id)) { await member.roles.remove(role); return interaction.reply({ content: `Removed ${roleName}`, ephemeral: true }); }
+                else { await member.roles.add(role); return interaction.reply({ content: `Added ${roleName}`, ephemeral: true }); }
             }
         }
     } catch (err) { console.error(err); }
