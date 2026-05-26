@@ -82,7 +82,7 @@ client.on(Events.InteractionCreate, async interaction => {
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 
-                await interaction.deferReply({ ephemeral: false });
+                await interaction.deferReply();
 
                 const embed = new EmbedBuilder()
                     .setTitle('S E L F   R O L E')
@@ -106,9 +106,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: `Successfully deleted ${amount} messages.`, ephemeral: true });
             }
 
-            if (commandName === 'say') { await interaction.channel.send(options.getString('message')); return interaction.reply({ content: 'Sent', ephemeral: true }); }
+            if (commandName === 'say') { 
+                await interaction.deferReply({ ephemeral: true });
+                await interaction.channel.send(options.getString('message')); 
+                return interaction.editReply({ content: 'Sent' }); 
+            }
             
             if (commandName === 'embed') {
+                await interaction.deferReply();
                 const title = options.getString('title');
                 let description = options.getString('description');
                 const color = options.getString('color') || '#5865F2';
@@ -125,8 +130,8 @@ client.on(Events.InteractionCreate, async interaction => {
                     description = description.replace(urlRegex, '').trim();
                 }
 
-                embed.setDescription(description);
-                return interaction.reply({ embeds: [embed] });
+                embed.setDescription(description || ' '); // Prevents empty description error
+                return interaction.editReply({ embeds: [embed] });
             }
 
             if (commandName === 'kick') { await options.getMember('user').kick(); return interaction.reply('Kicked'); }
@@ -141,8 +146,9 @@ client.on(Events.InteractionCreate, async interaction => {
             if (commandName === 'dice') return interaction.reply(`${Math.floor(Math.random() * 6) + 1}`);
             if (commandName === '8ball') return interaction.reply('Yes');
             if (commandName === 'meme') {
+                await interaction.deferReply();
                 const res = await axios.get('https://meme-api.com/gimme');
-                return interaction.reply({ embeds: [new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url)] });
+                return interaction.editReply({ embeds: [new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url)] });
             }
         }
 
