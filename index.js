@@ -81,18 +81,29 @@ client.on(Events.InteractionCreate, async interaction => {
             
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
+                
+                // I-defer para hindi mag-timeout ang bot
+                await interaction.deferReply({ ephemeral: false });
+
                 const embed = new EmbedBuilder()
                     .setTitle('S E L F   R O L E')
-                    .setDescription('@FIVEM\n@ROBLOX\n@VALORANT\n@18+')
+                    // PALITAN ANG MGA ID SA BABA NG TAMANG ROLE ID MULA SA SERVER MO
+                    .setDescription(
+                        '<@&123456789012345678> FIVEM\n' +
+                        '<@&123456789012345678> ROBLOX\n' +
+                        '<@&123456789012345678> VALORANT\n' +
+                        '<@&123456789012345678> 18+'
+                    )
                     .setColor(0x000000)
                     .setImage(BANNER_URL);
+                    
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
                     { type: 2, style: 2, label: 'ROBLOX', custom_id: 'role_roblox' },
                     { type: 2, style: 2, label: 'VALO', custom_id: 'role_valo' },
                     { type: 2, style: 2, label: '18+', custom_id: 'role_18' }
                 ]};
-                return interaction.reply({ embeds: [embed], components: [row] });
+                return interaction.editReply({ embeds: [embed], components: [row] });
             }
 
             if (commandName === 'say') { await interaction.channel.send(options.getString('message')); return interaction.reply({ content: 'Sent', ephemeral: true }); }
