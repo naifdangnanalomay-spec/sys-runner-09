@@ -12,7 +12,7 @@ const {
 const moment = require('moment');
 const axios = require('axios');
 
-const BANNER_URL = 'att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE%20(1).webp';
+const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 
 const client = new Client({
     intents: [
