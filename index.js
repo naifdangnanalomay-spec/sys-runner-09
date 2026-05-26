@@ -89,7 +89,7 @@ client.on(Events.InteractionCreate, async interaction => {
     .setTitle('S E L F   R O L E')
     .setDescription(`
 <@&1508559284156235878>
-<@&150855905572186127>
+<@&1508559055721861271>
 <@&1508559118913503452>
 <@&1508559365974659172>`)
     .setColor(0x000000)
