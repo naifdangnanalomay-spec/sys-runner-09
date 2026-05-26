@@ -160,34 +160,34 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (interaction.isButton()) {
 
-            // ✅ PINDOT TICKET SUPPORT → LALABAS ANG SELECTION MENU SA SCREEN (parang sa picture mo)
+            // ✅ PINDOT TICKET SUPPORT → AGAD LALABAS ANG LISTAHAN (GANTO SA PICTURE MO)
             if (interaction.customId === 'btn_ticket_support') {
                 const selectMenu = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('menu_support_options')
-                        .setPlaceholder('Make a selection') // ETO YUNG NAKALAGAY SA TAAS PARANG SA MO
+                        .setPlaceholder('Make a selection') // ETO YUNG NASA TAAS GAYA MO
                         .addOptions([
                             {
-                                label: '📋 ROSTER REGISTRATION',
+                                label: '📋 ROSTER REGISTRATION', // ✅ UNANG LALABAS
                                 value: 'opt_roster',
                                 description: 'Magparehistro / Ilapag ang Roster niyo'
                             },
                             {
-                                label: '❓ GENERAL SUPPORT',
+                                label: '❓ GENERAL SUPPORT', // ✅ PANGALAWA
                                 value: 'opt_support',
                                 description: 'Tulong, Tanong o Ibang usapin'
                             }
                         ])
                 );
-                // ✅ Ito ang magpapalabas ng menu sa screen nila, HINDI GUMAGAWA NG TICKET AGAD
+                // ✅ ITO ANG LALABAS: MAY NAKALAGAY NA AGAD ANG LISTAHAN, GANYAN SA MO
                 return interaction.reply({
-                    content: '🔽 **Please choose an option below:**',
+                    content: '**Make a selection**',
                     components: [selectMenu],
-                    ephemeral: true // ✅ ITO LANG MAKIKITA NIYA, IBA SA IBA
+                    ephemeral: true
                 });
             }
 
-            // ✅ APPLY STAFF → DIRETSONG GAWA
+            // ✅ APPLY STAFF → DIRETSONG GAWA NG TICKET
             if (interaction.customId === 'btn_ticket_staff') {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -217,7 +217,7 @@ Salamat sa pag-apply, babasahin namin agad.`,
                 return interaction.editReply({ content: `✅ Ticket created: ${channel}` });
             }
 
-            // ✅ PARTNERSHIP → DIRETSONG GAWA
+            // ✅ PARTNERSHIP → DIRETSONG GAWA NG TICKET
             if (interaction.customId === 'btn_ticket_partner') {
                 await interaction.deferReply({ ephemeral: true });
                 const channel = await guild.channels.create({
@@ -272,14 +272,14 @@ Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`
             }
         }
 
-        // ✅ PUMILI NA SILA SA MENU → SAKA LANG GAGAWA NG TICKET
+        // ✅ PUMILI NA SILA → SAKA LANG GAGAWA NG TICKET
         if (interaction.isStringSelectMenu()) {
             if (interaction.customId === 'menu_support_options') {
-                await interaction.deferUpdate(); // Tatanggalin yung menu
+                await interaction.deferUpdate();
 
                 const choice = interaction.values[0];
 
-                // ✅ GUMAWA NG TICKET CHANNEL DITO LANG
+                // ✅ GUMAWA NG TICKET DITO LANG
                 const channel = await guild.channels.create({
                     name: `support-${member.user.username}`,
                     type: ChannelType.GuildText,
@@ -293,7 +293,7 @@ Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** sa listahan.`
                 const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('Close Ticket').setCustomId('close_ticket'));
                 let content = '';
 
-                // ✅ KUNG ROSTER ANG PINILI
+                // ✅ ROSTER REGISTRATION - TAMA LAHAT NG SINABI MO
                 if (choice === 'opt_roster') {
                     content = `📋 — ROSTER REGISTRATION —
 ━━━━━━━━━━━━
@@ -316,7 +316,7 @@ Unfinished pa ito, pero kung gusto niyo sumali, **ILAPAG NIYO LANG ANG USER ID N
 Kapag hindi na active o wala na sa galaw — **TANGGALIN KO AGAD** ang lahat.`;
                 }
 
-                // ✅ KUNG SUPPORT ANG PINILI
+                // ✅ GENERAL SUPPORT
                 if (choice === 'opt_support') {
                     content = `❓ — GENERAL SUPPORT —
 ━━━━━━━━━━━━
