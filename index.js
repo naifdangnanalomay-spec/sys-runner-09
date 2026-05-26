@@ -82,18 +82,17 @@ client.on(Events.InteractionCreate, async interaction => {
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
                 
-                // I-defer para hindi mag-timeout ang bot
                 await interaction.deferReply({ ephemeral: false });
 
-              const embed = new EmbedBuilder()
-    .setTitle('S E L F   R O L E')
-    .setDescription(`
+                const embed = new EmbedBuilder()
+                    .setTitle('S E L F   R O L E')
+                    .setDescription(`
 <@&1508559284156235878>
-<@&1508559055721861271>
+<@&150855905572186127>
 <@&1508559118913503452>
 <@&1508559365974659172>`)
-    .setColor(0x000000)
-    .setImage(BANNER_URL);
+                    .setColor(0x000000)
+                    .setImage(BANNER_URL);
                     
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
@@ -104,12 +103,18 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.editReply({ embeds: [embed], components: [row] });
             }
 
+            if (commandName === 'clear') {
+                const amount = options.getInteger('amount');
+                if (amount < 1 || amount > 100) return interaction.reply({ content: 'Please provide a number between 1 and 100.', ephemeral: true });
+                await interaction.channel.bulkDelete(amount, true);
+                return interaction.reply({ content: `Successfully deleted ${amount} messages.`, ephemeral: true });
+            }
+
             if (commandName === 'say') { await interaction.channel.send(options.getString('message')); return interaction.reply({ content: 'Sent', ephemeral: true }); }
             if (commandName === 'embed') {
                 const embed = new EmbedBuilder().setTitle(options.getString('title')).setDescription(options.getString('description')).setColor(options.getString('color') || '#5865F2');
                 return interaction.reply({ embeds: [embed] });
             }
-            if (commandName === 'clear') { await interaction.channel.bulkDelete(options.getInteger('amount'), true); return interaction.reply({ content: 'Deleted', ephemeral: true }); }
             if (commandName === 'kick') { await options.getMember('user').kick(); return interaction.reply('Kicked'); }
             if (commandName === 'ban') { await options.getMember('user').ban(); return interaction.reply('Banned'); }
             if (commandName === 'timeout') { await options.getMember('user').timeout(options.getInteger('minutes') * 60000); return interaction.reply('Timed out'); }
