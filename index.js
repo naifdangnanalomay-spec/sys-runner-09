@@ -85,17 +85,15 @@ client.on(Events.InteractionCreate, async interaction => {
                 // I-defer para hindi mag-timeout ang bot
                 await interaction.deferReply({ ephemeral: false });
 
-                const embed = new EmbedBuilder()
-                    .setTitle('S E L F   R O L E')
-                    // PALITAN ANG MGA ID SA BABA NG TAMANG ROLE ID MULA SA SERVER MO
-                    .setDescription(
-                    <@&1508559284156235878>
-                    <@&150855905572186127>
-                    <@&1508559118913503452>
-                    <@&1508559365974659172>
-                    )
-                    .setColor(0x000000)
-                    .setImage(BANNER_URL);
+              const embed = new EmbedBuilder()
+    .setTitle('S E L F   R O L E')
+    .setDescription(`
+<@&1508559284156235878>
+<@&150855905572186127>
+<@&1508559118913503452>
+<@&1508559365974659172>`)
+    .setColor(0x000000)
+    .setImage(BANNER_URL);
                     
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'FIVEM', custom_id: 'role_fivem' },
