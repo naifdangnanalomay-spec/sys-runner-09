@@ -99,7 +99,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select which type of ticket you want to open \n\n ➤ – AZURA ORG SUPPORT\n ➤ – APPLY FOR STAFF \n ➤ – Partnership').setColor(0x000000).setImage('https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif');
                 const row = { type: 1, components: [
                     { type: 2, style: 2, label: 'Ticket Support', custom_id: 'ticket_support' },
-                    { type: 2, style: 2, label: 'Shop', custom_id: 'ticket_shop' },
+                    { type: 2, style: 2, label: 'APPLY STAFF', custom_id: 'ticket_staff' },
                     { type: 2, style: 2, label: 'Partnership', custom_id: 'ticket_partner' }
                 ]};
                 return interaction.editReply({ embeds: [embed], components: [row] });
