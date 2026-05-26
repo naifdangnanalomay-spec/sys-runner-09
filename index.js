@@ -89,10 +89,10 @@ client.on(Events.InteractionCreate, async interaction => {
                     .setTitle('S E L F   R O L E')
                     // PALITAN ANG MGA ID SA BABA NG TAMANG ROLE ID MULA SA SERVER MO
                     .setDescription(
-                        '<@&123456789012345678> FIVEM\n' +
-                        '<@&123456789012345678> ROBLOX\n' +
-                        '<@&123456789012345678> VALORANT\n' +
-                        '<@&123456789012345678> 18+'
+                        '<@&1508559284156235878> FIVEM\n' +
+                        '<@&15085590557218612718> ROBLOX\n' +
+                        '<@&1508559118913503452> VALORANT\n' +
+                        '<@&1508559365974659172> 18+'
                     )
                     .setColor(0x000000)
                     .setImage(BANNER_URL);
