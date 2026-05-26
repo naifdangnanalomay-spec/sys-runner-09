@@ -92,7 +92,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         '<@&1508559284156235878> \n' +
                         '<@&1508559055721861271> \n' +
                         '<@&1508559118913503452> \n' +
-                        '<@&1508559365974659172> 18+'
+                        '<@&1508559365974659172> \n' +
                     )
                     .setColor(0x000000)
                     .setImage(BANNER_URL);
