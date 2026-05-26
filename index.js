@@ -86,11 +86,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 const embed = new EmbedBuilder()
                     .setTitle('S E L F   R O L E')
-                    .setDescription(`
-<@&1508559284156235878>
-<@&150855905572186127>
-<@&1508559118913503452>
-<@&1508559365974659172>`)
+                    .setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>')
                     .setColor(0x000000)
                     .setImage(BANNER_URL);
                     
@@ -111,10 +107,29 @@ client.on(Events.InteractionCreate, async interaction => {
             }
 
             if (commandName === 'say') { await interaction.channel.send(options.getString('message')); return interaction.reply({ content: 'Sent', ephemeral: true }); }
+            
             if (commandName === 'embed') {
-                const embed = new EmbedBuilder().setTitle(options.getString('title')).setDescription(options.getString('description')).setColor(options.getString('color') || '#5865F2');
+                const title = options.getString('title');
+                const description = options.getString('description');
+                const color = options.getString('color') || '#5865F2';
+
+                // Regex para i-scan kung may image link sa loob ng description
+                const imageRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+                const match = description.match(imageRegex);
+
+                const embed = new EmbedBuilder()
+                    .setTitle(title)
+                    .setDescription(description)
+                    .setColor(color);
+
+                // Kung may link na image, ilalagay natin sa banner/image
+                if (match) {
+                    embed.setImage(match[0]);
+                }
+
                 return interaction.reply({ embeds: [embed] });
             }
+
             if (commandName === 'kick') { await options.getMember('user').kick(); return interaction.reply('Kicked'); }
             if (commandName === 'ban') { await options.getMember('user').ban(); return interaction.reply('Banned'); }
             if (commandName === 'timeout') { await options.getMember('user').timeout(options.getInteger('minutes') * 60000); return interaction.reply('Timed out'); }
