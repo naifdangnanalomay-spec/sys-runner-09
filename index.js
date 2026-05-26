@@ -113,8 +113,8 @@ client.on(Events.InteractionCreate, async interaction => {
                 let description = options.getString('description');
                 const color = options.getString('color') || '#5865F2';
 
-                const imageRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
-                const match = description.match(imageRegex);
+                const urlRegex = /(https?:\/\/[^\s]+)/gi;
+                const match = description.match(urlRegex);
 
                 const embed = new EmbedBuilder()
                     .setTitle(title)
@@ -122,7 +122,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 if (match) {
                     embed.setImage(match[0]);
-                    description = description.replace(match[0], '').trim();
+                    description = description.replace(urlRegex, '').trim();
                 }
 
                 embed.setDescription(description);
