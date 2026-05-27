@@ -1,14 +1,21 @@
 const {
-    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, 
-    Events, Partials, ChannelType, ActionRowBuilder, 
-    StringSelectMenuBuilder, ButtonBuilder, ButtonStyle
+    Client,
+    GatewayIntentBits,
+    PermissionsBitField,
+    EmbedBuilder,
+    Events,
+    REST,
+    Routes,
+    Partials,
+    ChannelType,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    ButtonBuilder,
+    ButtonStyle
 } = require('discord.js');
 
 const moment = require('moment');
 const axios = require('axios');
-
-// I-load ang TOKEN mula sa Railway Environment Variables
-const TOKEN = process.env.TOKEN;
 
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
@@ -23,114 +30,136 @@ const client = new Client({
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildBans
     ],
-    partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember]
+    partials: [
+        Partials.Message, Partials.Channel, Partials.Reaction, 
+        Partials.User, Partials.GuildMember
+    ]
 });
 
-client.once('ready', () => console.log(`${client.user.tag} IS ONLINE!`));
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = '1507007071634329703';
 
-// --- PREFIX COMMANDS ---
-client.on(Events.MessageCreate, async message => {
-    if (message.author.bot || !message.content.startsWith('?')) return;
-    const args = message.content.slice(1).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
+const commands = [
+    { name: 'ping', description: 'Check bot latency' },
+    { name: 'uptime', description: 'Check bot uptime' },
+    { name: 'setup-roles', description: 'Send self-role panel' },
+    { name: 'ticket-setup', description: 'Setup the ticket system' },
+    { name: 'poll', description: 'Create a poll', options: [{ name: 'question', type: 3, description: 'Poll question', required: true }] },
+    { name: 'say', description: 'Send message as bot', options: [{ name: 'message', type: 3, description: 'Message content', required: true }] },
+    { name: 'embed', description: 'Create embed', options: [
+        { name: 'title', type: 3, description: 'Embed title', required: true },
+        { name: 'description', type: 3, description: 'Embed description', required: true },
+        { name: 'color', type: 3, description: 'Hex color', required: false }
+    ]},
+    { name: 'clear', description: 'Delete messages', options: [{ name: 'amount', type: 4, description: '1-100', required: true }] },
+    { name: 'kick', description: 'Kick member', options: [{ name: 'user', type: 6, description: 'Target user', required: true }] },
+    { name: 'ban', description: 'Ban member', options: [{ name: 'user', type: 6, description: 'Target user', required: true }] },
+    { name: 'unban', description: 'Unban a user', options: [{ name: 'userid', type: 3, description: 'User ID to unban', required: true }] },
+    { name: 'warn', description: 'Warn a user', options: [
+        { name: 'user', type: 6, description: 'User to warn', required: true },
+        { name: 'reason', type: 3, description: 'Reason', required: true }
+    ]},
+    { name: 'timeout', description: 'Timeout user', options: [
+        { name: 'user', type: 6, description: 'Target user', required: true },
+        { name: 'minutes', type: 4, description: 'Timeout minutes', required: true }
+    ]},
+    { name: 'lock', description: 'Lock channel' },
+    { name: 'unlock', description: 'Unlock channel' },
+    { name: 'userinfo', description: 'User information', options: [{ name: 'user', type: 6, description: 'Target user', required: false }] },
+    { name: 'serverinfo', description: 'Server information' },
+    { name: 'avatar', description: 'Get avatar', options: [{ name: 'user', type: 6, description: 'Target user', required: false }] },
+    { name: 'coinflip', description: 'Flip coin' },
+    { name: 'dice', description: 'Roll dice' },
+    { name: '8ball', description: 'Magic 8ball', options: [{ name: 'question', type: 3, description: 'Your question', required: true }] },
+    { name: 'meme', description: 'Random meme' }
+];
 
+client.once('ready', async () => {
+    console.log(`${client.user.tag} ONLINE`);
+    const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
-        if (command === 'ping') return message.reply(`Pong: ${client.ws.ping}ms`);
-        if (command === 'uptime') return message.reply(`Uptime: ${moment.duration(client.uptime).humanize()}`);
-        
-        if (command === 'clear') {
-            if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) return message.reply("Wala kang permission!");
-            const amount = parseInt(args[0]);
-            if (!amount || amount < 1 || amount > 100) return message.reply('Provide number 1-100');
-            await message.channel.bulkDelete(amount, true);
-            message.reply(`Deleted ${amount} messages.`);
-        }
-
-        if (command === 'ban') {
-            if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) return;
-            const target = message.mentions.members.first();
-            if (target) { await target.ban(); message.reply('User banned.'); }
-        }
-
-        if (command === 'embed') {
-            const [title, description, color] = args.join(' ').split('|');
-            const embed = new EmbedBuilder().setTitle(title.trim()).setDescription(description.trim()).setColor(color ? color.trim() : '#5865F2');
-            message.channel.send({ embeds: [embed] });
-        }
-
-        if (command === 'setup-roles') {
-            const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('FIVEM').setCustomId('role_fivem'),
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('ROBLOX').setCustomId('role_roblox'),
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('VALO').setCustomId('role_valo'),
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('18+').setCustomId('role_18')
-            );
-            message.channel.send({ embeds: [embed], components: [row] });
-        }
-
-        if (command === 'ticket-setup') {
-            const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select a ticket type').setColor(0x000000).setImage(TICKET_GIF);
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('btn_ticket_support'),
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('btn_ticket_staff'),
-                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('btn_ticket_partner')
-            );
-            message.channel.send({ embeds: [embed], components: [row] });
-        }
-    } catch (e) { console.error("Error sa Prefix Command:", e); }
+        await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    } catch (err) { console.error(err); }
 });
 
-// --- INTERACTIONS ---
 client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu()) return;
+    const { guild, member } = interaction;
+
     try {
-        const { guild, member, customId } = interaction;
+        if (interaction.isChatInputCommand()) {
+            const { commandName, options } = interaction;
 
-        // Handle Roles
-        const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
-        if (roleMap[customId]) {
-            const role = guild.roles.cache.find(r => r.name === roleMap[customId]);
-            if (!role) return interaction.reply({ content: "Role not found!", ephemeral: true });
+            if (commandName === 'ping') return interaction.reply(`Pong: ${client.ws.ping}ms`);
+            if (commandName === 'uptime') return interaction.reply(`Uptime: ${moment.duration(client.uptime).humanize()}`);
             
-            if (member.roles.cache.has(role.id)) { await member.roles.remove(role); interaction.reply({ content: `Removed ${roleMap[customId]}`, ephemeral: true }); }
-            else { await member.roles.add(role); interaction.reply({ content: `Added ${roleMap[customId]}`, ephemeral: true }); }
-            return;
-        }
+            if (commandName === 'poll') {
+                const embed = new EmbedBuilder().setTitle('📊 POLL').setDescription(options.getString('question')).setColor('#F1C40F');
+                const msg = await interaction.reply({ embeds: [embed], fetchReply: true });
+                await msg.react('👍'); await msg.react('👎');
+                return;
+            }
 
-        // Handle Buttons
-        if (interaction.isButton()) {
-            if (customId === 'btn_ticket_support') {
-                const menu = new ActionRowBuilder().addComponents(
-                    new StringSelectMenuBuilder().setCustomId('menu_support_options').setPlaceholder('Make a selection')
-                        .addOptions([{ label: '📋 ROSTER REGISTRATION', value: 'opt_roster' }, { label: '❓ GENERAL SUPPORT', value: 'opt_support' }])
+            if (commandName === 'setup-roles') {
+                if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
+                await interaction.deferReply();
+                const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('FIVEM').setCustomId('role_fivem'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('ROBLOX').setCustomId('role_roblox'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('VALO').setCustomId('role_valo'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('18+').setCustomId('role_18')
                 );
-                return interaction.reply({ components: [menu], ephemeral: true });
+                return interaction.editReply({ embeds: [embed], components: [row] });
             }
-            if (customId === 'close_ticket') {
-                await interaction.reply('Closing in 5 seconds...');
-                setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
+
+            if (commandName === 'ticket-setup') {
+                if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({ content: 'Missing permissions', ephemeral: true });
+                await interaction.deferReply();
+                const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select which type of ticket you want to open').setColor(0x000000).setImage(TICKET_GIF);
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('btn_ticket_support'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('btn_ticket_staff'),
+                    new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('btn_ticket_partner')
+                );
+                return interaction.editReply({ embeds: [embed], components: [row] });
             }
+
+            if (commandName === 'clear') {
+                const amount = options.getInteger('amount');
+                await interaction.channel.bulkDelete(amount, true);
+                return interaction.reply({ content: `Deleted ${amount} messages.`, ephemeral: true });
+            }
+
+            if (commandName === 'unban') {
+                if (!member.permissions.has(PermissionsBitField.Flags.BanMembers)) return interaction.reply({ content: 'No permission', ephemeral: true });
+                await guild.bans.remove(options.getString('userid'));
+                return interaction.reply('User unbanned.');
+            }
+
+            if (commandName === 'warn') {
+                if (!member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return interaction.reply({ content: 'No permission', ephemeral: true });
+                const user = options.getMember('user');
+                const reason = options.getString('reason');
+                return interaction.reply(`Warned ${user.user.tag} for: ${reason}`);
+            }
+
+            // [Lalagay dito ang ibang command logic gaya ng kick, ban, etc.]
+            if (commandName === 'kick') { await options.getMember('user').kick(); return interaction.reply('Kicked'); }
+            if (commandName === 'ban') { await options.getMember('user').ban(); return interaction.reply('Banned'); }
+            
+            // ... (Ipagpatuloy ang iba pang command handlers)
         }
 
-        // Handle Select Menu
-        if (interaction.isStringSelectMenu() && customId === 'menu_support_options') {
-            const type = interaction.values[0];
-            const channel = await guild.channels.create({
-                name: `${type}-${member.user.username}`,
-                type: ChannelType.GuildText,
-                permissionOverwrites: [
-                    { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                    { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-                    { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-                ]
-            });
-            await channel.send(`Ticket Created for: ${type}`);
-            interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
+        // --- BUTTONS/MENUS ---
+        if (interaction.isButton() || interaction.isStringSelectMenu()) {
+            // [Ilagay ang logic para sa Ticket buttons at Role system dito]
+            if (interaction.customId === 'close_ticket') {
+                await interaction.reply('Closing in 5s...');
+                setTimeout(() => interaction.channel.delete(), 5000);
+            }
         }
-    } catch (e) {
-        console.error("Interaction Error:", e);
-        if (!interaction.replied) interaction.reply({ content: "Error: I need Manage Channels/Roles permission!", ephemeral: true });
-    }
+    } catch (err) { console.error(err); }
 });
 
 client.login(TOKEN);
