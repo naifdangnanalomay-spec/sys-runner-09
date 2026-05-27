@@ -31,91 +31,102 @@ client.on(Events.MessageCreate, async message => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    if (command === 'ping') return message.reply(`Pong: ${client.ws.ping}ms`);
-    if (command === 'uptime') return message.reply(`Uptime: ${moment.duration(client.uptime).humanize()}`);
-    
-    if (command === 'clear') {
-        const amount = parseInt(args[0]);
-        if (!amount || amount < 1 || amount > 100) return message.reply('Provide number 1-100');
-        await message.channel.bulkDelete(amount, true);
-        message.reply(`Deleted ${amount} messages.`);
-    }
+    try {
+        if (command === 'ping') return message.reply(`Pong: ${client.ws.ping}ms`);
+        if (command === 'uptime') return message.reply(`Uptime: ${moment.duration(client.uptime).humanize()}`);
+        
+        if (command === 'clear') {
+            if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) return message.reply("Wala kang permission!");
+            const amount = parseInt(args[0]);
+            if (!amount || amount < 1 || amount > 100) return message.reply('Provide number 1-100');
+            await message.channel.bulkDelete(amount, true);
+            message.reply(`Deleted ${amount} messages.`);
+        }
 
-    if (command === 'ban') {
-        const target = message.mentions.members.first();
-        if (target) { await target.ban(); message.reply('User banned.'); }
-    }
+        if (command === 'ban') {
+            if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) return;
+            const target = message.mentions.members.first();
+            if (target) { await target.ban(); message.reply('User banned.'); }
+        }
 
-    if (command === 'embed') {
-        const [title, description, color] = args.join(' ').split('|');
-        const embed = new EmbedBuilder().setTitle(title.trim()).setDescription(description.trim()).setColor(color ? color.trim() : '#5865F2');
-        message.channel.send({ embeds: [embed] });
-    }
+        if (command === 'embed') {
+            const [title, description, color] = args.join(' ').split('|');
+            const embed = new EmbedBuilder().setTitle(title.trim()).setDescription(description.trim()).setColor(color ? color.trim() : '#5865F2');
+            message.channel.send({ embeds: [embed] });
+        }
 
-    if (command === 'setup-roles') {
-        const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('FIVEM').setCustomId('role_fivem'),
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('ROBLOX').setCustomId('role_roblox'),
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('VALO').setCustomId('role_valo'),
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('18+').setCustomId('role_18')
-        );
-        message.channel.send({ embeds: [embed], components: [row] });
-    }
+        if (command === 'setup-roles') {
+            const embed = new EmbedBuilder().setTitle('S E L F   R O L E').setDescription('<@&1508559284156235878>\n<@&150855905572186127>\n<@&1508559118913503452>\n<@&1508559365974659172>').setColor(0x000000).setImage(BANNER_URL);
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('FIVEM').setCustomId('role_fivem'),
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('ROBLOX').setCustomId('role_roblox'),
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('VALO').setCustomId('role_valo'),
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('18+').setCustomId('role_18')
+            );
+            message.channel.send({ embeds: [embed], components: [row] });
+        }
 
-    if (command === 'ticket-setup') {
-        const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select a ticket type').setColor(0x000000).setImage(TICKET_GIF);
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('btn_ticket_support'),
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('btn_ticket_staff'),
-            new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('btn_ticket_partner')
-        );
-        message.channel.send({ embeds: [embed], components: [row] });
-    }
+        if (command === 'ticket-setup') {
+            const embed = new EmbedBuilder().setTitle('AZURA ORG TICKET SUPPORT').setDescription('Please select a ticket type').setColor(0x000000).setImage(TICKET_GIF);
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Ticket Support').setCustomId('btn_ticket_support'),
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Apply Staff').setCustomId('btn_ticket_staff'),
+                new ButtonBuilder().setStyle(ButtonStyle.Secondary).setLabel('Partnership').setCustomId('btn_ticket_partner')
+            );
+            message.channel.send({ embeds: [embed], components: [row] });
+        }
+    } catch (e) { console.error("Error sa Prefix Command:", e); }
 });
 
-// --- INTERACTIONS (Buttons, Select Menus) ---
+// --- INTERACTIONS ---
 client.on(Events.InteractionCreate, async interaction => {
-    const { guild, member, customId } = interaction;
+    try {
+        const { guild, member, customId } = interaction;
 
-    // Handle Roles
-    const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
-    if (roleMap[customId]) {
-        const role = guild.roles.cache.find(r => r.name === roleMap[customId]);
-        if (member.roles.cache.has(role.id)) { await member.roles.remove(role); interaction.reply({ content: `Removed ${roleMap[customId]}`, ephemeral: true }); }
-        else { await member.roles.add(role); interaction.reply({ content: `Added ${roleMap[customId]}`, ephemeral: true }); }
-        return;
-    }
-
-    // Handle Buttons
-    if (interaction.isButton()) {
-        if (customId === 'btn_ticket_support') {
-            const menu = new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder().setCustomId('menu_support_options').setPlaceholder('Make a selection')
-                    .addOptions([{ label: '📋 ROSTER REGISTRATION', value: 'opt_roster' }, { label: '❓ GENERAL SUPPORT', value: 'opt_support' }])
-            );
-            return interaction.reply({ components: [menu], ephemeral: true });
+        // Handle Roles
+        const roleMap = { 'role_fivem': 'FIVEM', 'role_roblox': 'ROBLOX', 'role_valo': 'VALORANT', 'role_18': '18+' };
+        if (roleMap[customId]) {
+            const role = guild.roles.cache.find(r => r.name === roleMap[customId]);
+            if (!role) return interaction.reply({ content: "Role not found!", ephemeral: true });
+            
+            if (member.roles.cache.has(role.id)) { await member.roles.remove(role); interaction.reply({ content: `Removed ${roleMap[customId]}`, ephemeral: true }); }
+            else { await member.roles.add(role); interaction.reply({ content: `Added ${roleMap[customId]}`, ephemeral: true }); }
+            return;
         }
-        if (customId === 'close_ticket') {
-            await interaction.reply('Closing...');
-            setTimeout(() => interaction.channel.delete(), 5000);
-        }
-    }
 
-    // Handle Select Menu (Roster/Support)
-    if (interaction.isStringSelectMenu() && customId === 'menu_support_options') {
-        const type = interaction.values[0];
-        const channel = await guild.channels.create({
-            name: `${type}-${member.user.username}`,
-            type: ChannelType.GuildText,
-            permissionOverwrites: [
-                { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-                { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-            ]
-        });
-        await channel.send(`Ticket Created for: ${type}`);
-        interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
+        // Handle Buttons
+        if (interaction.isButton()) {
+            if (customId === 'btn_ticket_support') {
+                const menu = new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder().setCustomId('menu_support_options').setPlaceholder('Make a selection')
+                        .addOptions([{ label: '📋 ROSTER REGISTRATION', value: 'opt_roster' }, { label: '❓ GENERAL SUPPORT', value: 'opt_support' }])
+                );
+                return interaction.reply({ components: [menu], ephemeral: true });
+            }
+            if (customId === 'close_ticket') {
+                await interaction.reply('Closing in 5 seconds...');
+                setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
+            }
+        }
+
+        // Handle Select Menu
+        if (interaction.isStringSelectMenu() && customId === 'menu_support_options') {
+            const type = interaction.values[0];
+            const channel = await guild.channels.create({
+                name: `${type}-${member.user.username}`,
+                type: ChannelType.GuildText,
+                permissionOverwrites: [
+                    { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                    { id: member.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+                    { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+                ]
+            });
+            await channel.send(`Ticket Created for: ${type}`);
+            interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
+        }
+    } catch (e) {
+        console.error("Interaction Error:", e);
+        if (!interaction.replied) interaction.reply({ content: "Error: I need Manage Channels/Roles permission!", ephemeral: true });
     }
 });
 
