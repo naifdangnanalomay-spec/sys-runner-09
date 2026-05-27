@@ -7,6 +7,9 @@ const {
 const moment = require('moment');
 const axios = require('axios');
 
+// I-load ang TOKEN mula sa Railway Environment Variables
+const TOKEN = process.env.TOKEN;
+
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
