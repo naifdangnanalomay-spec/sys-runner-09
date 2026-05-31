@@ -215,11 +215,17 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: `✅ Ticket na ginawa: ${channel}`, ephemeral: true });
             }
 
-            // 🔒 CLOSE TICKET
+            // 🔒 CLOSE TICKET — ✅ INALIS ANG LIMITASYON: PWEDENG MAG CLOSE SI OWNER, ADMIN AT STAFF
             if (interaction.customId === 'close_ticket') {
-                if (!member.roles.cache.has(STAFF_ROLE_ID)) {
-                    return interaction.reply({ content: '❌ Tanging Staff lamang ang pwedeng magsara ng ticket.', ephemeral: true });
+                // Pwede mag close kung: May Staff Role, O Administrator, O Owner
+                const canClose = member.roles.cache.has(STAFF_ROLE_ID) || 
+                                 member.permissions.has(PermissionsBitField.Flags.Administrator) || 
+                                 guild.ownerId === member.id;
+
+                if (!canClose) {
+                    return interaction.reply({ content: '❌ Tanging Staff, Admin o Owner lamang ang pwedeng magsara ng ticket.', ephemeral: true });
                 }
+
                 await interaction.reply('🔒 Isasara ang ticket pagkalipas ng 5 segundo...');
                 setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
             }
