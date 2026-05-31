@@ -1,5 +1,5 @@
 const {
-    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, Events, REST, Routes, 
+    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, Events, REST, Routes,
     Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle
 } = require('discord.js');
 const moment = require('moment');
@@ -56,14 +56,20 @@ const commands = [
 
 client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN);
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    console.log(`${client.user.tag} ONLINE!`);
+    try {
+        await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+        console.log(`${client.user.tag} ONLINE!`);
+    } catch (err) {
+        console.error(err);
+    }
 });
 
 client.on(Events.MessageCreate, async message => {
-    if (message.author.bot || !autoResponders.has(message.guild.id)) return;
+    if (message.author.bot || !autoResponders.has(message.guild?.id)) return;
     const trigger = message.content.toLowerCase();
-    if (autoResponders.get(message.guild.id).has(trigger)) message.channel.send(autoResponders.get(message.guild.id).get(trigger));
+    if (autoResponders.get(message.guild.id).has(trigger)) {
+        message.channel.send(autoResponders.get(message.guild.id).get(trigger));
+    }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -71,8 +77,12 @@ client.on(Events.InteractionCreate, async interaction => {
     const { guild, member, commandName, options } = interaction;
 
     try {
+        // Slash Commands
         if (interaction.isChatInputCommand()) {
-            if (commandName === 'ping') return interaction.reply(`Pong: ${client.ws.ping}ms`);
+            if (commandName === 'ping') {
+                return interaction.reply(`Pong: ${client.ws.ping}ms`);
+            }
+
             if (commandName === 'say') {
                 const input = options.getString('message');
                 const isMedia = /\.(gif|webp|png|jpg|jpeg|mp4)$/i.test(input) || input.startsWith('http');
@@ -83,6 +93,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 await interaction.channel.send({ content: input });
                 return interaction.reply({ content: '✅ Mensahe naipadala na.', ephemeral: true });
             }
+
             if (commandName === 'autorespo') {
                 const action = options.getString('action');
                 const trigger = options.getString('trigger').toLowerCase();
@@ -96,25 +107,106 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
                 return;
             }
+
+            // ✅ FIXED /ticket-setup COMMAND
+            if (commandName === 'ticket-setup') {
+                if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+                    return interaction.reply({ content: '❌ You need Administrator permission to use this.', ephemeral: true });
+                }
+
+                const embed = new EmbedBuilder()
+                    .setTitle('🎟️ | SUPPORT TICKET SYSTEM')
+                    .setDescription('Click the button below to create a ticket and get assistance from our team.')
+                    .setImage(TICKET_GIF)
+                    .setThumbnail(BANNER_URL)
+                    .setColor('#2F3136')
+                    .setFooter({ text: 'AZURA BOT | Ticket System', iconURL: BANNER_URL });
+
+                const button = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('btn_ticket_support')
+                        .setLabel('CREATE TICKET')
+                        .setEmoji('🎟️')
+                        .setStyle(ButtonStyle.Primary)
+                );
+
+                await interaction.channel.send({ embeds: [embed], components: [button] });
+                return interaction.reply({ content: '✅ Ticket system has been set up successfully.', ephemeral: true });
+            }
+
             // Add other command logic (clear, ban, etc.) here
         }
 
+        // Buttons
         if (interaction.isButton()) {
             if (interaction.customId === 'btn_ticket_support') {
                 const menu = new ActionRowBuilder().addComponents(
-                    new StringSelectMenuBuilder().setCustomId('menu_support_options').setPlaceholder('Make a selection').addOptions([
-                        { label: '📋 ROSTER REGISTRATION', value: 'opt_roster' },
-                        { label: '❓ GENERAL SUPPORT', value: 'opt_support' }
-                    ])
+                    new StringSelectMenuBuilder()
+                        .setCustomId('menu_support_options')
+                        .setPlaceholder('Make a selection')
+                        .addOptions([
+                            { label: '📋 ROSTER REGISTRATION', value: 'opt_roster' },
+                            { label: '❓ GENERAL SUPPORT', value: 'opt_support' }
+                        ])
                 );
-                return interaction.reply({ content: 'Select:', components: [menu], ephemeral: true });
+                return interaction.reply({ content: 'Select a category for your ticket:', components: [menu], ephemeral: true });
             }
+
             if (interaction.customId === 'close_ticket') {
-                await interaction.reply('🔒 Closing...');
+                if (!member.roles.cache.has(STAFF_ROLE_ID)) {
+                    return interaction.reply({ content: '❌ Only staff can close tickets.', ephemeral: true });
+                }
+                await interaction.reply('🔒 Closing ticket in 5 seconds...');
                 setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
             }
         }
-    } catch (err) { console.error(err); }
+
+        // Select Menu
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'menu_support_options') {
+                const selected = interaction.values[0];
+                let categoryName = '';
+                if (selected === 'opt_roster') categoryName = 'Roster Registration';
+                if (selected === 'opt_support') categoryName = 'General Support';
+
+                const existingTicket = guild.channels.cache.find(c => c.name === `ticket-${interaction.user.username.toLowerCase()}`);
+                if (existingTicket) {
+                    return interaction.reply({ content: `❌ You already have an open ticket: ${existingTicket}`, ephemeral: true });
+                }
+
+                const channel = await guild.channels.create({
+                    name: `ticket-${interaction.user.username}`,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] }
+                    ]
+                });
+
+                const ticketEmbed = new EmbedBuilder()
+                    .setTitle(`🎟️ NEW TICKET: ${categoryName}`)
+                    .setDescription(`Hello ${interaction.user}! Please explain your concern, our staff will assist you shortly.`)
+                    .setColor('#00FF00')
+                    .setTimestamp();
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('CLOSE TICKET').setStyle(ButtonStyle.Danger)
+                );
+
+                await channel.send({ embeds: [ticketEmbed], components: [closeBtn] });
+                return interaction.reply({ content: `✅ Ticket created: ${channel}`, ephemeral: true });
+            }
+        }
+
+    } catch (err) {
+        console.error(err);
+        if (interaction.replied || interaction.deferred) {
+            interaction.followUp({ content: '❌ An error occurred while executing this command.', ephemeral: true });
+        } else {
+            interaction.reply({ content: '❌ An error occurred while executing this command.', ephemeral: true });
+        }
+    }
 });
 
 client.login(TOKEN);
