@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async interaction => {
     const { guild, member, commandName, options } = interaction;
 
     try {
-        // Slash Commands
+        // 📌 Slash Commands
         if (interaction.isChatInputCommand()) {
             if (commandName === 'ping') {
                 return interaction.reply(`Pong: ${client.ws.ping}ms`);
@@ -108,71 +108,133 @@ client.on(Events.InteractionCreate, async interaction => {
                 return;
             }
 
-            // ✅ FIXED /ticket-setup COMMAND
+            // ✅ TICKET SETUP — MAY LAHAT NG BUTTON: SUPPORT, PARTNERSHIP, APPLY STAFF
             if (commandName === 'ticket-setup') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-                    return interaction.reply({ content: '❌ You need Administrator permission to use this.', ephemeral: true });
+                    return interaction.reply({ content: '❌ Kailangan mo ng Administrator permission.', ephemeral: true });
                 }
 
                 const embed = new EmbedBuilder()
-                    .setTitle('🎟️ | SUPPORT TICKET SYSTEM')
-                    .setDescription('Click the button below to create a ticket and get assistance from our team.')
+                    .setTitle('🎟️ | AZURA SUPPORT SYSTEM')
+                    .setDescription('Piliin ang kategorya ng iyong kailangan sa pamamagitan ng pag-click sa button sa ibaba:')
                     .setImage(TICKET_GIF)
                     .setThumbnail(BANNER_URL)
                     .setColor('#2F3136')
                     .setFooter({ text: 'AZURA BOT | Ticket System', iconURL: BANNER_URL });
 
-                const button = new ActionRowBuilder().addComponents(
+                const buttons = new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
                         .setCustomId('btn_ticket_support')
-                        .setLabel('CREATE TICKET')
-                        .setEmoji('🎟️')
-                        .setStyle(ButtonStyle.Primary)
+                        .setLabel('🎟️ TICKET SUPPORT')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('btn_ticket_partnership')
+                        .setLabel('🤝 PARTNERSHIP')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId('btn_ticket_staff')
+                        .setLabel('👔 APPLY STAFF')
+                        .setStyle(ButtonStyle.Secondary)
                 );
 
-                await interaction.channel.send({ embeds: [embed], components: [button] });
-                return interaction.reply({ content: '✅ Ticket system has been set up successfully.', ephemeral: true });
+                await interaction.channel.send({ embeds: [embed], components: [buttons] });
+                return interaction.reply({ content: '✅ Ticket System matagumpay na na-setup!', ephemeral: true });
             }
-
-            // Add other command logic (clear, ban, etc.) here
         }
 
-        // Buttons
+        // 📌 BUTTON HANDLERS
         if (interaction.isButton()) {
+
+            // 🎟️ TICKET SUPPORT — DITO NANDOON ANG ROSTER AT GENERAL SUPPORT SELECTION
             if (interaction.customId === 'btn_ticket_support') {
                 const menu = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('menu_support_options')
-                        .setPlaceholder('Make a selection')
+                        .setPlaceholder('📋 Piliin ang kategorya...')
                         .addOptions([
                             { label: '📋 ROSTER REGISTRATION', value: 'opt_roster' },
                             { label: '❓ GENERAL SUPPORT', value: 'opt_support' }
                         ])
                 );
-                return interaction.reply({ content: 'Select a category for your ticket:', components: [menu], ephemeral: true });
+                return interaction.reply({ content: 'Piliin kung anong uri ng tulong ang kailangan mo:', components: [menu], ephemeral: true });
             }
 
+            // 🤝 PARTNERSHIP BUTTON
+            if (interaction.customId === 'btn_ticket_partnership') {
+                const existingTicket = guild.channels.cache.find(c => c.name === `partnership-${interaction.user.username.toLowerCase()}`);
+                if (existingTicket) return interaction.reply({ content: `❌ Mayroon ka nang bukas na ticket: ${existingTicket}`, ephemeral: true });
+
+                const channel = await guild.channels.create({
+                    name: `partnership-${interaction.user.username}`,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
+                    ]
+                });
+
+                const embed = new EmbedBuilder()
+                    .setTitle('🤝 PARTNERSHIP APPLICATION')
+                    .setDescription(`Kamusta ${interaction.user}! Pakilagay dito ang detalye ng inyong server para sa partnership.`)
+                    .setColor('#2ECC71');
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger)
+                );
+
+                await channel.send({ embeds: [embed], components: [closeBtn] });
+                return interaction.reply({ content: `✅ Ticket na ginawa: ${channel}`, ephemeral: true });
+            }
+
+            // 👔 APPLY STAFF BUTTON
+            if (interaction.customId === 'btn_ticket_staff') {
+                const existingTicket = guild.channels.cache.find(c => c.name === `applystaff-${interaction.user.username.toLowerCase()}`);
+                if (existingTicket) return interaction.reply({ content: `❌ Mayroon ka nang bukas na ticket: ${existingTicket}`, ephemeral: true });
+
+                const channel = await guild.channels.create({
+                    name: `applystaff-${interaction.user.username}`,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
+                    ]
+                });
+
+                const embed = new EmbedBuilder()
+                    .setTitle('👔 STAFF APPLICATION')
+                    .setDescription(`Kamusta ${interaction.user}! Pakisagot ang mga sumusunod: \n1. Pangalan / Age\n2. Bakit mo gustong maging staff?\n3. Gaano ka kadalas online?`)
+                    .setColor('#3498DB');
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger)
+                );
+
+                await channel.send({ embeds: [embed], components: [closeBtn] });
+                return interaction.reply({ content: `✅ Ticket na ginawa: ${channel}`, ephemeral: true });
+            }
+
+            // 🔒 CLOSE TICKET
             if (interaction.customId === 'close_ticket') {
                 if (!member.roles.cache.has(STAFF_ROLE_ID)) {
-                    return interaction.reply({ content: '❌ Only staff can close tickets.', ephemeral: true });
+                    return interaction.reply({ content: '❌ Tanging Staff lamang ang pwedeng magsara ng ticket.', ephemeral: true });
                 }
-                await interaction.reply('🔒 Closing ticket in 5 seconds...');
-                setTimeout(() => interaction.channel.delete().catch(console.error), 5000);
+                await interaction.reply('🔒 Isasara ang ticket pagkalipas ng 5 segundo...');
+                setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
             }
         }
 
-        // Select Menu
+        // 📌 SELECT MENU HANDLER — ROSTER / GENERAL SUPPORT
         if (interaction.isStringSelectMenu()) {
             if (interaction.customId === 'menu_support_options') {
                 const selected = interaction.values[0];
-                let categoryName = '';
-                if (selected === 'opt_roster') categoryName = 'Roster Registration';
-                if (selected === 'opt_support') categoryName = 'General Support';
+                let ticketType = '';
+                if (selected === 'opt_roster') ticketType = 'ROSTER REGISTRATION';
+                if (selected === 'opt_support') ticketType = 'GENERAL SUPPORT';
 
                 const existingTicket = guild.channels.cache.find(c => c.name === `ticket-${interaction.user.username.toLowerCase()}`);
-                if (existingTicket) {
-                    return interaction.reply({ content: `❌ You already have an open ticket: ${existingTicket}`, ephemeral: true });
-                }
+                if (existingTicket) return interaction.reply({ content: `❌ Mayroon ka nang bukas na ticket: ${existingTicket}`, ephemeral: true });
 
                 const channel = await guild.channels.create({
                     name: `ticket-${interaction.user.username}`,
@@ -180,31 +242,30 @@ client.on(Events.InteractionCreate, async interaction => {
                     permissionOverwrites: [
                         { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
                         { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
-                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] }
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
                     ]
                 });
 
-                const ticketEmbed = new EmbedBuilder()
-                    .setTitle(`🎟️ NEW TICKET: ${categoryName}`)
-                    .setDescription(`Hello ${interaction.user}! Please explain your concern, our staff will assist you shortly.`)
-                    .setColor('#00FF00')
-                    .setTimestamp();
+                const embed = new EmbedBuilder()
+                    .setTitle(`🎟️ ${ticketType}`)
+                    .setDescription(`Kamusta ${interaction.user}! Pakilagay dito ang iyong detalye o tanong para matulungan ka namin.`)
+                    .setColor('#F1C40F');
 
                 const closeBtn = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('close_ticket').setLabel('CLOSE TICKET').setStyle(ButtonStyle.Danger)
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger)
                 );
 
-                await channel.send({ embeds: [ticketEmbed], components: [closeBtn] });
-                return interaction.reply({ content: `✅ Ticket created: ${channel}`, ephemeral: true });
+                await channel.send({ embeds: [embed], components: [closeBtn] });
+                return interaction.reply({ content: `✅ Ticket na ginawa: ${channel}`, ephemeral: true });
             }
         }
 
     } catch (err) {
         console.error(err);
         if (interaction.replied || interaction.deferred) {
-            interaction.followUp({ content: '❌ An error occurred while executing this command.', ephemeral: true });
+            interaction.followUp({ content: '❌ May naganap na error.', ephemeral: true });
         } else {
-            interaction.reply({ content: '❌ An error occurred while executing this command.', ephemeral: true });
+            interaction.reply({ content: '❌ May naganap na error.', ephemeral: true });
         }
     }
 });
