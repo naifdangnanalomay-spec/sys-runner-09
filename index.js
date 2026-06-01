@@ -2,7 +2,6 @@ const {
     Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, Events, REST, Routes,
     Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder
 } = require('discord.js');
-const moment = require('moment');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -476,7 +475,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ ${commandName.toUpperCase()} message naitakda: \n\`${msg}\``});
             }
 
-            if(commandName === 'level' || commandName === 'rank' || commandName === 'stats') {
+            if(command === 'level' || commandName === 'rank' || commandName === 'stats') {
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
                 const userData = serverData.get(interaction.user.id) || {xp:0, level:0, messages:0};
@@ -489,7 +488,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .addFields(
                             {name: '📈 Level', value: `${userData.level}`, inline: true},
                             {name: '✨ XP', value: `${userData.xp} / ${nextLevelXP}`, inline: true},
-                            {name: '💬 Mensahe', value: `${userData.messages}`, inline: true}
+                            {name: '💬 Mensahe", value: `${userData.messages}`, inline: true}
                         )
                         .setColor('Purple');
                     return interaction.reply({embeds: [emb]});
@@ -811,7 +810,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 if (interaction.customId === 'btn_ticket_support') { categoryName = 'Support'; parentId = null; }
                 if (interaction.customId === 'btn_ticket_partnership') { categoryName = 'Partnership'; parentId = null; }
-                if (interaction.customId === 'btn_ticket_support') { categoryName = 'Staff Application'; parentId = null; }
+                if (interaction.customId === 'btn_ticket_staff') { categoryName = 'Staff Application'; parentId = null; }
 
                 const channelName = `ticket-${categoryName.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
                 
@@ -821,9 +820,32 @@ client.on(Events.InteractionCreate, async interaction => {
                     parent: parentId,
                     permissionOverwrites: [
                         { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
-                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] },
-                        { id: client.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] }
+                        { 
+                            id: interaction.user.id, 
+                            allow: [
+                                PermissionsBitField.Flags.ViewChannel, 
+                                PermissionsBitField.Flags.SendMessages, 
+                                PermissionsBitField.Flags.ReadMessageHistory
+                            ] 
+                        },
+                        { 
+                            id: STAFF_ROLE_ID, 
+                            allow: [
+                                PermissionsBitField.Flags.ViewChannel, 
+                                PermissionsBitField.Flags.SendMessages, 
+                                PermissionsBitField.Flags.ReadMessageHistory, 
+                                PermissionsBitField.Flags.ManageChannels
+                            ] 
+                        },
+                        { 
+                            id: client.user.id, 
+                            allow: [
+                                PermissionsBitField.Flags.ViewChannel, 
+                                PermissionsBitField.Flags.SendMessages, 
+                                PermissionsBitField.Flags.ReadMessageHistory, 
+                                PermissionsBitField.Flags.ManageChannels
+                            ] 
+                        }
                     ]
                 });
 
@@ -865,5 +887,4 @@ client.on(Events.InteractionCreate, async interaction => {
                     name: channelName,
                     type: ChannelType.GuildText,
                     permissionOverwrites: [
-                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages,
+                        { id: guild.id, deny: [PermissionsBitField.F
