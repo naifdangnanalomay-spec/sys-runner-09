@@ -881,4 +881,12 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(val === 'opt_roster') cat = 'Roster Registration';
                 if(val === 'opt_support') cat = 'General Support';
 
-                const channelName = `ticket-${cat.toLowerCase().replace(/\s
+                const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
+                
+                const newChannel = await guild.channels.create({
+                    name: channelName,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { 
+                            id: interaction.user.id,
