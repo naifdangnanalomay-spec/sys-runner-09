@@ -10,12 +10,12 @@ const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
 
-// 📌 ROLE IDs - PALITAN ITO NG TUNAY NA ROLE IDs SA SERVER MO
+// 📌 ROLE IDs
 const ROLES = {
-    FIVEM: '1508559284156235878',       // <--- PALITAN
-    ROBLOX: '1508559055721861271',     // <--- PALITAN
-    VALORANT: '1508559118913503452',     // <--- PALITAN
-    EIGHTEEN_PLUS: '1508559365974659172'  // <--- PALITAN
+    FIVEM: '1508559284156235878',       
+    ROBLOX: '1508559055721861271',     
+    VALORANT: '1508559118913503452',     
+    EIGHTEEN_PLUS: '1508559365974659172'  
 };
 
 // 📌 DATABASES
@@ -48,7 +48,7 @@ const CLIENT_ID = '1507007071634329703';
 const commands = [
     { name: 'ping', description: 'Check bot latency' },
     { name: 'uptime', description: 'Check bot uptime' },
-    { name: 'setup-roles', description: 'Send self-role panel' }, // ✅ GANTO NA ITO
+    { name: 'setup-roles', description: 'Send self-role panel' },
     { name: 'ticket-setup', description: 'Setup the ticket system' },
     { 
         name: 'say', 
@@ -200,7 +200,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: `🏓 Pong! Latency: **${client.ws.ping}ms**`, ephemeral: false });
             }
 
-            // ✅ /SETUP-ROLES  <--- INAYOS ITO, DATI WALA TONG LAMAN KAYO AYAW GUMANA
+            // ✅ /SETUP-ROLES
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
                     return interaction.reply({ content: '❌ Kailangan mo ng Administrator permission.', ephemeral: true });
@@ -209,7 +209,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 const embed = new EmbedBuilder()
                     .setTitle('SELF ROLE')
                     .setDescription('Piliin ang iyong mga role sa pamamagitan ng pag-click sa mga button sa ibaba:')
-                    .setImage(BANNER_URL) // Ito yung AZURAGODSORG na litrato
+                    .setImage(BANNER_URL)
                     .setColor('#2F3136');
 
                 const buttons = new ActionRowBuilder().addComponents(
@@ -333,7 +333,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 
                 if (member.roles.cache.has(role.id)) {
                     await member.roles.remove(role);
-                    return interaction.reply({ content: `❌ Tinanggal na ang role: **${role.name}**`, ephemer: true });
+                    return interaction.reply({ content: `❌ Tinanggal na ang role: **${role.name}**`, ephemeral: true });
                 } else {
                     await member.roles.add(role);
                     return interaction.reply({ content: `✅ Idinagdag na ang role: **${role.name}**`, ephemeral: true });
@@ -367,7 +367,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: 'Piliin kung anong uri ng tulong ang kailangan mo:', components: [menu], ephemeral: true });
             }
 
-            // 🤝 PARTNERSHIP TICKET
+            // 🤝 PARTNERSHIP TICKET - ✅ INAYOS NA, WALA NANG ERROR
             if (interaction.customId === 'btn_ticket_partnership') {
                 const existingTicket = guild.channels.cache.find(c => c.name === `partnership-${interaction.user.username.toLowerCase()}`);
                 if (existingTicket) return interaction.reply({ content: `❌ Mayroon ka nang bukas na ticket: ${existingTicket}`, ephemeral: true });
@@ -378,7 +378,7 @@ client.on(Events.InteractionCreate, async interaction => {
                     permissionOverwrites: [
                         { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
                         { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
-                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.ReadMessageHistory] }
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
                     ]
                 });
 
@@ -395,7 +395,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: `✅ Ticket na ginawa: ${channel}`, ephemeral: true });
             }
 
-            // 👔 STAFF APPLICATION TICKET
+            // 👔 APPLY STAFF TICKET
             if (interaction.customId === 'btn_ticket_staff') {
                 const existingTicket = guild.channels.cache.find(c => c.name === `applystaff-${interaction.user.username.toLowerCase()}`);
                 if (existingTicket) return interaction.reply({ content: `❌ Mayroon ka nang bukas na ticket: ${existingTicket}`, ephemeral: true });
