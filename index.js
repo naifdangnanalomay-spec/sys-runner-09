@@ -24,10 +24,8 @@ const ROLES = {
 const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
-// ✅ BAGO: DATABASE PARA SA WELCOME / LEAVE
-const guildSettings = new Map(); 
-// ✅ BAGO: DATABASE PARA SA LEVELING SYSTEM
-const levels = new Map(); 
+const guildSettings = new Map(); // Para sa Welcome/Leave
+const levels = new Map(); // Para sa Level System
 
 // 📌 BOT CONFIG & INTENTS
 const client = new Client({
@@ -40,7 +38,7 @@ const client = new Client({
         GatewayIntentBits.GuildBans,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.GuildMessageReactions // Dagdag para sa antas
+        GatewayIntentBits.GuildMessageReactions
     ],
     partials: [
         Partials.Message, 
@@ -51,7 +49,7 @@ const client = new Client({
     ]
 });
 
-// 🔑 CREDENTIALS (Nasa Environment Variable na, WALA SA CODE)
+// 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
@@ -127,32 +125,25 @@ const commands = [
             { name: 'action', type: 3, description: 'Action', required: true, choices: [
                 { name: 'add', value: 'add' },
                 { name: 'remove', value: 'remove' },
-                { name: 'transcript', value: 'transcript' } // ✅ NANDITO NA
+                { name: 'transcript', value: 'transcript' }
             ]},
             { name: 'user', type: 6, description: 'User to add/remove', required: false }
         ]
     },
-    // ✅ BAGO: WELCOME & LEAVE COMMANDS
     { 
         name: 'welcome', 
         description: 'Set welcome message (Admin)', 
-        options: [
-            { name: 'set', type: 3, description: 'Message (use {user} & {server})', required: true }
-        ]
+        options: [{ name: 'set', type: 3, description: 'Message (use {user} & {server})', required: true }]
     },
     { 
         name: 'leave', 
         description: 'Set leave message (Admin)', 
-        options: [
-            { name: 'set', type: 3, description: 'Message (use {user} & {server})', required: true }
-        ]
+        options: [{ name: 'set', type: 3, description: 'Message (use {user} & {server})', required: true }]
     },
-    // ✅ BAGO: LEVELING COMMANDS (PARA SA MIYEMBRO)
     { name: 'level', description: 'Check your current level & XP' },
     { name: 'rank', description: 'Show your rank card' },
     { name: 'leaderboard', description: 'Show top active members' },
     { name: 'stats', description: 'Show your server statistics' },
-
     { 
         name: 'say', 
         description: 'Send message as bot', 
@@ -251,7 +242,7 @@ client.once('ready', async () => {
     }
 });
 
-// 📌 ✅ AUTO RESPONDER SYSTEM
+// 📌 AUTO RESPONDER + LEVELING SYSTEM
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
 
@@ -262,7 +253,7 @@ client.on(Events.MessageCreate, async message => {
         if (guildRespos.has(trigger)) message.channel.send({ content: guildRespos.get(trigger) });
     }
 
-    // --- ✅ LEVELING SYSTEM (Bigay XP kada mensahe) ---
+    // --- LEVELING SYSTEM ---
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const userID = message.author.id;
@@ -271,16 +262,14 @@ client.on(Events.MessageCreate, async message => {
     
     const userData = serverData.get(userID);
     userData.messages += 1;
-    const xpGain = Math.floor(Math.random() * 10) + 5; // 5-15 XP kada chat
+    const xpGain = Math.floor(Math.random() * 10) + 5;
     userData.xp += xpGain;
 
-    // Formula para sa susunod na level: 50 * (level^2) + 50
     const nextLevel = 50 * (userData.level * userData.level) + 50;
 
     if(userData.xp >= nextLevel){
         userData.level += 1;
-        userData.xp = 0; // I-reset XP pag tumaas level
-        // Magpadala ng mensahe na tumaas na siya
+        userData.xp = 0;
         const lvlEmbed = new EmbedBuilder()
             .setTitle('🎉 LEVEL UP!')
             .setDescription(`Maligayang pagbati <@${userID}>!\nUmakyat ka na sa **Level ${userData.level}**!`)
@@ -290,7 +279,7 @@ client.on(Events.MessageCreate, async message => {
     serverData.set(userID, userData);
 });
 
-// 📌 ✅ WELCOME & LEAVE EVENT
+// 📌 WELCOME & LEAVE EVENT
 client.on(Events.GuildMemberAdd, async member => {
     const settings = guildSettings.get(member.guild.id);
     if(settings && settings.welcome) {
@@ -318,16 +307,14 @@ client.on(Events.InteractionCreate, async interaction => {
 
     try {
         // ========================
-        // 📌 SLASH COMMANDS EXECUTION
+        // 📌 SLASH COMMANDS
         // ========================
         if (interaction.isChatInputCommand()) {
 
-            // ✅ PING
             if (commandName === 'ping') {
                 return interaction.reply({ content: `🏓 Pong! Latency: **${client.ws.ping}ms**`, ephemeral: false });
             }
 
-            // ✅ UPTIME
             if (commandName === 'uptime') {
                 const days = Math.floor(client.uptime / 86400000);
                 const hours = Math.floor(client.uptime / 3600000) % 24;
@@ -336,7 +323,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: `⏱️ Uptime: **${days}d ${hours}h ${minutes}m ${seconds}s**` });
             }
 
-            // ✅ WARNINGS
             if (commandName === 'warnings') {
                 const user = options.getUser('user') || interaction.user;
                 if(!warns.has(user.id) || warns.get(user.id).length === 0) 
@@ -347,7 +333,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-            // ✅ JOKE
             if (commandName === 'joke') {
                 const jokes = [
                     "Bakit laging pagod ang kalendaryo? Kasi laging may date! 📅😂",
@@ -358,7 +343,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: jokes[Math.floor(Math.random() * jokes.length)]});
             }
 
-            // ✅ FACT
             if (commandName === 'fact') {
                 const facts = [
                     "Ang saging ay berries, pero ang strawberry ay hindi! 🍌",
@@ -369,14 +353,12 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: facts[Math.floor(Math.random() * facts.length)]});
             }
 
-            // ✅ RPS
             if (commandName === 'rps') {
                 const choices = ['Bato 🪨', 'Gunting ✂️', 'Papel 📄'];
                 const botChoice = choices[Math.floor(Math.random() * choices.length)];
                 return interaction.reply({content: `Ako ay pumili ng: **${botChoice}**\nItype sa chat ang iyong sagot: *bato, gunting, o papel*`});
             }
 
-            // ✅ TRANSLATE
             if (commandName === 'translate') {
                 const lang = options.getString('language');
                 const text = options.getString('text');
@@ -388,7 +370,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ REMINDER
             if (commandName === 'reminder') {
                 const timeStr = options.getString('time');
                 const msg = options.getString('message');
@@ -405,7 +386,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }, timeMs);
             }
 
-            // ✅ CALCULATOR
             if (commandName === 'calculator') {
                 const exp = options.getString('expression');
                 try {
@@ -416,11 +396,10 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ TIME / WEATHER
-            if (commandName === 'time') return interaction.reply({content: `🕒 Ang oras doon ay nakadepende sa timezone, gamitin ang Google para eksakto!`, ephemeral:true});
-            if (commandName === 'weather') return interaction.reply({content: `🌤️ Para sa ulat panahon, bisitahin ang PAGASA o AccuWeather.`, ephemeral:true});
+            if (commandName === 'time' || commandName === 'weather') {
+                return interaction.reply({content: `ℹ️ Para sa eksaktong oras o panahon, bisitahin ang Google/PAGASA.`, ephemeral:true});
+            }
 
-            // ✅ MODERATOR COMMANDS
             if (commandName === 'slowmode') {
                 if(!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return interaction.reply({content:'❌ Wala kang pahintulot.', ephemeral:true});
                 const sec = options.getInteger('seconds');
@@ -452,14 +431,12 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `🔒 **LOCKDOWN AKTIBO** - Lahat ng channel ay nakasara.`});
             }
 
-            // ✅ TICKET COMMANDS (ADD / REMOVE / TRANSCRIPT)
             if (commandName === 'ticket') {
                 const action = options.getString('action');
                 const user = options.getUser('user');
                 const isStaff = member.roles.cache.has(STAFF_ROLE_ID) || member.permissions.has(PermissionsBitField.Flags.Administrator);
                 if(!isStaff) return interaction.reply({content:'❌ Tanging Staff lang pwede gumamit nito.', ephemeral:true});
 
-                // ✅ TRANSCRIPT FEATURE
                 if(action === 'transcript') {
                     await interaction.deferReply();
                     const messages = await interaction.channel.messages.fetch({limit: 100});
@@ -474,7 +451,7 @@ client.on(Events.InteractionCreate, async interaction => {
                     const attach = new AttachmentBuilder(filePath, {name: `transcript-${interaction.channel.name}.txt`});
                     
                     await interaction.editReply({content: `✅ Heto ang transcript ng usapan:`, files: [attach]});
-                    fs.unlinkSync(filePath); // Burahin ang file matapos ipadala
+                    fs.unlinkSync(filePath);
                     return;
                 }
 
@@ -486,7 +463,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ WELCOME & LEAVE SETTINGS
             if(commandName === 'welcome' || commandName === 'leave') {
                 if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return interaction.reply({content:'❌ Admin lang pwedeng mag-set.', ephemeral:true});
                 const msg = options.getString('set');
@@ -500,7 +476,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ ${commandName.toUpperCase()} message naitakda: \n\`${msg}\``});
             }
 
-            // ✅ LEVELING COMMANDS (Para sa Miyembro)
             if(commandName === 'level' || commandName === 'rank' || commandName === 'stats') {
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
@@ -521,7 +496,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
 
                 if(commandName === 'rank'){
-                    // Pagkuha ng Ranggo
                     const sorted = Array.from(serverData.values()).sort((a,b) => b.level - a.level || b.xp - a.xp);
                     const pos = sorted.findIndex(u => u.level === userData.level && u.xp === userData.xp) + 1;
                     
@@ -552,7 +526,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ LEADERBOARD
             if(commandName === 'leaderboard'){
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
@@ -573,7 +546,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds: [emb]});
             }
 
-            // ✅ /SETUP-ROLES
             if (commandName === 'setup-roles') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) 
                     return interaction.reply({ content: '❌ Kailangan mo ng Administrator permission.', ephemeral: true });
@@ -594,7 +566,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: '✅ Self-Role Panel matagumpay na na-setup!', ephemeral: true });
             }
 
-            // ✅ SAY / MEDIA
             if (commandName === 'say') {
                 const input = options.getString('message');
                 const isMedia = /\.(gif|webp|png|jpg|jpeg|mp4)$/i.test(input) || input.startsWith('http');
@@ -606,7 +577,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: '✅ Mensahe naipadala na.', ephemeral: true });
             }
 
-            // ✅ AUTO RESPONSE MANAGER
             if (commandName === 'autorespo') {
                 const action = options.getString('action');
                 const trigger = options.getString('trigger').toLowerCase().trim();
@@ -624,7 +594,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ EMBED CREATOR
             if (commandName === 'embed') {
                 const title = options.getString('title');
                 const desc = options.getString('description');
@@ -634,7 +603,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: '✅ Embed created!', ephemeral: true });
             }
 
-            // ✅ CLEAR MESSAGES
             if (commandName === 'clear') {
                 if (!member.permissions.has(PermissionsBitField.Flags.ManageMessages)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission: `ManageMessages`', ephemeral: true });
@@ -644,7 +612,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Nabura ang **${amount}** mensahe.`, ephemeral:true});
             }
 
-            // ✅ KICK
             if (commandName === 'kick') {
                 if (!member.permissions.has(PermissionsBitField.Flags.KickMembers)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission: `KickMembers`', ephemeral: true });
@@ -656,7 +623,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Nai-kick si **${user.tag}**`});
             }
 
-            // ✅ BAN
             if (commandName === 'ban') {
                 if (!member.permissions.has(PermissionsBitField.Flags.BanMembers)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission: `BanMembers`', ephemeral: true });
@@ -668,7 +634,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Nai-ban si **${user.tag}**`});
             }
 
-            // ✅ UNBAN
             if (commandName === 'unban') {
                 if (!member.permissions.has(PermissionsBitField.Flags.BanMembers)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission: `BanMembers`', ephemeral: true });
@@ -677,7 +642,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Na-unban na ang **${id}**`});
             }
 
-            // ✅ WARN
             if (commandName === 'warn') {
                 const user = options.getUser('user');
                 const reason = options.getString('reason');
@@ -686,7 +650,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ **${user.tag}** ay binigyan ng babala: *${reason}*`});
             }
 
-            // ✅ UNWARN
             if (commandName === 'unwarn') {
                 const user = options.getUser('user');
                 const idx = options.getInteger('index') - 1;
@@ -695,7 +658,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Tinanggal ang babala kay **${user.tag}**`});
             }
 
-            // ✅ POLL
             if (commandName === 'poll') {
                 const q = options.getString('question');
                 const o1 = options.getString('option1');
@@ -706,7 +668,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 await msg.react('2️⃣');
             }
 
-            // ✅ TIMEOUT
             if (commandName === 'timeout') {
                 if (!member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission: `ModerateMembers`', ephemeral: true });
@@ -719,7 +680,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ Naka-timeout si **${user.tag}** sa loob ng **${mins} minuto**`});
             }
 
-            // ✅ LOCK / UNLOCK
             if (commandName === 'lock') {
                 if (!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) 
                     return interaction.reply({ content: '❌ Kulang ka ng permission.', ephemeral: true });
@@ -733,7 +693,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `🔓 Naka-unlock na ang channel na ito.`});
             }
 
-            // ✅ USERINFO
             if (commandName === 'userinfo') {
                 const user = options.getUser('user') || interaction.user;
                 const memb = guild.members.cache.get(user.id);
@@ -749,7 +708,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-            // ✅ SERVERINFO
             if (commandName === 'serverinfo') {
                 const emb = new EmbedBuilder()
                     .setAuthor({name: guild.name, iconURL: guild.iconURL()})
@@ -763,13 +721,11 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-            // ✅ AVATAR
             if (commandName === 'avatar') {
                 const user = options.getUser('user') || interaction.user;
                 return interaction.reply({content: user.displayAvatarURL({size: 4096, dynamic: true})});
             }
 
-            // ✅ GAMES & FUN
             if (commandName === 'coinflip') {
                 const res = Math.random() > 0.5 ? "**TAIL** 🟡" : "**HEAD** 🔴";
                 return interaction.reply({content: `🪙 Bumagsak sa: ${res}`});
@@ -793,7 +749,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
-            // ✅ TICKET SYSTEM SETUP
             if (commandName === 'ticket-setup') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) 
                     return interaction.reply({ content: '❌ Kailangan mo ng Administrator permission.', ephemeral: true });
@@ -820,7 +775,6 @@ client.on(Events.InteractionCreate, async interaction => {
         // 📌 BUTTON ACTIONS
         // ========================
         if (interaction.isButton()) {
-            // 🎮 SELF ROLE HANDLERS
             const handleRole = async (roleId, roleName) => {
                 const role = guild.roles.cache.get(roleId);
                 if (!role) return interaction.reply({ content: '❌ Role hindi nahanap, i-check ang ID sa code.', ephemeral: true });
@@ -838,7 +792,6 @@ client.on(Events.InteractionCreate, async interaction => {
             if (interaction.customId === 'role_valo') await handleRole(ROLES.VALORANT, 'VALORANT');
             if (interaction.customId === 'role_18plus') await handleRole(ROLES.EIGHTEEN_PLUS, '18+');
 
-            // 🎟️ SUPPORT CATEGORY SELECT
             if (interaction.customId === 'btn_ticket_support') {
                 const menu = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
@@ -849,4 +802,69 @@ client.on(Events.InteractionCreate, async interaction => {
                             { label: '❓ GENERAL SUPPORT', value: 'opt_support' }
                         ])
                 );
-                return interaction.reply
+                return interaction.reply({ components: [menu], ephemeral: true });
+            }
+
+            if (interaction.customId.startsWith('btn_ticket_')) {
+                let categoryName = '';
+                let parentId = null;
+
+                if (interaction.customId === 'btn_ticket_support') { categoryName = 'Support'; parentId = null; }
+                if (interaction.customId === 'btn_ticket_partnership') { categoryName = 'Partnership'; parentId = null; }
+                if (interaction.customId === 'btn_ticket_staff') { categoryName = 'Staff Application'; parentId = null; }
+
+                const channelName = `ticket-${categoryName.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
+                
+                const newChannel = await guild.channels.create({
+                    name: channelName,
+                    type: ChannelType.GuildText,
+                    parent: parentId,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] },
+                        { id: client.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels] }
+                    ]
+                });
+
+                const embTicket = new EmbedBuilder()
+                    .setTitle(`🎟️ TICKET: ${categoryName}`)
+                    .setDescription(`Kamusta <@${interaction.user.id}>!\nIsulat dito ang iyong kailangan at lalapitan ka agad ng Staff.`)
+                    .setColor('Green');
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('ticket_close').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
+                );
+
+                await newChannel.send({ embeds: [embTicket], components: [closeBtn] });
+                return interaction.reply({ content: `✅ Ticket ginawa: <#${newChannel.id}>`, ephemeral: true });
+            }
+
+            if (interaction.customId === 'ticket_close') {
+                if(!member.roles.cache.has(STAFF_ROLE_ID) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) 
+                    return interaction.reply({content:'❌ Staff lang pwedeng magsara.', ephemeral:true});
+                
+                await interaction.reply({content: '⏳ Isinasara ang ticket...'});
+                setTimeout(() => interaction.channel.delete().catch(()=>{}), 3000);
+            }
+        }
+
+        // ========================
+        // 📌 MENU SELECT ACTIONS
+        // ========================
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'menu_support_options') {
+                const val = interaction.values[0];
+                let cat = '';
+                if(val === 'opt_roster') cat = 'Roster Registration';
+                if(val === 'opt_support') cat = 'General Support';
+
+                const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
+                
+                const newChannel = await guild.channels.create({
+                    name: channelName,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, Permissions
