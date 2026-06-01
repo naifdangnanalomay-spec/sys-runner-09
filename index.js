@@ -890,3 +890,5 @@ client.on(Events.InteractionCreate, async interaction => {
                         { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
                         { 
                             id: interaction.user.id,
+      
+client.login(TOKEN);
