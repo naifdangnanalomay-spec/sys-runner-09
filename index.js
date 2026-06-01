@@ -875,20 +875,77 @@ client.on(Events.InteractionCreate, async interaction => {
         // 📌 MENU SELECT ACTIONS
         // ========================
         if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'menu_support_options') {
-                const val = interaction.values[0];
-                let cat = '';
-                if(val === 'opt_roster') cat = 'Roster Registration';
-                if(val === 'opt_support') cat = 'General Support';
+    if (interaction.customId === 'menu_support_options') {
+        const val = interaction.values[0];
 
-                const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
-                
-                const newChannel = await guild.channels.create({
-                    name: channelName,
-                    type: ChannelType.GuildText,
-                    permissionOverwrites: [
-                        { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                        { 
-                            id: interaction.user.id,
+        let cat = '';
+        if (val === 'opt_roster') cat = 'Roster Registration';
+        if (val === 'opt_support') cat = 'General Support';
+
+        const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
+
+        const newChannel = await guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            permissionOverwrites: [
+                {
+                    id: guild.id,
+                    deny: [PermissionsBitField.Flags.ViewChannel]
+                },
+                {
+                    id: interaction.user.id,
+                    allow: [
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.ReadMessageHistory
+                    ]
+                },
+                {
+                    id: STAFF_ROLE_ID,
+                    allow: [
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.ReadMessageHistory,
+                        PermissionsBitField.Flags.ManageChannels
+                    ]
+                },
+                {
+                    id: client.user.id,
+                    allow: [
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.ReadMessageHistory,
+                        PermissionsBitField.Flags.ManageChannels
+                    ]
+                }
+            ]
+        });
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🎟️ ${cat}`)
+            .setDescription(
+                `Hello <@${interaction.user.id}>!\n\nPakisabi ang concern mo at may staff na tutulong sa iyo.`
+            )
+            .setColor('Green');
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('ticket_close')
+                .setLabel('🔒 Close Ticket')
+                .setStyle(ButtonStyle.Danger)
+        );
+
+        await newChannel.send({
+            content: `<@${interaction.user.id}>`,
+            embeds: [embed],
+            components: [row]
+        });
+
+        return interaction.reply({
+            content: `✅ Ticket created: <#${newChannel.id}>`,
+            ephemeral: true
+        });
+    }
+}
       
 client.login(TOKEN);
