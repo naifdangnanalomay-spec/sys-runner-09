@@ -892,53 +892,15 @@ client.on(Events.InteractionCreate, async interaction => {
                     id: guild.id,
                     deny: [PermissionsBitField.Flags.ViewChannel]
                 },
-                {
+                               {
                     id: interaction.user.id,
                     allow: [
                         PermissionsBitField.Flags.ViewChannel,
                         PermissionsBitField.Flags.SendMessages,
                         PermissionsBitField.Flags.ReadMessageHistory
                     ]
-                },
-                {
-                    id: STAFF_ROLE_ID,
-                    allow: [
-                        PermissionsBitField.Flags.ViewChannel,
-                        PermissionsBitField.Flags.SendMessages,
-                        PermissionsBitField.Flags.ReadMessageHistory,
-                        PermissionsBitField.Flags.ManageChannels
-                    ]
-                },
-                {
-                    id: client.user.id,
-                    allow: [
-                        PermissionsBitField.Flags.ViewChannel,
-                        PermissionsBitField.Flags.SendMessages,
-                        PermissionsBitField.Flags.ReadMessageHistory,
-                        PermissionsBitField.Flags.ManageChannels
-                    ]
                 }
             ]
-        });
-
-        const embed = new EmbedBuilder()
-            .setTitle(`🎟️ ${cat}`)
-            .setDescription(
-                `Hello <@${interaction.user.id}>!\n\nPakisabi ang concern mo at may staff na tutulong sa iyo.`
-            )
-            .setColor('Green');
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('ticket_close')
-                .setLabel('🔒 Close Ticket')
-                .setStyle(ButtonStyle.Danger)
-        );
-
-        await newChannel.send({
-            content: `<@${interaction.user.id}>`,
-            embeds: [embed],
-            components: [row]
         });
 
         return interaction.reply({
@@ -947,5 +909,21 @@ client.on(Events.InteractionCreate, async interaction => {
         });
     }
 }
-      
+    } catch (err) {
+        console.error(err);
+
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({
+                content: '❌ Nagkaroon ng error.',
+                ephemeral: true
+            }).catch(() => {});
+        } else {
+            await interaction.reply({
+                content: '❌ Nagkaroon ng error.',
+                ephemeral: true
+            }).catch(() => {});
+        }
+    }
+});
+
 client.login(TOKEN);
