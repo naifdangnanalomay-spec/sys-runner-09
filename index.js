@@ -475,7 +475,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content: `✅ ${commandName.toUpperCase()} message naitakda: \n\`${msg}\``});
             }
 
-            if(command === 'level' || commandName === 'rank' || commandName === 'stats') {
+            if(commandName === 'level' || commandName === 'rank' || commandName === 'stats') {
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
                 const userData = serverData.get(interaction.user.id) || {xp:0, level:0, messages:0};
@@ -488,7 +488,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .addFields(
                             {name: '📈 Level', value: `${userData.level}`, inline: true},
                             {name: '✨ XP', value: `${userData.xp} / ${nextLevelXP}`, inline: true},
-                            {name: '💬 Mensahe", value: `${userData.messages}`, inline: true}
+                            {name: '💬 Mensahe', value: `${userData.messages}`, inline: true}
                         )
                         .setColor('Purple');
                     return interaction.reply({embeds: [emb]});
@@ -881,10 +881,4 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(val === 'opt_roster') cat = 'Roster Registration';
                 if(val === 'opt_support') cat = 'General Support';
 
-                const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
-                
-                const newChannel = await guild.channels.create({
-                    name: channelName,
-                    type: ChannelType.GuildText,
-                    permissionOverwrites: [
-                        { id: guild.id, deny: [PermissionsBitField.F
+                const channelName = `ticket-${cat.toLowerCase().replace(/\s
