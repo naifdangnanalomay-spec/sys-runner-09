@@ -41,7 +41,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS
+// 📌 SLASH COMMANDS (NAKALAHAT NA DITO, KASAMA DM!)
 const commands = [
     { name: 'ping', description: 'Check bot latency' },
     { name: 'uptime', description: 'Check bot uptime' },
@@ -87,15 +87,16 @@ const commands = [
     { name: 'dice', description: 'Roll dice' },
     { name: '8ball', description: 'Magic 8ball', options: [{name:'question',type:3,required:true}]},
     { name: 'meme', description: 'Random meme' },
-    { name: 'dm', description: 'DM All Members (Admin)', options: [{name:'message',type:3,required:true}]}
+    { name: 'dm', description: '📩 DM ALL MEMBERS (ADMIN ONLY)', options: [{name:'message',type:3,description:'Message to send to everyone',required:true}]}
 ];
 
 // 📌 BOT READY
 client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
+        console.log('🔄 Re-registering commands...');
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✅ ${client.user.tag} ONLINE!`);
+        console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
     } catch (err) { console.error('❌ Error:', err); }
 });
 
@@ -351,15 +352,22 @@ client.on(Events.InteractionCreate, async int => {
                 try { const res=await axios.get('https://meme-api.com/gimme'); return int.reply({embeds:[new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random')]}); }
                 catch { return int.reply({content:'❌ Error',ephemeral:true}); }
             }
+            // ✅ DM COMMAND LOGIC (SIGURADONG GAGANA NA)
             if (commandName === 'dm') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
-                const msg=options.getString('message'); await int.reply({content:'🔄 Sending...',ephemeral:true});
-                const members=await guild.members.fetch(); let sent=0,fail=0;
-                for(const [id,m] of members){
-                    if(m.user.bot||m.id===int.user.id) continue;
-                    try { await m.send(msg); sent++; await new Promise(r=>setTimeout(r,1000)); } catch { fail++; }
+                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Kailangan mo ng Admin Permission!',ephemeral:true});
+                const msg = options.getString('message'); 
+                await int.reply({content:'🔄 Nagpapadala ng mensahe sa lahat... Huwag isara!',ephemeral:true});
+                const members = await guild.members.fetch(); 
+                let sent = 0, fail = 0;
+                for(const [id, m] of members){
+                    if(m.user.bot || m.id === int.user.id) continue;
+                    try { 
+                        await m.send(msg); 
+                        sent++; 
+                        await new Promise(r=>setTimeout(r,1000)); // Anti-Spam Delay
+                    } catch { fail++; }
                 }
-                return int.followUp({content:`✅ Done!\nSent: ${sent}\nFailed: ${fail}`,ephemeral:true});
+                return int.followUp({content:`✅ TAPOS NA!\n📤 Naipadala: ${sent}\n❌ Nabigo/Naka-off DM: ${fail}`,ephemeral:true});
             }
             if (commandName === 'ticket-setup') {
                 if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
