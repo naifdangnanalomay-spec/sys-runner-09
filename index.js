@@ -37,14 +37,17 @@ const client = new Client({
         GatewayIntentBits.GuildBans,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.GuildMessageReactions
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping
     ],
     partials: [
         Partials.Message, 
         Partials.Channel, 
         Partials.Reaction, 
         Partials.User, 
-        Partials.GuildMember
+        Partials.GuildMember,
+        Partials.ThreadMember
     ]
 });
 
@@ -280,22 +283,30 @@ client.on(Events.MessageCreate, async message => {
 
 // 📌 WELCOME & LEAVE EVENT
 client.on(Events.GuildMemberAdd, async member => {
-    const settings = guildSettings.get(member.guild.id);
-    if(settings && settings.welcome) {
-        const msg = settings.welcome.replace(/{user}/g, `<@${member.id}>`).replace(/{server}/g, member.guild.name);
-        const emb = new EmbedBuilder().setTitle('👤 Bagong Miyembro!').setDescription(msg).setColor('Green');
-        const channel = member.guild.systemChannel || member.guild.channels.cache.first();
-        if(channel) channel.send({embeds: [emb]}).catch(()=>{});
+    try {
+        const settings = guildSettings.get(member.guild.id);
+        if(settings && settings.welcome) {
+            const msg = settings.welcome.replace(/{user}/g, `<@${member.id}>`).replace(/{server}/g, member.guild.name);
+            const emb = new EmbedBuilder().setTitle('👤 Bagong Miyembro!').setDescription(msg).setColor('Green');
+            const channel = member.guild.systemChannel || member.guild.channels.cache.find(ch => ch.type === ChannelType.GuildText);
+            if(channel) await channel.send({embeds: [emb]}).catch(()=>{});
+        }
+    } catch (e) {
+        console.log("Error sa welcome message:", e)
     }
 });
 
 client.on(Events.GuildMemberRemove, async member => {
-    const settings = guildSettings.get(member.guild.id);
-    if(settings && settings.leave) {
-        const msg = settings.leave.replace(/{user}/g, `${member.user.tag}`).replace(/{server}/g, member.guild.name);
-        const emb = new EmbedBuilder().setTitle('😢 Umalis ang Miyembro').setDescription(msg).setColor('Red');
-        const channel = member.guild.systemChannel || member.guild.channels.cache.first();
-        if(channel) channel.send({embeds: [emb]}).catch(()=>{});
+    try {
+        const settings = guildSettings.get(member.guild.id);
+        if(settings && settings.leave) {
+            const msg = settings.leave.replace(/{user}/g, `${member.user.tag}`).replace(/{server}/g, member.guild.name);
+            const emb = new EmbedBuilder().setTitle('😢 Umalis ang Miyembro').setDescription(msg).setColor('Red');
+            const channel = member.guild.systemChannel || member.guild.channels.cache.find(ch => ch.type === ChannelType.GuildText);
+            if(channel) await channel.send({embeds: [emb]}).catch(()=>{});
+        }
+    } catch (e) {
+        console.log("Error sa leave message:", e)
     }
 });
 
@@ -701,8 +712,8 @@ client.on(Events.InteractionCreate, async interaction => {
                     .addFields(
                         {name: 'ID', value: user.id},
                         {name: 'Account Created', value: `<t:${Math.floor(user.createdTimestamp/1000)}:F>`},
-                        {name: 'Joined Server', value: `<t:${Math.floor(memb.joinedTimestamp/1000)}:F>`},
-                        {name: 'Roles', value: memb.roles.cache.map(r=>r).join(', ') || 'Wala'}
+                        {name: 'Joined Server', value: memb?.joinedTimestamp ? `<t:${Math.floor(memb.joinedTimestamp/1000)}:F>` : 'Hindi nabasa'},
+                        {name: 'Roles', value: memb?.roles?.cache?.map(r=>r).join(', ') || 'Wala'}
                     ).setColor('Blue');
                 return interaction.reply({embeds:[emb]});
             }
@@ -833,7 +844,7 @@ client.on(Events.InteractionCreate, async interaction => {
                             allow: [
                                 PermissionsBitField.Flags.ViewChannel, 
                                 PermissionsBitField.Flags.SendMessages, 
-                                PermissionsBitField.Flags.ReadMessageHistory, 
+                                PermissionsBitField.Flags.ReadMessageHistory,
                                 PermissionsBitField.Flags.ManageChannels
                             ] 
                         },
@@ -842,7 +853,7 @@ client.on(Events.InteractionCreate, async interaction => {
                             allow: [
                                 PermissionsBitField.Flags.ViewChannel, 
                                 PermissionsBitField.Flags.SendMessages, 
-                                PermissionsBitField.Flags.ReadMessageHistory, 
+                                PermissionsBitField.Flags.ReadMessageHistory,
                                 PermissionsBitField.Flags.ManageChannels
                             ] 
                         }
