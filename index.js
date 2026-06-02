@@ -41,7 +41,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS (NAKALAHAT NA DITO, KASAMA DM!)
+// 📌 SLASH COMMANDS (INAYOS KO NA PARA LUMABAS ANG DM!)
 const commands = [
     { name: 'ping', description: 'Check bot latency' },
     { name: 'uptime', description: 'Check bot uptime' },
@@ -51,43 +51,44 @@ const commands = [
     { name: 'joke', description: 'Get a random joke' },
     { name: 'fact', description: 'Get a random fact' },
     { name: 'rps', description: 'Play Rock Paper Scissors with bot' },
-    { name: 'translate', description: 'Translate text', options: [{name:'language',type:3,required:true},{name:'text',type:3,required:true}]},
-    { name: 'reminder', description: 'Set reminder', options: [{name:'time',type:3,required:true},{name:'message',type:3,required:true}]},
-    { name: 'calculator', description: 'Math calculate', options: [{name:'expression',type:3,required:true}]},
-    { name: 'time', description: 'Get time', options: [{name:'location',type:3,required:true}]},
-    { name: 'weather', description: 'Get weather', options: [{name:'location',type:3,required:true}]},
-    { name: 'slowmode', description: 'Set slowmode', options: [{name:'seconds',type:4,required:true}]},
-    { name: 'addrole', description: 'Add role', options: [{name:'user',type:6,required:true},{name:'role',type:8,required:true}]},
-    { name: 'removerole', description: 'Remove role', options: [{name:'user',type:6,required:true},{name:'role',type:8,required:true}]},
+    { name: 'translate', description: 'Translate text', options: [{name:'language',type:3,description:'Target language',required:true},{name:'text',type:3,description:'Text to translate',required:true}]},
+    { name: 'reminder', description: 'Set reminder', options: [{name:'time',type:3,description:'Time (e.g. 10m)',required:true},{name:'message',type:3,description:'Reminder message',required:true}]},
+    { name: 'calculator', description: 'Math calculate', options: [{name:'expression',type:3,description:'Math expression',required:true}]},
+    { name: 'time', description: 'Get time', options: [{name:'location',type:3,description:'City',required:true}]},
+    { name: 'weather', description: 'Get weather', options: [{name:'location',type:3,description:'City',required:true}]},
+    { name: 'slowmode', description: 'Set slowmode', options: [{name:'seconds',type:4,description:'Seconds',required:true}]},
+    { name: 'addrole', description: 'Add role', options: [{name:'user',type:6,description:'User',required:true},{name:'role',type:8,description:'Role',required:true}]},
+    { name: 'removerole', description: 'Remove role', options: [{name:'user',type:6,description:'User',required:true},{name:'role',type:8,description:'Role',required:true}]},
     { name: 'lockdown', description: 'Lock all channels' },
-    { name: 'ticket', description: 'Ticket manage', options: [{name:'action',type:3,required:true,choices:[{name:'add',value:'add'},{name:'remove',value:'remove'},{name:'transcript',value:'transcript'}]},{name:'user',type:6,required:false}]},
-    { name: 'welcome', description: 'Set welcome msg', options: [{name:'set',type:3,required:true}]},
-    { name: 'leave', description: 'Set leave msg', options: [{name:'set',type:3,required:true}]},
+    { name: 'ticket', description: 'Ticket manage', options: [{name:'action',type:3,description:'Action',required:true,choices:[{name:'add',value:'add'},{name:'remove',value:'remove'},{name:'transcript',value:'transcript'}]},{name:'user',type:6,description:'User',required:false}]},
+    { name: 'welcome', description: 'Set welcome msg', options: [{name:'set',type:3,description:'Message',required:true}]},
+    { name: 'leave', description: 'Set leave msg', options: [{name:'set',type:3,description:'Message',required:true}]},
     { name: 'level', description: 'Check level' },
     { name: 'rank', description: 'Show rank' },
     { name: 'leaderboard', description: 'Top members' },
     { name: 'stats', description: 'User stats' },
-    { name: 'say', description: 'Bot say', options: [{name:'message',type:3,required:true}]},
-    { name: 'autorespo', description: 'Auto responder', options: [{name:'action',type:3,required:true,choices:[{name:'Add',value:'add'},{name:'Remove',value:'remove'}]},{name:'trigger',type:3,required:true},{name:'response',type:3,required:false}]},
-    { name: 'embed', description: 'Make embed', options: [{name:'title',type:3,required:true},{name:'description',type:3,required:true},{name:'color',type:3,required:false}]},
-    { name: 'clear', description: 'Delete messages', options: [{name:'amount',type:4,required:true}]},
-    { name: 'kick', description: 'Kick user', options: [{name:'user',type:6,required:true}]},
-    { name: 'ban', description: 'Ban user', options: [{name:'user',type:6,required:true}]},
-    { name: 'unban', description: 'Unban user', options: [{name:'userid',type:3,required:true}]},
-    { name: 'warn', description: 'Warn user', options: [{name:'user',type:6,required:true},{name:'reason',type:3,required:true}]},
-    { name: 'unwarn', description: 'Remove warn', options: [{name:'user',type:6,required:true},{name:'index',type:4,required:true}]},
-    { name: 'poll', description: 'Make poll', options: [{name:'question',type:3,required:true},{name:'option1',type:3,required:true},{name:'option2',type:3,required:true}]},
-    { name: 'timeout', description: 'Timeout user', options: [{name:'user',type:6,required:true},{name:'minutes',type:4,required:true}]},
+    { name: 'say', description: 'Bot say', options: [{name:'message',type:3,description:'Message',required:true}]},
+    { name: 'autorespo', description: 'Auto responder', options: [{name:'action',type:3,description:'Action',required:true,choices:[{name:'Add',value:'add'},{name:'Remove',value:'remove'}]},{name:'trigger',type:3,description:'Keyword',required:true},{name:'response',type:3,description:'Reply',required:false}]},
+    { name: 'embed', description: 'Make embed', options: [{name:'title',type:3,description:'Title',required:true},{name:'description',type:3,description:'Description',required:true},{name:'color',type:3,description:'Color',required:false}]},
+    { name: 'clear', description: 'Delete messages', options: [{name:'amount',type:4,description:'Amount',required:true}]},
+    { name: 'kick', description: 'Kick user', options: [{name:'user',type:6,description:'User',required:true}]},
+    { name: 'ban', description: 'Ban user', options: [{name:'user',type:6,description:'User',required:true}]},
+    { name: 'unban', description: 'Unban user', options: [{name:'userid',type:3,description:'User ID',required:true}]},
+    { name: 'warn', description: 'Warn user', options: [{name:'user',type:6,description:'User',required:true},{name:'reason',type:3,description:'Reason',required:true}]},
+    { name: 'unwarn', description: 'Remove warn', options: [{name:'user',type:6,description:'User',required:true},{name:'index',type:4,description:'Warn number',required:true}]},
+    { name: 'poll', description: 'Make poll', options: [{name:'question',type:3,description:'Question',required:true},{name:'option1',type:3,description:'Option 1',required:true},{name:'option2',type:3,description:'Option 2',required:true}]},
+    { name: 'timeout', description: 'Timeout user', options: [{name:'user',type:6,description:'User',required:true},{name:'minutes',type:4,description:'Minutes',required:true}]},
     { name: 'lock', description: 'Lock channel' },
     { name: 'unlock', description: 'Unlock channel' },
-    { name: 'userinfo', description: 'User info', options: [{name:'user',type:6,required:false}]},
+    { name: 'userinfo', description: 'User info', options: [{name:'user',type:6,description:'User',required:false}]},
     { name: 'serverinfo', description: 'Server info' },
-    { name: 'avatar', description: 'Get avatar', options: [{name:'user',type:6,required:false}]},
+    { name: 'avatar', description: 'Get avatar', options: [{name:'user',type:6,description:'User',required:false}]},
     { name: 'coinflip', description: 'Flip coin' },
     { name: 'dice', description: 'Roll dice' },
-    { name: '8ball', description: 'Magic 8ball', options: [{name:'question',type:3,required:true}]},
+    { name: '8ball', description: 'Magic 8ball', options: [{name:'question',type:3,description:'Question',required:true}]},
     { name: 'meme', description: 'Random meme' },
-    { name: 'dm', description: '📩 DM ALL MEMBERS (ADMIN ONLY)', options: [{name:'message',type:3,description:'Message to send to everyone',required:true}]}
+    // ✅ INAYOS NA DM COMMAND (WALANG SPECIAL CHARACTERS PARA TANGGAPIN NI DISCORD)
+    { name: 'dm', description: 'Send message to all members (Admin Only)', options: [{name:'message',type:3,description:'Message to send',required:true}]}
 ];
 
 // 📌 BOT READY
@@ -95,6 +96,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         console.log('🔄 Re-registering commands...');
+        // ⚠️ IMPORTANT: TINANGGAL KO ANG GUILD COMMAND REGISTRATION PARA GLOBAL SIYA
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
         console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
     } catch (err) { console.error('❌ Error:', err); }
@@ -352,7 +354,7 @@ client.on(Events.InteractionCreate, async int => {
                 try { const res=await axios.get('https://meme-api.com/gimme'); return int.reply({embeds:[new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random')]}); }
                 catch { return int.reply({content:'❌ Error',ephemeral:true}); }
             }
-            // ✅ DM COMMAND LOGIC (SIGURADONG GAGANA NA)
+            // ✅ DM COMMAND LOGIC
             if (commandName === 'dm') {
                 if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Kailangan mo ng Admin Permission!',ephemeral:true});
                 const msg = options.getString('message'); 
