@@ -1,5 +1,5 @@
 const {
-    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, Events, REST, Routes,
+    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, REST, Routes,
     Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder
 } = require('discord.js');
 const axios = require('axios');
@@ -229,7 +229,13 @@ const commands = [
         description: 'Ask the magic 8Ball', 
         options: [{ name: 'question', type: 3, description: 'Your question', required: true }] 
     },
-    { name: 'meme', description: 'Send random meme' }
+    { name: 'meme', description: 'Send random meme' },
+    // ✅ BAGONG COMMAND: DM ALL
+    {
+        name: 'dm',
+        description: 'Ipadala ang mensahe sa lahat ng miyembro ng server (Admin Only)',
+        options: [{ name: 'message', type: 3, description: 'Ang mensaheng ipapadala sa lahat', required: true }]
+    }
 ];
 
 // 📌 BOT READY & COMMAND REGISTRATION
@@ -759,6 +765,44 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
             }
 
+            // ✅ LOGIC PARA SA /DM COMMAND
+            if (commandName === 'dm') {
+                // Check kung Admin
+                if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+                    return interaction.reply({ content: '❌ Admin lang ang pwedeng gumamit nito.', ephemeral: true });
+                }
+
+                const messageToSend = options.getString('message');
+                await interaction.reply({ content: '🔄 Sinisimulan ang pagpapadala ng mensahe sa lahat ng miyembro...', ephemeral: true });
+
+                // Kukunin ang lahat ng miyembro
+                const members = await guild.members.fetch();
+                let sentCount = 0;
+                let failCount = 0;
+
+                // Iikot sa bawat miyembro
+                for (const [id, memb] of members) {
+                    // Huwag padalhan ang sarili, mga bot, at mga naka-off o walang DM
+                    if (memb.user.bot || memb.id === interaction.user.id) continue;
+
+                    try {
+                        // Magpadala ng mensahe
+                        await memb.send(messageToSend);
+                        sentCount++;
+                        // Delay ng 1 segundo para hindi ma-detect bilang spam
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    } catch (err) {
+                        failCount++;
+                    }
+                }
+
+                // I-report ang resulta
+                return interaction.followUp({
+                    content: `✅ Tapos na!\n📤 Naipadala sa: **${sentCount}** na miyembro\n❌ Nabigo / Naka-off ang DM: **${failCount}**`,
+                    ephemeral: true
+                });
+            }
+
             if (commandName === 'ticket-setup') {
                 if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) 
                     return interaction.reply({ content: '❌ Kailangan mo ng Administrator permission.', ephemeral: true });
@@ -840,101 +884,4 @@ client.on(Events.InteractionCreate, async interaction => {
                             ] 
                         },
                         { 
-                            id: STAFF_ROLE_ID, 
-                            allow: [
-                                PermissionsBitField.Flags.ViewChannel, 
-                                PermissionsBitField.Flags.SendMessages, 
-                                PermissionsBitField.Flags.ReadMessageHistory,
-                                PermissionsBitField.Flags.ManageChannels
-                            ] 
-                        },
-                        { 
-                            id: client.user.id, 
-                            allow: [
-                                PermissionsBitField.Flags.ViewChannel, 
-                                PermissionsBitField.Flags.SendMessages, 
-                                PermissionsBitField.Flags.ReadMessageHistory,
-                                PermissionsBitField.Flags.ManageChannels
-                            ] 
-                        }
-                    ]
-                });
-
-                const embTicket = new EmbedBuilder()
-                    .setTitle(`🎟️ TICKET: ${categoryName}`)
-                    .setDescription(`Kamusta <@${interaction.user.id}>!\nIsulat dito ang iyong kailangan at lalapitan ka agad ng Staff.`)
-                    .setColor('Green');
-
-                const closeBtn = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('ticket_close').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
-                );
-
-                await newChannel.send({ embeds: [embTicket], components: [closeBtn] });
-                return interaction.reply({ content: `✅ Ticket ginawa: <#${newChannel.id}>`, ephemeral: true });
-            }
-
-            if (interaction.customId === 'ticket_close') {
-                if(!member.roles.cache.has(STAFF_ROLE_ID) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) 
-                    return interaction.reply({content:'❌ Staff lang pwedeng magsara.', ephemeral:true});
-                
-                await interaction.reply({content: '⏳ Isinasara ang ticket...'});
-                setTimeout(() => interaction.channel.delete().catch(()=>{}), 3000);
-            }
-        }
-
-        // ========================
-        // 📌 MENU SELECT ACTIONS
-        // ========================
-        if (interaction.isStringSelectMenu()) {
-    if (interaction.customId === 'menu_support_options') {
-        const val = interaction.values[0];
-
-        let cat = '';
-        if (val === 'opt_roster') cat = 'Roster Registration';
-        if (val === 'opt_support') cat = 'General Support';
-
-        const channelName = `ticket-${cat.toLowerCase().replace(/\s/g, '-')}-${interaction.user.username}`;
-
-        const newChannel = await guild.channels.create({
-            name: channelName,
-            type: ChannelType.GuildText,
-            permissionOverwrites: [
-                {
-                    id: guild.id,
-                    deny: [PermissionsBitField.Flags.ViewChannel]
-                },
-                               {
-                    id: interaction.user.id,
-                    allow: [
-                        PermissionsBitField.Flags.ViewChannel,
-                        PermissionsBitField.Flags.SendMessages,
-                        PermissionsBitField.Flags.ReadMessageHistory
-                    ]
-                }
-            ]
-        });
-
-        return interaction.reply({
-            content: `✅ Ticket created: <#${newChannel.id}>`,
-            ephemeral: true
-        });
-    }
-}
-    } catch (err) {
-        console.error(err);
-
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({
-                content: '❌ Nagkaroon ng error.',
-                ephemeral: true
-            }).catch(() => {});
-        } else {
-            await interaction.reply({
-                content: '❌ Nagkaroon ng error.',
-                ephemeral: true
-            }).catch(() => {});
-        }
-    }
-});
-
-client.login(TOKEN);
+                            id: STAFF_ROLE
