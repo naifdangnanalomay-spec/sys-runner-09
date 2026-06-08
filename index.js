@@ -287,7 +287,8 @@ client.on(Events.InteractionCreate, async int => {
                 return int.reply({embeds:[new EmbedBuilder().setTitle(`⚠️ Warnings: ${u.username}`).setDescription(list).setColor('Yellow')]});
             }
 
-            if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃","Dati kana bang gago? Alam ko HAHAHAHAHA "," alam mo ba bakit kanya iniwan kasi ang asim mo! HAHAHAHAHAHA][Math.floor(Math.random()*4)]});
+            // ✅ INAYOS NA /JOKE COMMAND (ITO ANG NAGKAMALI KANINA)
+            if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃","Dati kana bang gago? Alam ko HAHAHAHAHA 😂","Alam mo ba bakit siya iniwan ka? Kasi ang asim mo! HAHAHAHAHAHA 🤣"][Math.floor(Math.random()*6)]});
 
             if (commandName === 'fact') return int.reply({content:["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐","Tao nakakita lang ng RGB.","Araw 91% Hydrogen. ☀️"][Math.floor(Math.random()*4)]});
 
@@ -572,6 +573,7 @@ client.on(Events.InteractionCreate, async int => {
             if (commandName === 'dice') return int.reply({content:`🎲 Rolled: **${Math.floor(Math.random()*6)+1}**`});
 
             if (commandName === '8ball') return int.reply({content:`🎱 8Ball says: **${['Yes','No','Maybe','Try again','Definitely','Dont do it','Probably'][Math.floor(Math.random()*7)]}**`});
+            
             // ✅ INAYOS NA /MEME COMMAND
             if (commandName === 'meme') {
                 try { 
@@ -670,12 +672,6 @@ client.on(Events.InteractionCreate, async int => {
         if (int.isStringSelectMenu()) {
             if(int.customId==='menu_support'){
                 const val=int.values[0];
-                const ch=await guild.channels.create({
-                    name:`ticket-${val}-${int.user.username}`,
-                    type:ChannelType.GuildText,
-                    permissionOverwrites:[
-                        {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
-                        {id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]},
-                        {id:STAFF_ROLE
+                const ch=await guild
 
-    client.login(TOKEN);
+client.login(TOKEN);
