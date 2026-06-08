@@ -106,30 +106,31 @@ client.once('ready', async () => {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
         console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
 
-        // ✅ STATUS: XXX Logo + Oras (Playing) | PUBLIC AZURA (Watching)
+        // ✅ STATUS: Streaming @xxx • oras | Watching PUBLIC AZURA
         setInterval(() => {
             const totalSeconds = Math.floor(client.uptime / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-            // 🟢 YUNG GUSTO MONG ITSURA:
+            // 🟢 GUSTO MONG ITSURA:
             const activities = [
                 { 
-                    name: `XXX • ${timeDisplay}`,  // ↓ NANDITO YUNG PICTURE + ORAS
-                    type: ActivityType.Playing 
+                    name: `@xxx • ${timeDisplay}`, // ← nakalagay @xxx + oras
+                    type: ActivityType.Streaming,  // ← pinalitan ko na Streaming
+                    url: "https://www.twitch.tv/mataru" // ← ito ang nagpapakita ng "Watch" button
                 },
                 { 
-                    name: 'PUBLIC AZURA',  // ↓ NAKAPIRMI LANG ITO
+                    name: 'PUBLIC AZURA',  
                     type: ActivityType.Watching 
                 }
             ];
 
             // Magpapalit bawat 10 segundo
             const current = activities[Math.floor((Date.now() / 10000) % 2)];
-            client.user.setActivity(current.name, { type: current.type });
+            client.user.setActivity(current.name, { type: current.type, url: current.url || null });
 
-        }, 1000); // Bibilang bawat 1 segundo para ma-update ang oras
+        }, 1000); // nag-a-update bawat 1 segundo
 
     } catch (err) { console.error('❌ Error:', err); }
 });
@@ -377,7 +378,7 @@ client.on(Events.InteractionCreate, async int => {
                 return int.reply({embeds:[emb]});
             }
 
-            // ✅ /LEADERBOARD - INAYOS NA
+            // ✅ /LEADERBOARD - INAYos na
             if (commandName === 'leaderboard'){
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
