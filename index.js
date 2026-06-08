@@ -558,9 +558,14 @@ client.on(Events.InteractionCreate, async int => {
 
             if (commandName === '8ball') return int.reply({content:`🎱 8Ball says: **${['Yes','No','Maybe','Try again','Definitely','Dont do it','Probably'][Math.floor(Math.random()*7)]}**`});
 
+            // ✅ INAYOS NA /MEME COMMAND (ITO YUNG MAY ERROR KANINA)
             if (commandName === 'meme') {
-                try { const res=await axios.get('https://meme-api.com/gimme'); return int.reply({embeds:[new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random')]}); }
-                catch { return int.reply({content:'❌ Error,"ephemeral":true}); }
+                try { 
+                    const res = await axios.get('https://meme-api.com/gimme'); 
+                    return int.reply({embeds:[new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random')]}); 
+                } catch { 
+                    return int.reply({content:'❌ Error', ephemeral: true}); 
+                }
             }
 
             if (commandName === 'dm') {
@@ -612,7 +617,7 @@ client.on(Events.InteractionCreate, async int => {
                 if(int.customId==='btn_ticket_partnership')cat='Partnership';
                 if(int.customId==='btn_ticket_staff')cat='Staff';
                 const cn=`ticket-${cat.toLowerCase()}-${int.user.username}`;
-                const ch=await guild.channels.create({name:cn,type:ChannelType.GuildText,parent:pid,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}]});
+                const ch=await guild.channels.create({name:cn,type:ChannelType.GuildText,parent:pid,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.viewchannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}]});
                 const emb=new EmbedBuilder().setTitle(`🎟️ TICKET: ${cat}`).setDescription(`Hello <@${int.user.id}>!\nStaff will be with you shortly.`).setColor('Green');
                 await ch.send({embeds:[emb]});
                 return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
