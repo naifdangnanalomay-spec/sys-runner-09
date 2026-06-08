@@ -106,16 +106,23 @@ client.once('ready', async () => {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
         console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
 
-        // ✅ STATUS: Playing xxx | Watching PUBLIC AZURA
-        const statuses = [
-            { name: 'xxx', type: ActivityType.Playing },
-            { name: 'PUBLIC AZURA', type: ActivityType.Watching }
-        ];
-        let i = 0;
+        // ✅ STATUS: Tuloy-tuloy na pagbilang ng oras (Playing) at Nakapirming Pangalan (Watching)
         setInterval(() => {
-            const act = statuses[i = (i + 1) % statuses.length];
-            client.user.setActivity(act.name, { type: act.type });
-        }, 10000);
+            const totalSeconds = Math.floor(client.uptime / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            // Ito ang magpapalit-palit pero tama ang uri:
+            const activities = [
+                { name: timeDisplay, type: ActivityType.Playing },
+                { name: 'PUBLIC AZURA', type: ActivityType.Watching }
+            ];
+
+            const current = activities[Math.floor((Date.now() / 10000) % 2)]; // magpapalit bawat 10 segundo
+            client.user.setActivity(current.name, { type: current.type });
+
+        }, 1000); // bibilang bawat 1 segundo para ma-update ang oras
 
     } catch (err) { console.error('❌ Error:', err); }
 });
@@ -558,7 +565,7 @@ client.on(Events.InteractionCreate, async int => {
 
             if (commandName === '8ball') return int.reply({content:`🎱 8Ball says: **${['Yes','No','Maybe','Try again','Definitely','Dont do it','Probably'][Math.floor(Math.random()*7)]}**`});
 
-            // ✅ INAYOS NA /MEME COMMAND (ITO YUNG MAY ERROR KANINA)
+            // ✅ INAYOS NA /MEME COMMAND
             if (commandName === 'meme') {
                 try { 
                     const res = await axios.get('https://meme-api.com/gimme'); 
@@ -617,7 +624,7 @@ client.on(Events.InteractionCreate, async int => {
                 if(int.customId==='btn_ticket_partnership')cat='Partnership';
                 if(int.customId==='btn_ticket_staff')cat='Staff';
                 const cn=`ticket-${cat.toLowerCase()}-${int.user.username}`;
-                const ch=await guild.channels.create({name:cn,type:ChannelType.GuildText,parent:pid,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.viewchannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}]});
+                const ch=await guild.channels.create({name:cn,type:ChannelType.GuildText,parent:pid,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}]});
                 const emb=new EmbedBuilder().setTitle(`🎟️ TICKET: ${cat}`).setDescription(`Hello <@${int.user.id}>!\nStaff will be with you shortly.`).setColor('Green');
                 await ch.send({embeds:[emb]});
                 return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
