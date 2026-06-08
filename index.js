@@ -115,7 +115,7 @@ client.once('ready', async () => {
 
             // Ito ang magpapalit-palit pero tama ang uri:
             const activities = [
-                { name: timeDisplay, type: ActivityType.Playing },
+                { name: timeDisplay, type: ActivityType.Playing xxx },
                 { name: 'PUBLIC AZURA', type: ActivityType.Watching }
             ];
 
