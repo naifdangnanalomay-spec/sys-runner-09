@@ -117,8 +117,8 @@ client.once('ready', async () => {
             const activities = [
                 { 
                     name: `@xxx • ${timeDisplay}`, // ← nakalagay @xxx + oras
-                    type: ActivityType.Streaming,  // ← pinalitan ko na Streaming
-                    url: "https://www.twitch.tv/mataru" // ← ito ang nagpapakita ng "Watch" button
+                    type: ActivityType.Streaming,  // ← ito naglalagay ng PURPLE PLAY ICON
+                    url: "https://www.twitch.tv/mataru" // ← ito nagpapakita ng "WATCH" BUTTON
                 },
                 { 
                     name: 'PUBLIC AZURA',  
@@ -572,7 +572,6 @@ client.on(Events.InteractionCreate, async int => {
             if (commandName === 'dice') return int.reply({content:`🎲 Rolled: **${Math.floor(Math.random()*6)+1}**`});
 
             if (commandName === '8ball') return int.reply({content:`🎱 8Ball says: **${['Yes','No','Maybe','Try again','Definitely','Dont do it','Probably'][Math.floor(Math.random()*7)]}**`});
-
             // ✅ INAYOS NA /MEME COMMAND
             if (commandName === 'meme') {
                 try { 
