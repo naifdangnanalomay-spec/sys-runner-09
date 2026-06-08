@@ -1,6 +1,6 @@
 const {
     Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, REST, Routes,
-    Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, Events
+    Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, Events, ActivityType
 } = require('discord.js');
 const axios = require('axios');
 const fs = require('fs');
@@ -24,7 +24,7 @@ const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
 const guildSettings = new Map();
-const levels = new Map();
+const levels = new Map(); // ✅ Leveling System Database
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -41,8 +41,9 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS (INAYOS KO NA PARA LUMABAS ANG DM!)
+// 📌 SLASH COMMANDS
 const commands = [
+    { name: 'commands', description: '📋 List of all available commands (Admin Only)' },
     { name: 'ping', description: 'Check bot latency' },
     { name: 'uptime', description: 'Check bot uptime' },
     { name: 'setup-roles', description: 'Send self-role panel' },
@@ -63,10 +64,10 @@ const commands = [
     { name: 'ticket', description: 'Ticket manage', options: [{name:'action',type:3,description:'Action',required:true,choices:[{name:'add',value:'add'},{name:'remove',value:'remove'},{name:'transcript',value:'transcript'}]},{name:'user',type:6,description:'User',required:false}]},
     { name: 'welcome', description: 'Set welcome msg', options: [{name:'set',type:3,description:'Message',required:true}]},
     { name: 'leave', description: 'Set leave msg', options: [{name:'set',type:3,description:'Message',required:true}]},
-    { name: 'level', description: 'Check level' },
-    { name: 'rank', description: 'Show rank' },
-    { name: 'leaderboard', description: 'Top members' },
-    { name: 'stats', description: 'User stats' },
+    { name: 'level', description: '📊 Check your level & XP' },
+    { name: 'rank', description: '🏅 Show your rank card' },
+    { name: 'leaderboard', description: '📈 Top members leaderboard' },
+    { name: 'stats', description: '📉 View your server stats' },
     { name: 'say', description: 'Bot say', options: [{name:'message',type:3,description:'Message',required:true}]},
     { name: 'autorespo', description: 'Auto responder', options: [{name:'action',type:3,description:'Action',required:true,choices:[{name:'Add',value:'add'},{name:'Remove',value:'remove'}]},{name:'trigger',type:3,description:'Keyword',required:true},{name:'response',type:3,description:'Reply',required:false}]},
     { name: 'embed', description: 'Make embed', options: [{name:'title',type:3,description:'Title',required:true},{name:'description',type:3,description:'Description',required:true},{name:'color',type:3,description:'Color',required:false}]},
@@ -87,8 +88,14 @@ const commands = [
     { name: 'dice', description: 'Roll dice' },
     { name: '8ball', description: 'Magic 8ball', options: [{name:'question',type:3,description:'Question',required:true}]},
     { name: 'meme', description: 'Random meme' },
-    // ✅ INAYOS NA DM COMMAND (WALANG SPECIAL CHARACTERS PARA TANGGAPIN NI DISCORD)
-    { name: 'dm', description: 'Send message to all members (Admin Only)', options: [{name:'message',type:3,description:'Message to send',required:true}]}
+    { name: 'dm', description: 'Send message to all members', options: [{name:'message',type:3,description:'Message to send',required:true}]},
+    { name: 'botinfo', description: 'Show bot information' },
+    { name: 'roleinfo', description: 'Get role info', options: [{name:'role',type:8,description:'Role',required:true}]},
+    { name: 'createchannel', description: 'Create new channel', options: [{name:'name',type:3,description:'Channel Name',required:true},{name:'type',type:3,description:'text/voice',required:true,choices:[{name:'Text',value:'text'},{name:'Voice',value:'voice'}]}]},
+    { name: 'deletechannel', description: 'Delete channel', options: [{name:'channel',type:7,description:'Channel',required:true}]},
+    { name: 'rename', description: 'Rename channel', options: [{name:'channel',type:7,description:'Channel',required:true},{name:'newname',type:3,description:'New Name',required:true}]},
+    { name: 'emojilist', description: 'List all server emojis' },
+    { name: 'servericon', description: 'Get server icon' }
 ];
 
 // 📌 BOT READY
@@ -96,13 +103,24 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         console.log('🔄 Re-registering commands...');
-        // ⚠️ IMPORTANT: TINANGGAL KO ANG GUILD COMMAND REGISTRATION PARA GLOBAL SIYA
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
         console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
+
+        // ✅ STATUS: Playing xxx | Watching PUBLIC AZURA
+        const statuses = [
+            { name: 'xxx', type: ActivityType.Playing },
+            { name: 'PUBLIC AZURA', type: ActivityType.Watching }
+        ];
+        let i = 0;
+        setInterval(() => {
+            const act = statuses[i = (i + 1) % statuses.length];
+            client.user.setActivity(act.name, { type: act.type });
+        }, 10000);
+
     } catch (err) { console.error('❌ Error:', err); }
 });
 
-// 📌 AUTO RESPONSE + LEVEL SYSTEM
+// 📌 ✅ IMPROVED LEVELING SYSTEM
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
 
@@ -113,19 +131,46 @@ client.on(Events.MessageCreate, async message => {
         if (respos.has(trigger)) message.channel.send({ content: respos.get(trigger) });
     }
 
-    // Leveling
+    // ✅ LEVEL SYSTEM - INAYOS AT TAMA NA
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const uid = message.author.id;
-    if(!serverData.has(uid)) serverData.set(uid, { xp:0, level:0, messages:0 });
-    const uData = serverData.get(uid);
-    uData.messages++; uData.xp += Math.floor(Math.random()*10)+5;
-    const nextLvl = 50 * (uData.level * uData.level) + 50;
-    if(uData.xp >= nextLvl){
-        uData.level++; uData.xp=0;
-        const emb = new EmbedBuilder().setTitle('🎉 LEVEL UP!').setDescription(`<@${uid}> reached **Level ${uData.level}**!`).setColor('Gold');
-        message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),10000));
+    
+    // Initialize user data if not exists
+    if(!serverData.has(uid)) {
+        serverData.set(uid, { 
+            xp: 0, 
+            level: 1, 
+            messages: 0,
+            lastXp: 0 // Anti-spam cooldown
+        });
     }
+    
+    const uData = serverData.get(uid);
+    const now = Date.now();
+
+    // ✅ Anti-Spam: Bigyan lang ng XP bawat 1 minuto
+    if (now - uData.lastXp > 60000) { 
+        uData.messages++;
+        const gainXP = Math.floor(Math.random() * 15) + 10; // 10-25 XP bawat mensahe
+        uData.xp += gainXP;
+        uData.lastXp = now;
+
+        // ✅ Formula: XP needed = level * 100
+        const nextLevelXP = uData.level * 100;
+
+        // ✅ Level Up Check
+        if(uData.xp >= nextLevelXP){
+            uData.level++;
+            const emb = new EmbedBuilder()
+                .setTitle('🎉 LEVEL UP!')
+                .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP`)
+                .setColor('Gold')
+                .setThumbnail(BANNER_URL);
+            message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
+        }
+    }
+
     serverData.set(uid,uData);
 });
 
@@ -158,25 +203,81 @@ client.on(Events.InteractionCreate, async int => {
     if (!int.isChatInputCommand() && !int.isButton() && !int.isStringSelectMenu()) return;
     const { guild, member, commandName, options } = int;
 
+    // ✅ PERMISSION SYSTEM
+    const ADMIN_COMMANDS = ['commands', 'setup-roles', 'ticket-setup', 'warnings', 'slowmode', 'addrole', 'removerole', 'lockdown', 'ticket', 'welcome', 'leave', 'say', 'autorespo', 'embed', 'clear', 'kick', 'ban', 'unban', 'warn', 'unwarn', 'poll', 'timeout', 'lock', 'unlock', 'dm', 'botinfo', 'roleinfo', 'createchannel', 'deletechannel', 'rename'];
+    const MEMBER_COMMANDS = ['ping', 'uptime', 'joke', 'fact', 'rps', 'translate', 'reminder', 'calculator', 'time', 'weather', 'level', 'rank', 'leaderboard', 'stats', 'userinfo', 'serverinfo', 'avatar', 'coinflip', 'dice', '8ball', 'meme', 'emojilist', 'servericon'];
+
+    if (int.isChatInputCommand()) {
+        // Check if Admin/Owner
+        const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
+        
+        if (ADMIN_COMMANDS.includes(commandName) && !isAdmin) {
+            return int.reply({ content: '❌ **ACCESS DENIED**\nKailangan mo ng **ADMIN PERMISSION** o ikaw ang **OWNER** para gamitin ito!', ephemeral: true });
+        }
+        if (!ADMIN_COMMANDS.includes(commandName) && !MEMBER_COMMANDS.includes(commandName)) {
+            return int.reply({ content: '❌ **COMMAND NOT AVAILABLE**', ephemeral: true });
+        }
+    }
+
     try {
         // ========================
         // COMMANDS
         // ========================
         if (int.isChatInputCommand()) {
+
+            // ✅ /COMMANDS - LIST LAHAT NG COMMANDS
+            if (commandName === 'commands') {
+                const emb = new EmbedBuilder()
+                    .setTitle('📋 ALL COMMANDS - AZURA BOT')
+                    .setDescription('✅ **Admin/Owner:** Lahat ng commands\n✅ **Members:** Fun, Info, & Level Commands lang')
+                    .setColor('#2F3136')
+                    .setThumbnail(BANNER_URL)
+                    .addFields(
+                        { name: '🔧 MODERATION (ADMIN ONLY)', value: '`/clear`, `/kick`, `/ban`, `/unban`, `/warn`, `/unwarn`, `/timeout`, `/addrole`, `/removerole`, `/lock`, `/unlock`, `/lockdown`, `/slowmode`' },
+                        { name: '⚙️ SETTINGS (ADMIN ONLY)', value: '`/setup-roles`, `/ticket-setup`, `/welcome`, `/leave`, `/autorespo`' },
+                        { name: '📊 INFO & STATS (ALL)', value: '`/ping`, `/uptime`, `/userinfo`, `/serverinfo`, `/avatar`, `/servericon`, `/emojilist`, `/level`, `/rank`, `/leaderboard`, `/stats`' },
+                        { name: '✨ FUN & UTILITY (ALL)', value: '`/joke`, `/fact`, `/rps`, `/translate`, `/reminder`, `/calculator`, `/time`, `/weather`, `/poll`, `/coinflip`, `/dice`, `/8ball`, `/meme`' },
+                        { name: '🎟️ TICKET SYSTEM', value: '`/ticket add`, `/ticket remove`, `/ticket transcript`' },
+                        { name: '📢 BROADCAST & MANAGEMENT (ADMIN ONLY)', value: '`/dm`, `/botinfo`, `/roleinfo`, `/createchannel`, `/deletechannel`, `/rename`, `/say`, `/embed`' }
+                    )
+                    .setFooter({ text: 'AZURA BOT • Made for your server', iconURL: BANNER_URL });
+                return int.reply({ embeds: [emb], ephemeral: true });
+            }
+
             if (commandName === 'ping') return int.reply({content:`🏓 Pong! ${client.ws.ping}ms`});
+
             if (commandName === 'uptime') {
                 const d=Math.floor(client.uptime/86400000),h=Math.floor(client.uptime/3600000)%24,m=Math.floor(client.uptime/60000)%60,s=Math.floor(client.uptime/1000)%60;
                 return int.reply({content:`⏱️ Uptime: ${d}d ${h}h ${m}m ${s}s`});
             }
+
+            if (commandName === 'botinfo') {
+                const emb = new EmbedBuilder()
+                    .setAuthor({name:client.user.tag,iconURL:client.user.displayAvatarURL({size:1024})})
+                    .setTitle('🤖 BOT INFORMATION')
+                    .addFields(
+                        {name:'Bot ID',value:client.user.id},
+                        {name:'Created On',value:`<t:${Math.floor(client.user.createdTimestamp/1000)}:F>`},
+                        {name:'Servers',value:`${client.guilds.cache.size}`},
+                        {name:'Status',value:'✅ ONLINE | AZURA SYSTEM'}
+                    )
+                    .setColor('Purple');
+                return int.reply({embeds:[emb]});
+            }
+
             if (commandName === 'warnings') {
                 const u = options.getUser('user') || int.user;
                 if(!warns.has(u.id)||warns.get(u.id).length===0) return int.reply({content:`✅ ${u.tag} has no warnings.`,ephemeral:true});
                 const list = warns.get(u.id).map((w,i)=>`**${i+1}.** ${w.reason} *(${w.by})*`).join('\n');
                 return int.reply({embeds:[new EmbedBuilder().setTitle(`⚠️ Warnings: ${u.username}`).setDescription(list).setColor('Yellow')]});
             }
+
             if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃"][Math.floor(Math.random()*4)]});
+
             if (commandName === 'fact') return int.reply({content:["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐","Tao nakakita lang ng RGB.","Araw 91% Hydrogen. ☀️"][Math.floor(Math.random()*4)]});
+
             if (commandName === 'rps') return int.reply({content:`Pili ako: **${['Bato 🪨','Gunting ✂️','Papel 📄'][Math.floor(Math.random()*3)]}**\nType: bato/gunting/papel`});
+
             if (commandName === 'translate') {
                 const l=options.getString('language'),t=options.getString('text');
                 try {
@@ -184,6 +285,7 @@ client.on(Events.InteractionCreate, async int => {
                     return int.reply({content:`📝 Translated: ${res.data.responseData.translatedText}`});
                 } catch { return int.reply({content:'❌ Error',ephemeral:true}); }
             }
+
             if (commandName === 'reminder') {
                 const t=options.getString('time'),msg=options.getString('message');
                 let ms=0; if(t.includes('m'))ms=parseInt(t)*60000; if(t.includes('h'))ms=parseInt(t)*3600000; if(t.includes('d'))ms=parseInt(t)*86400000;
@@ -191,28 +293,111 @@ client.on(Events.InteractionCreate, async int => {
                 int.reply({content:`⏰ Reminder set for ${t}`,ephemeral:true});
                 setTimeout(()=>int.followUp({content:`<@${int.user.id}> ⏰ REMINDER: ${msg}`}),ms);
             }
+
             if (commandName === 'calculator') {
                 try { return int.reply({content:`🧮 Result: ${eval(options.getString('expression'))}`}); }
                 catch { return int.reply({content:'❌ Invalid',ephemeral:true}); }
             }
+
             if (commandName === 'time'||commandName==='weather') return int.reply({content:'ℹ️ Check Google/PAGASA',ephemeral:true});
+
+            // ✅ /LEVEL - INAYOS NA
+            if (commandName === 'level') {
+                if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+                const serverData = levels.get(guild.id);
+                const userData = serverData.get(int.user.id) || { xp:0, level:1, messages:0 };
+                const nextLvl = userData.level * 100;
+                const emb = new EmbedBuilder()
+                    .setAuthor({name:int.user.tag, iconURL:int.user.displayAvatarURL({size:1024})})
+                    .setTitle('📊 YOUR LEVEL')
+                    .addFields(
+                        {name:'🏆 Level', value:`**${userData.level}**`, inline:true},
+                        {name:'⚡ XP', value:`${userData.xp} / ${nextLvl}`, inline:true},
+                        {name:'💬 Messages', value:`${userData.messages}`, inline:true}
+                    )
+                    .setColor('Purple');
+                return int.reply({embeds:[emb]});
+            }
+
+            // ✅ /RANK - INAYOS NA
+            if (commandName === 'rank') {
+                if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+                const serverData = levels.get(guild.id);
+                const arr = Array.from(serverData.values()).map((data, idx) => ({ id: Array.from(serverData.keys())[idx], ...data }));
+                arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
+                const pos = arr.findIndex(u => u.id === int.user.id) + 1;
+                const userData = serverData.get(int.user.id) || { xp:0, level:1, messages:0 };
+                const nextLvl = userData.level * 100;
+                const percent = Math.floor((userData.xp / nextLvl) * 100);
+                const bar = '█'.repeat(Math.floor(percent/10)) + '░'.repeat(10 - Math.floor(percent/10));
+
+                const emb = new EmbedBuilder()
+                    .setAuthor({name:int.user.tag, iconURL:int.user.displayAvatarURL({size:1024})})
+                    .setTitle('🏅 RANK CARD')
+                    .setDescription(`**Rank #${pos}** of ${arr.length} members`)
+                    .addFields(
+                        {name:'Level', value:`${userData.level}`, inline:true},
+                        {name:'Progress', value:`${bar} ${percent}%`, inline:true},
+                        {name:'XP', value:`${userData.xp}/${nextLvl}`, inline:true}
+                    )
+                    .setColor('Gold');
+                return int.reply({embeds:[emb]});
+            }
+
+            // ✅ /STATS - INAYOS NA
+            if (commandName === 'stats') {
+                if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+                const serverData = levels.get(guild.id);
+                const userData = serverData.get(int.user.id) || { xp:0, level:1, messages:0 };
+                const emb = new EmbedBuilder()
+                    .setAuthor({name:int.user.tag, iconURL:int.user.displayAvatarURL({size:1024})})
+                    .setTitle('📉 YOUR SERVER STATS')
+                    .addFields(
+                        {name:'📅 Joined Server', value:`<t:${Math.floor(member.joinedTimestamp/1000)}:F>`, inline:false},
+                        {name:'💬 Total Messages', value:`${userData.messages}`, inline:true},
+                        {name:'⚡ Total XP', value:`${userData.xp}`, inline:true},
+                        {name:'🏆 Current Level', value:`${userData.level}`, inline:true},
+                        {name:'⚠️ Warnings', value:`${warns.get(int.user.id)?.length || 0}`, inline:true}
+                    )
+                    .setColor('Blue');
+                return int.reply({embeds:[emb]});
+            }
+
+            // ✅ /LEADERBOARD - INAYOS NA
+            if (commandName === 'leaderboard'){
+                if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+                const serverData = levels.get(guild.id);
+                const arr = Array.from(serverData.values()).map((data, idx) => ({ id: Array.from(serverData.keys())[idx], ...data }));
+                arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
+                const top10 = arr.slice(0,10);
+                let desc = '';
+                top10.forEach((u,i) => {
+                    desc += `**${i+1}.** <@${u.id}> | Lvl: ${u.level} | XP: ${u.xp}\n`;
+                });
+                const emb = new EmbedBuilder()
+                    .setTitle('📈 SERVER LEADERBOARD')
+                    .setDescription(desc || 'No data yet!')
+                    .setColor('Orange');
+                return int.reply({embeds:[emb]});
+            }
+
             if (commandName === 'slowmode') {
-                if(!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 await int.channel.setRateLimitPerUser(options.getInteger('seconds'));
                 return int.reply({content:`🐢 Slowmode set to ${options.getInteger('seconds')}s`});
             }
+
             if (commandName === 'addrole'||commandName==='removerole') {
-                if(!member.permissions.has(PermissionsBitField.Flags.ManageRoles)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 const u=options.getUser('user'),r=options.getRole('role'),m=guild.members.cache.get(u.id);
                 if(r.position>=member.roles.highest.position) return int.reply({content:'❌ Cannot modify higher role',ephemeral:true});
                 if(commandName==='addrole'){await m.roles.add(r);return int.reply({content:`✅ Added ${r.name} to ${u.tag}`});}
                 else {await m.roles.remove(r);return int.reply({content:`✅ Removed ${r.name} from ${u.tag}`});}
             }
+
             if (commandName === 'lockdown') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
                 guild.channels.cache.filter(c=>c.type===ChannelType.GuildText).forEach(async ch=>await ch.permissionOverwrites.edit(guild.id,{SendMessages:false}));
                 return int.reply({content:`🔒 LOCKDOWN ACTIVE`});
             }
+
             if (commandName === 'ticket') {
                 const act=options.getString('action'),u=options.getUser('user');
                 if(!member.roles.cache.has(STAFF_ROLE_ID)&&!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Staff Only',ephemeral:true});
@@ -231,36 +416,14 @@ client.on(Events.InteractionCreate, async int => {
                     return int.reply({content:`${allow?'✅ Added':'❌ Removed'} ${u.tag} to ticket`});
                 }
             }
+
             if (commandName === 'welcome'||commandName==='leave') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
                 const msg=options.getString('set'); if(!guildSettings.has(guild.id)) guildSettings.set(guild.id,{});
                 const d=guildSettings.get(guild.id); if(commandName==='welcome')d.welcome=msg;else d.leave=msg;
                 guildSettings.set(guild.id,d); return int.reply({content:`✅ ${commandName.toUpperCase()} set: \n${msg}`});
             }
-            if (commandName === 'level'||commandName==='rank'||commandName==='stats') {
-                if(!levels.has(guild.id)) levels.set(guild.id,new Map());
-                const sd=levels.get(guild.id),ud=sd.get(int.user.id)||{xp:0,level:0,messages:0},nl=50*(ud.level*ud.level)+50;
-                if(commandName==='level'){
-                    return int.reply({embeds:[new EmbedBuilder().setAuthor({name:int.user.tag,iconURL:int.user.displayAvatarURL()}).setTitle('📊 Your Level').addFields({name:'Level',value:`${ud.level}`,inline:true},{name:'XP',value:`${ud.xp}/${nl}`,inline:true},{name:'Messages',value:`${ud.messages}`,inline:true}).setColor('Purple')]});
-                }
-                if(commandName==='rank'){
-                    const sorted=Array.from(sd.values()).sort((a,b)=>b.level-a.level||b.xp-a.xp);
-                    const pos=sorted.findIndex(x=>x.level===ud.level&&x.xp===ud.xp)+1;
-                    return int.reply({embeds:[new EmbedBuilder().setAuthor({name:int.user.tag,iconURL:int.user.displayAvatarURL()}).setTitle('🏅 Rank Card').setDescription(`Rank #${pos}`).addFields({name:'Level',value:`${ud.level}`,inline:true},{name:'Progress',value:`${'█'.repeat(Math.floor((ud.xp/nl)*10))}${'░'.repeat(10-Math.floor((ud.xp/nl)*10))} ${Math.floor((ud.xp/nl)*100)}%`}).setColor('Gold')]});
-                }
-                if(commandName==='stats'){
-                    return int.reply({embeds:[new EmbedBuilder().setAuthor({name:int.user.tag,iconURL:int.user.displayAvatarURL()}).setTitle('📉 Stats').addFields({name:'Joined',value:`<t:${Math.floor(member.joinedTimestamp/1000)}:F>`,inline:false},{name:'Messages',value:`${ud.messages||0}`,inline:true},{name:'Level',value:`${ud.level||0}`,inline:true},{name:'Warnings',value:`${warns.get(int.user.id)?.length||0}`,inline:true}).setColor('Blue')]});
-                }
-            }
-            if (commandName === 'leaderboard'){
-                if(!levels.has(guild.id)) levels.set(guild.id,new Map());
-                const sd=levels.get(guild.id);
-                const sorted=Array.from(sd.entries()).map(([id,d])=>({id,...d})).sort((a,b)=>b.level-a.level||b.xp-a.xp).slice(0,10);
-                let desc=''; sorted.forEach((u,i)=>desc+=`**${i+1}.** <@${u.id}> - Lvl: ${u.level} | XP: ${u.xp}\n`);
-                return int.reply({embeds:[new EmbedBuilder().setTitle('🏆 LEADERBOARD').setDescription(desc||'No data').setColor('Orange')]});
-            }
+
             if (commandName === 'setup-roles') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
                 const emb=new EmbedBuilder().setTitle('SELF ROLE').setDescription('Choose roles below:').setImage(BANNER_URL).setColor('#2F3136');
                 const row=new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('role_fivem').setLabel('FIVEM').setStyle(ButtonStyle.Primary),
@@ -271,6 +434,7 @@ client.on(Events.InteractionCreate, async int => {
                 await int.channel.send({embeds:[emb],components:[row]});
                 return int.reply({content:'✅ Role Panel Sent',ephemeral:true});
             }
+
             if (commandName === 'say') {
                 const txt=options.getString('message');
                 if(/\.(gif|webp|png|jpg|jpeg|mp4)$/i.test(txt)||txt.startsWith('http')){
@@ -280,99 +444,138 @@ client.on(Events.InteractionCreate, async int => {
                 await int.channel.send({content:txt});
                 return int.reply({content:'✅ Sent',ephemeral:true});
             }
+
             if (commandName === 'autorespo') {
                 const act=options.getString('action'),trig=options.getString('trigger').toLowerCase().trim(),res=options.getString('response');
                 if(!autoResponders.has(guild.id)) autoResponders.set(guild.id,new Map());
                 if(act==='add'){ if(!res) return int.reply({content:'❌ Missing Response',ephemeral:true}); autoResponders.get(guild.id).set(trig,res); return int.reply({content:`✅ Added: ${trig} → ${res}`}); }
                 else { if(!autoResponders.get(guild.id).has(trig)) return int.reply({content:'❌ Not Found',ephemeral:true}); autoResponders.get(guild.id).delete(trig); return int.reply({content:`✅ Removed: ${trig}`}); }
             }
+
             if (commandName === 'embed') {
                 const t=options.getString('title'),d=options.getString('description'),c=options.getString('color')||'#2F3136';
                 await int.channel.send({embeds:[new EmbedBuilder().setTitle(t).setDescription(d).setColor(c)]});
                 return int.reply({content:'✅ Embed Sent',ephemeral:true});
             }
+
             if (commandName === 'clear') {
-                if(!member.permissions.has(PermissionsBitField.Flags.ManageMessages)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 const a=options.getInteger('amount'); if(a<1||a>100) return int.reply({content:'❌ 1-100 only',ephemeral:true});
                 await int.channel.bulkDelete(a,true);
                 return int.reply({content:`✅ Deleted ${a} messages`,ephemeral:true});
             }
+
             if (commandName === 'kick'||commandName==='ban') {
                 const perm=commandName==='kick'?PermissionsBitField.Flags.KickMembers:PermissionsBitField.Flags.BanMembers;
-                if(!member.permissions.has(perm)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 const u=options.getUser('user'),m=guild.members.cache.get(u.id);
                 if(m.roles.highest.position>=member.roles.highest.position) return int.reply({content:'❌ Cannot mod higher role',ephemeral:true});
                 if(commandName==='kick') await m.kick(`By: ${member.user.tag}`); else await m.ban({reason:`By: ${member.user.tag}`});
                 return int.reply({content:`✅ ${commandName==='kick'?'Kicked':'Banned'} ${u.tag}`});
             }
+
             if (commandName === 'unban') {
-                if(!member.permissions.has(PermissionsBitField.Flags.BanMembers)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 await guild.bans.remove(options.getString('userid'));
                 return int.reply({content:`✅ Unbanned ${options.getString('userid')}`});
             }
+
             if (commandName === 'warn') {
                 const u=options.getUser('user'),r=options.getString('reason');
                 if(!warns.has(u.id)) warns.set(u.id,[]); warns.get(u.id).push({reason:r,by:member.user.tag,time:Date.now()});
                 return int.reply({content:`✅ Warned ${u.tag}: ${r}`});
             }
+
             if (commandName === 'unwarn') {
                 const u=options.getUser('user'),i=options.getInteger('index')-1;
                 if(!warns.has(u.id)||!warns.get(u.id)[i]) return int.reply({content:'❌ Invalid Warn',ephemeral:true});
                 warns.get(u.id).splice(i,1); return int.reply({content:`✅ Removed warn from ${u.tag}`});
             }
+
             if (commandName === 'poll') {
                 const q=options.getString('question'),o1=options.getString('option1'),o2=options.getString('option2');
                 const emb=new EmbedBuilder().setTitle(q).setDescription(`1️⃣ ${o1}\n\n2️⃣ ${o2}`).setColor('Gold');
                 const m=await int.reply({embeds:[emb],fetchReply:true}); await m.react('1️⃣'); await m.react('2️⃣');
             }
+
             if (commandName === 'timeout') {
-                if(!member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 const u=options.getUser('user'),min=options.getInteger('minutes'),m=guild.members.cache.get(u.id);
                 if(m.roles.highest.position>=member.roles.highest.position) return int.reply({content:'❌ Cannot mod higher role',ephemeral:true});
                 await m.timeout(min*60000,`By: ${member.user.tag}`);
                 return int.reply({content:`✅ Timed out ${u.tag} for ${min}m`});
             }
+
             if (commandName === 'lock'||commandName==='unlock') {
-                if(!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) return int.reply({content:'❌ No Permission',ephemeral:true});
                 const s=commandName==='lock'?false:true; await int.channel.permissionOverwrites.edit(guild.id,{SendMessages:s});
                 return int.reply({content:`🔒 Channel ${s?'Unlocked':'Locked'}`});
             }
+
             if (commandName === 'userinfo') {
                 const u=options.getUser('user')||int.user,m=guild.members.cache.get(u.id);
-                const emb=new EmbedBuilder().setAuthor({name:u.tag,iconURL:u.displayAvatarURL()}).setThumbnail(u.displayAvatarURL({size:1024})).addFields({name:'ID',value:u.id},{name:'Created',value:`<t:${Math.floor(u.createdTimestamp/1000)}:F>`},{name:'Joined',value:m?.joinedTimestamp?`<t:${Math.floor(m.joinedTimestamp/1000)}:F>`:'-'},{name:'Roles',value:m?.roles?.cache?.map(r=>r).join(', ')||'-'}).setColor('Blue');
+                const emb=new EmbedBuilder().setAuthor({name:u.tag,iconURL:u.displayAvatarURL({size:1024})}).setThumbnail(u.displayAvatarURL({size:1024})).addFields({name:'ID',value:u.id},{name:'Created',value:`<t:${Math.floor(u.createdTimestamp/1000)}:F>`},{name:'Joined',value:m?.joinedTimestamp?`<t:${Math.floor(m.joinedTimestamp/1000)}:F>`:'-'},{name:'Roles',value:m?.roles?.cache?.map(r=>r).join(', ')||'-'}).setColor('Blue');
                 return int.reply({embeds:[emb]});
             }
+
             if (commandName === 'serverinfo') {
                 const emb=new EmbedBuilder().setAuthor({name:guild.name,iconURL:guild.iconURL()}).setThumbnail(guild.iconURL({size:1024})).addFields({name:'Owner',value:`<@${guild.ownerId}>`},{name:'Members',value:`${guild.memberCount}`},{name:'Channels',value:`${guild.channels.cache.size}`},{name:'Created',value:`<t:${Math.floor(guild.createdTimestamp/1000)}:F>`}).setColor('Blue');
                 return int.reply({embeds:[emb]});
             }
+
             if (commandName === 'avatar') return int.reply({content:(options.getUser('user')||int.user).displayAvatarURL({size:4096,dynamic:true})});
+
+            if (commandName === 'servericon') return int.reply({content:guild.iconURL({size:4096,dynamic:true})||'❌ No Server Icon'});
+
+            if (commandName === 'emojilist') {
+                const emojis = guild.emojis.cache.map(e=>`<:${e.name}:${e.id}>`).join(' ')||'❌ No Emojis';
+                return int.reply({content:`📋 **Server Emojis:**\n${emojis}`});
+            }
+
+            if (commandName === 'roleinfo') {
+                const r = options.getRole('role');
+                const emb=new EmbedBuilder().setTitle(`🎭 Role Info: ${r.name}`).addFields({name:'ID',value:r.id},{name:'Color',value:`#${r.hexColor}`},{name:'Members',value:`${r.members.size}`},{name:'Position',value:`${r.position}`}).setColor(r.color);
+                return int.reply({embeds:[emb]});
+            }
+
+            if (commandName === 'createchannel') {
+                const n=options.getString('name'),t=options.getString('type');
+                const type = t==='text' ? ChannelType.GuildText : ChannelType.GuildVoice;
+                await guild.channels.create({name:n,type:type});
+                return int.reply({content:`✅ Created **${n}** (${t.toUpperCase()})`});
+            }
+
+            if (commandName === 'deletechannel') {
+                const ch=options.getChannel('channel');
+                await ch.delete();
+                return int.reply({content:`✅ Deleted channel **${ch.name}**`});
+            }
+
+            if (commandName === 'rename') {
+                const ch=options.getChannel('channel'),n=options.getString('newname');
+                await ch.setName(n);
+                return int.reply({content:`✅ Renamed to **${n}**`});
+            }
+
             if (commandName === 'coinflip') return int.reply({content:`🪙 Landed on: **${Math.random()>0.5?'TAIL 🟡':'HEAD 🔴'}**`});
+
             if (commandName === 'dice') return int.reply({content:`🎲 Rolled: **${Math.floor(Math.random()*6)+1}**`});
+
             if (commandName === '8ball') return int.reply({content:`🎱 8Ball says: **${['Yes','No','Maybe','Try again','Definitely','Dont do it','Probably'][Math.floor(Math.random()*7)]}**`});
+
             if (commandName === 'meme') {
                 try { const res=await axios.get('https://meme-api.com/gimme'); return int.reply({embeds:[new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random')]}); }
-                catch { return int.reply({content:'❌ Error',ephemeral:true}); }
+                catch { return int.reply({content:'❌ Error,"ephemeral":true}); }
             }
-            // ✅ DM COMMAND LOGIC
+
             if (commandName === 'dm') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Kailangan mo ng Admin Permission!',ephemeral:true});
                 const msg = options.getString('message'); 
                 await int.reply({content:'🔄 Nagpapadala ng mensahe sa lahat... Huwag isara!',ephemeral:true});
                 const members = await guild.members.fetch(); 
                 let sent = 0, fail = 0;
                 for(const [id, m] of members){
                     if(m.user.bot || m.id === int.user.id) continue;
-                    try { 
-                        await m.send(msg); 
-                        sent++; 
-                        await new Promise(r=>setTimeout(r,1000)); // Anti-Spam Delay
-                    } catch { fail++; }
+                    try { await m.send(msg); sent++; await new Promise(r=>setTimeout(r,1000)); } catch { fail++; }
                 }
                 return int.followUp({content:`✅ TAPOS NA!\n📤 Naipadala: ${sent}\n❌ Nabigo/Naka-off DM: ${fail}`,ephemeral:true});
             }
+
             if (commandName === 'ticket-setup') {
-                if(!member.permissions.has(PermissionsBitField.Flags.Administrator)) return int.reply({content:'❌ Admin Only',ephemeral:true});
                 const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
                 const row=new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('🎟️ SUPPORT').setStyle(ButtonStyle.Primary),
@@ -428,7 +631,7 @@ client.on(Events.InteractionCreate, async int => {
             }
         }
 
-    } catch (e) { console.error('❌ Error:',e); }
+    } catch (e) { console.error('❌ Error:',e); int.reply({content:'❌ May naganap na error, pakisubukan ulit.',ephemeral:true}); }
 });
 
 client.login(TOKEN);
