@@ -106,23 +106,30 @@ client.once('ready', async () => {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
         console.log(`✅ ${client.user.tag} ONLINE & ALL COMMANDS LOADED!`);
 
-        // ✅ STATUS: Tuloy-tuloy na pagbilang ng oras (Playing) at Nakapirming Pangalan (Watching)
+        // ✅ STATUS: XXX Logo + Oras (Playing) | PUBLIC AZURA (Watching)
         setInterval(() => {
             const totalSeconds = Math.floor(client.uptime / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-            // Ito ang magpapalit-palit pero tama ang uri:
+            // 🟢 YUNG GUSTO MONG ITSURA:
             const activities = [
-                { name: timeDisplay, type: ActivityType.Playing xxx },
-                { name: 'PUBLIC AZURA', type: ActivityType.Watching }
+                { 
+                    name: `XXX • ${timeDisplay}`,  // ↓ NANDITO YUNG PICTURE + ORAS
+                    type: ActivityType.Playing 
+                },
+                { 
+                    name: 'PUBLIC AZURA',  // ↓ NAKAPIRMI LANG ITO
+                    type: ActivityType.Watching 
+                }
             ];
 
-            const current = activities[Math.floor((Date.now() / 10000) % 2)]; // magpapalit bawat 10 segundo
+            // Magpapalit bawat 10 segundo
+            const current = activities[Math.floor((Date.now() / 10000) % 2)];
             client.user.setActivity(current.name, { type: current.type });
 
-        }, 1000); // bibilang bawat 1 segundo para ma-update ang oras
+        }, 1000); // Bibilang bawat 1 segundo para ma-update ang oras
 
     } catch (err) { console.error('❌ Error:', err); }
 });
@@ -610,7 +617,7 @@ client.on(Events.InteractionCreate, async int => {
             };
             if(int.customId==='role_fivem') await handleRole(ROLES.FIVEM,'FIVEM');
             if(int.customId==='role_roblox') await handleRole(ROLES.ROBLOX,'ROBLOX');
-            if(int.customId==='role_valo') await handleRole(ROLES.VALORANT,'VALORANT');
+            if(int.customId==='role_valo') await handleRole(ROLES.VALORANT,'VALO');
             if(int.customId==='role_18plus') await handleRole(ROLES.EIGHTEEN_PLUS,'18+');
 
             if(int.customId==='btn_ticket_support'){
