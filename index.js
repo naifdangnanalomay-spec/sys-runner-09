@@ -287,7 +287,7 @@ client.on(Events.InteractionCreate, async int => {
                 return int.reply({embeds:[new EmbedBuilder().setTitle(`⚠️ Warnings: ${u.username}`).setDescription(list).setColor('Yellow')]});
             }
 
-            if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃"][Math.floor(Math.random()*4)]});
+            if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃","Dati kana bang gago? Alam ko HAHAHAHAHA "," alam mo ba bakit kanya iniwan kasi ang asim mo! HAHAHAHAHAHA][Math.floor(Math.random()*4)]});
 
             if (commandName === 'fact') return int.reply({content:["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐","Tao nakakita lang ng RGB.","Araw 91% Hydrogen. ☀️"][Math.floor(Math.random()*4)]});
 
@@ -596,10 +596,12 @@ client.on(Events.InteractionCreate, async int => {
 
             if (commandName === 'ticket-setup') {
                 const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
+                
+                // ✅ TATLONG BUTTON NA GUSTO MO: ➤ SUPPORT ➤ APPLY STAFF ➤ PARTNERSHIP
                 const row=new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('🎟️ SUPPORT').setStyle(ButtonStyle.Primary),
-                    new ButtonBuilder().setCustomId('btn_ticket_partnership').setLabel('🤝 PARTNERSHIP').setStyle(ButtonStyle.Success),
-                    new ButtonBuilder().setCustomId('btn_ticket_staff').setLabel('👔 APPLY STAFF').setStyle(ButtonStyle.Secondary)
+                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('➤ SUPPORT').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId('btn_ticket_apply').setLabel('➤ APPLY STAFF').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary)
                 );
                 await int.channel.send({embeds:[emb],components:[row]});
                 return int.reply({content:'✅ Ticket System Ready',ephemeral:true});
@@ -620,21 +622,45 @@ client.on(Events.InteractionCreate, async int => {
             if(int.customId==='role_valo') await handleRole(ROLES.VALORANT,'VALO');
             if(int.customId==='role_18plus') await handleRole(ROLES.EIGHTEEN_PLUS,'18+');
 
-            if(int.customId==='btn_ticket_support'){
-                const menu=new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('menu_support').setPlaceholder('Select...').addOptions([{label:'📋 ROSTER',value:'roster'},{label:'❓ HELP',value:'help'}]));
-                return int.reply({components:[menu],ephemeral:true});
+            // ✅ BUTTON FUNCTIONS
+            if(int.customId.startsWith('btn_ticket_')){
+                let cat='';
+                if(int.customId==='btn_ticket_support') cat='SUPPORT';
+                if(int.customId==='btn_ticket_apply') cat='APPLY STAFF';
+                if(int.customId==='btn_ticket_partner') cat='PARTNERSHIP';
+
+                const cn=`ticket-${cat.toLowerCase().replace(/\s+/g,'-')}-${int.user.username}`;
+                const ch=await guild.channels.create({
+                    name:cn,
+                    type:ChannelType.GuildText,
+                    permissionOverwrites:[
+                        {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
+                        {id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
+                        {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
+                    ]
+                });
+
+                // ✅ MAY CLOSE BUTTON SA LOOB NG TICKET
+                const emb=new EmbedBuilder()
+                    .setTitle(`🎟️ TICKET: ${cat}`)
+                    .setDescription(`Hello <@${int.user.id}>!\nStaff will be with you shortly.`)
+                    .setColor('Green');
+                
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger)
+                );
+
+                await ch.send({embeds:[emb], components:[closeBtn]});
+                return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
             }
 
-            if(int.customId.startsWith('btn_ticket_')){
-                let cat='',pid=null;
-                if(int.customId==='btn_ticket_support')cat='Support';
-                if(int.customId==='btn_ticket_partnership')cat='Partnership';
-                if(int.customId==='btn_ticket_staff')cat='Staff';
-                const cn=`ticket-${cat.toLowerCase()}-${int.user.username}`;
-                const ch=await guild.channels.create({name:cn,type:ChannelType.GuildText,parent:pid,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}]});
-                const emb=new EmbedBuilder().setTitle(`🎟️ TICKET: ${cat}`).setDescription(`Hello <@${int.user.id}>!\nStaff will be with you shortly.`).setColor('Green');
-                await ch.send({embeds:[emb]});
-                return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
+            // ✅ CLOSE TICKET FUNCTION - MAY-ARI AT ADMIN LANG PWEDE
+            if(int.customId==='close_ticket'){
+                const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
+                if(!isAdmin) return int.reply({content:'❌ **ACCESS DENIED**\nIkaw ay hindi Admin o May-ari ng Server!',ephemeral:true});
+
+                await int.reply({content:'🔒 Ticket is closing...'});
+                setTimeout(()=>int.channel.delete().catch(()=>{}),2000);
             }
         }
 
@@ -644,13 +670,12 @@ client.on(Events.InteractionCreate, async int => {
         if (int.isStringSelectMenu()) {
             if(int.customId==='menu_support'){
                 const val=int.values[0];
-                const ch=await guild.channels.create({name:`ticket-${val}-${int.user.username}`,type:ChannelType.GuildText,permissionOverwrites:[{id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},{id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]},{id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]}]});
-                await ch.send({embeds:[new EmbedBuilder().setTitle(`🎟️ ${val.toUpperCase()} TICKET`).setDescription(`User: <@${int.user.id}>`).setColor('Blue')]});
-                return int.reply({content:`✅ Channel created: ${ch}`,ephemeral:true});
-            }
-        }
+                const ch=await guild.channels.create({
+                    name:`ticket-${val}-${int.user.username}`,
+                    type:ChannelType.GuildText,
+                    permissionOverwrites:[
+                        {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
+                        {id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]},
+                        {id:STAFF_ROLE
 
-    } catch (e) { console.error('❌ Error:',e); int.reply({content:'❌ May naganap na error, pakisubukan ulit.',ephemeral:true}); }
-});
-
-client.login(TOKEN);
+    client.login(TOKEN);
