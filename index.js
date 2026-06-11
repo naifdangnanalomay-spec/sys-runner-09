@@ -669,6 +669,11 @@ client.on(Events.InteractionCreate, async int => {
         // ========================
         // MENUS
         // ========================
-        if (int.isStringSelectMenu())
-
+        if (int.isStringSelectMenu()) {
+            const val = int.values[0];
+            const ch = await guild.channels.create({
+                name: `support-${val}-${int.user.username}`,
+                type: ChannelType.GuildText,
+                permissionOverwrites: [
+                    { id: guild
 client.login(TOKEN);
