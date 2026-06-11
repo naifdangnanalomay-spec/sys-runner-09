@@ -669,10 +669,6 @@ client.on(Events.InteractionCreate, async int => {
         // ========================
         // MENUS
         // ========================
-        if (int.isStringSelectMenu()) {
-            if(int.customId==='menu_support'){
-                const val=int.values[0];
-                const ch=await guild.channels.create({
-                    name: `support-${val}-${int.user.username}`,
+        if (int.isStringSelectMenu())
 
 client.login(TOKEN);
