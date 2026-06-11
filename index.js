@@ -674,6 +674,7 @@ client.on(Events.InteractionCreate, async int => {
             const ch = await guild.channels.create({
                 name: `support-${val}-${int.user.username}`,
                 type: ChannelType.GuildText,
-                permissionOverwrites: [
-                    { id: guild
+                permissionOverw
+        }
+
 client.login(TOKEN);
