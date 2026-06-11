@@ -675,6 +675,3 @@ client.on(Events.InteractionCreate, async int => {
                 name: `support-${val}-${int.user.username}`,
                 type: ChannelType.GuildText,
                 permissionOverw
-        
-
-client.login(TOKEN);
