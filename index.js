@@ -672,3 +672,10 @@ client.on(Events.InteractionCreate, async int => {
         if (int.isStringSelectMenu()) {
             // wala kang nilagay na function dito kaya walang error
         }
+
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+});
+
+// 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
