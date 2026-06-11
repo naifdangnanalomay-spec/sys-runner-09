@@ -670,7 +670,5 @@ client.on(Events.InteractionCreate, async int => {
         // MENUS
         // ========================
         if (int.isStringSelectMenu()) {
-            const val = int.values[0];
-            const ch = await guild.channels.create({
-                name: `support-${val}-${int.user.username}`,
-                type: Channel
+            // wala kang nilagay na function dito kaya walang error
+        }
