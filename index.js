@@ -679,3 +679,4 @@ client.on(Events.InteractionCreate, async int => {
 });
 
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
+client.login(TOKEN);
