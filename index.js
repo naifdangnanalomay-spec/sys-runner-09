@@ -464,15 +464,15 @@ client.on(Events.MessageCreate, async message => {
             antiNukeSettings.set('antiLink', true);
             // PARUSA: Mixed (Ban + Tanggal Role) - ayon sa litrato
             antiNukeSettings.set('punishment', 'mixed'); 
-            // LOG CHANNEL: #officialx-antinuke-log - ayon sa litrato
-            antiNukeSettings.set('logChannel', 'officialx-antinuke-log'); 
+            // LOG CHANNEL: #officialservs-antinuke-log - ayon sa litrato
+            antiNukeSettings.set('logChannel', 'officialservs-antinuke-log'); 
 
             const emb = new EmbedBuilder()
                 .setTitle('🛡️ OfficialX Anti-Nuke Dashboard')
                 .setColor('#2ECC71')
                 .addFields(
                     {name: 'Anti-Nuke Status', value: '✅ **ENABLED**', inline: true},
-                    {name: 'Log Channel', value: `<#${guild.channels.cache.find(c=>c.name==='officialx-antinuke-log')?.id || 'Hindi nahanap'}>`, inline: true},
+                    {name: 'Log Channel', value: `<#${guild.channels.cache.find(c=>c.name==='officialservs-antinuke-log')?.id || 'Hindi nahanap'}>`, inline: true},
                     {name: 'Punishment', value: '`Mixed (ban, striproles)`', inline: true},
                     {name: '\u200b', value: '**Anti-Nuke Features:**', inline: false},
                     {name: '✅ Anti-Bot', value: '✅ Anti-Ban', inline: true},
@@ -548,7 +548,7 @@ client.on(Events.MessageCreate, async message => {
                     {name:'🆔 ID',value:client.user.id},
                     {name:'📅 Ginawa Noong',value:`<t:${Math.floor(client.user.createdTimestamp/1000)}:F>`},
                     {name:'🌐 Servers',value:`${client.guilds.cache.size}`},
-                    {name:'✅ Status',value:'ONLINE | AZURA SYSTEM'}
+                    {name:'✅ Status',value:'ONLINE | OfficialServS System'}
                 )
                 .setColor('Purple');
             return message.reply({embeds:[emb]});
@@ -699,8 +699,12 @@ client.on(Events.ChannelDelete, async channel => {
     const mod = entry.executor;
     if(mod.id === channel.guild.ownerId || mod.id === client.user.id) return;
 
-    // IBALIK ANG CHANNEL
-    await channel.clone({name: channel.name, type: channel.type, topic: channel.topic, nsfw
+    // IBALIK ANG CHANNEL AGAD
+    await channel.clone({
+        name: channel.name,
+        type: channel.type,
+        topic: channel.topic,
+        nsfw: channel.
 
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
 client.login(TOKEN);
