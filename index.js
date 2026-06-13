@@ -710,7 +710,8 @@ client.on(Events.ChannelDelete, async channel => {
     });
 
     // LOG
-    const logCh = channel.guild.channels.cache.find(c=>c.name===settings.logChannel
+    const logCh = channel.guild.channels.cache.find(c=>c.name===settings.logChannel);
+    if(logCh) logCh.send(`🛡️
 });
     
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
