@@ -27,7 +27,7 @@ const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
 const VERIFY_ROLE_ID = '1509517115265253487'; 
-const OWNER_ID = '1250654354344775703'; // ✅ ID MO NA
+const OWNER_ID = '1250654354344775703'; 
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -236,15 +236,17 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 ✅ SLASH COMMAND HANDLER - LAHAT GUMAGANA
+// 📌 ✅ ANG PINAKA-IMPORTANTENG BAHAGI - TICKET & APPLY HANDLER
 client.on(Events.InteractionCreate, async interaction => {
-    if (interaction.isChatInputCommand()) {
-        const command = interaction.commandName;
-        const member = interaction.member;
-        const guild = interaction.guild;
-        const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
+    try {
 
-        try {
+        // --- SLASH COMMANDS ---
+        if (interaction.isChatInputCommand()) {
+            const command = interaction.commandName;
+            const member = interaction.member;
+            const guild = interaction.guild;
+            const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
+
             // --- MOD COMMANDS ---
             if (command === 'setpfp' && isAdmin) {
                 const url = interaction.options.getString('url');
@@ -476,47 +478,67 @@ client.on(Events.InteractionCreate, async interaction => {
                 const emb = new EmbedBuilder().setAuthor({name:client.user.tag}).addFields({name:'ID',value:client.user.id},{name:'Servers',value:`${client.guilds.cache.size}`}).setColor('Purple');
                 return interaction.reply({embeds:[emb]});
             }
-
-        } catch (err) {
-            console.error(err);
-            return interaction.reply({ content: '❌ May naganap na error, subukan ulit.', ephemeral: true });
         }
-    }
 
-    // 📌 TICKET & APPLY STAFF HANDLER - **ITO ANG INAYOS NA HINDI NA MAG-EERROR**
-    if (!interaction.isChatInputCommand()) {
-        try {
-            const { guild, member, customId } = interaction;
+        // --- BUTTON CLICKS ---
+        if (interaction.isButton()) {
+            const { customId, guild, member } = interaction;
+
+            // 📌 PAG PINDOT SA APPLY STAFF
+            if (customId === 'btn_ticket_apply') {
+                const modal = new ModalBuilder()
+                    .setCustomId('apply_staff_modal')
+                    .setTitle('📝 STAFF APPLICATION - PUBLIC AZURA');
+
+                const q1 = new TextInputBuilder()
+                    .setCustomId('ans1')
+                    .setLabel('1. Why do you want to become a staff member?')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true);
+
+                const q2 = new TextInputBuilder()
+                    .setCustomId('ans2')
+                    .setLabel('2. How Old Are You?')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+                const q3 = new TextInputBuilder()
+                    .setCustomId('ans3')
+                    .setLabel('3. How can we trust you?')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true);
+
+                const q4 = new TextInputBuilder()
+                    .setCustomId('ans4')
+                    .setLabel('4. How can you contribute to Public Azura?')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true);
+
+                const q5 = new TextInputBuilder()
+                    .setCustomId('ans5')
+                    .setLabel('5. Don’t abuse your position, understood?')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+                const r1 = new ActionRowBuilder().addComponents(q1);
+                const r2 = new ActionRowBuilder().addComponents(q2);
+                const r3 = new ActionRowBuilder().addComponents(q3);
+                const r4 = new ActionRowBuilder().addComponents(q4);
+                const r5 = new ActionRowBuilder().addComponents(q5);
+
+                modal.addComponents(r1, r2, r3, r4, r5);
+                
+                // ✅ IPAPAKITA ANG FORM - DITO DATI NAG-EERROR
+                return await interaction.showModal(modal);
+            }
 
             // 📌 SUPPORT & PARTNERSHIP
-            if(customId?.startsWith('btn_ticket_')){
+            if(customId.startsWith('btn_ticket_')){
                 let cat='';
                 if(customId==='btn_ticket_support') cat='➤SUPPORT';
                 if(customId==='btn_ticket_partner') cat='➤PARTNERSHIP';
 
-                if(customId==='btn_ticket_apply') {
-                    const modal = new ModalBuilder()
-                        .setCustomId('apply_staff_modal')
-                        .setTitle('📝 STAFF APPLICATION - PUBLIC AZURA');
-
-                    const q1 = new TextInputBuilder().setCustomId('ans1').setLabel('1. Why do you want to become a staff member?').setStyle(TextInputStyle.Paragraph).setRequired(true);
-                    const q2 = new TextInputBuilder().setCustomId('ans2').setLabel('2. How Old Are You?').setStyle(TextInputStyle.Short).setRequired(true);
-                    const q3 = new TextInputBuilder().setCustomId('ans3').setLabel('3. How can we trust you?').setStyle(TextInputStyle.Paragraph).setRequired(true);
-                    const q4 = new TextInputBuilder().setCustomId('ans4').setLabel('4. How can you contribute to Public Azura?').setStyle(TextInputStyle.Paragraph).setRequired(true);
-                    const q5 = new TextInputBuilder().setCustomId('ans5').setLabel('5. Don’t abuse your position, understood?').setStyle(TextInputStyle.Short).setRequired(true);
-
-                    const r1 = new ActionRowBuilder().addComponents(q1);
-                    const r2 = new ActionRowBuilder().addComponents(q2);
-                    const r3 = new ActionRowBuilder().addComponents(q3);
-                    const r4 = new ActionRowBuilder().addComponents(q4);
-                    const r5 = new ActionRowBuilder().addComponents(q5);
-
-                    modal.addComponents(r1, r2, r3, r4, r5);
-                    return await interaction.showModal(modal);
-                }
-
-                // --- GUMAGAWA NG TICKET ---
-                await interaction.deferReply({ ephemeral: true }); // ✅ ITO ANG NAWAWALA KAYA NAG-EERROR
+                await interaction.deferReply({ ephemeral: true });
 
                 const ch=await guild.channels.create({
                     name:`ticket-${cat.toLowerCase()}-${interaction.user.username}`,
@@ -535,70 +557,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.editReply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
             }
 
-            // 📌 TANGGAPIN ANG SAGOT SA FORM - **ITO ANG PINAKA-IMPORTANTENG INAYOS**
-            if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
-                // ✅ PAGKATAPOS MAG-SUBMIT, SABIHIN AGAD KAY DISCORD NA HINDI ERROR
-                await interaction.deferReply({ ephemeral: true }); 
-
-                const a1 = interaction.fields.getTextInputValue('ans1');
-                const a2 = interaction.fields.getTextInputValue('ans2');
-                const a3 = interaction.fields.getTextInputValue('ans3');
-                const a4 = interaction.fields.getTextInputValue('ans4');
-                const a5 = interaction.fields.getTextInputValue('ans5');
-
-                // ✅ GUMAWA NG TICKET CHANNEL
-                const ticketChannel = await guild.channels.create({
-                    name:`apply-staff-${interaction.user.username}`,
-                    type:ChannelType.GuildText,
-                    permissionOverwrites:[
-                        {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
-                        {id:interaction.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
-                        {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
-                    ]
-                });
-
-                // ✅ ILAGAY ANG SAGOT
-                const ticketEmb = new EmbedBuilder()
-                    .setTitle(`📝 STAFF APPLICATION FROM: ${interaction.user.tag}`)
-                    .setDescription(`**User ID:** ${interaction.user.id}`)
-                    .addFields(
-                        {name: '1. Why do you want to become a staff member?', value: a1 },
-                        {name: '2. How Old Are You?', value: a2 },
-                        {name: '3. How can we trust you?', value: a3 },
-                        {name: '4. How can you contribute to Public Azura?', value: a4 },
-                        {name: '5. Don’t abuse your position, understood?', value: a5 }
-                    )
-                    .setColor('Green')
-                    .setTimestamp();
-
-                const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
-                await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
-
-                // ✅ IPADALA SAYO SA DM
-                const dmEmb = new EmbedBuilder()
-                    .setTitle('📥 NEW STAFF APPLICATION RECEIPT')
-                    .setDescription(`**From:** ${interaction.user.tag} | ID: ${interaction.user.id}\n**Server:** ${interaction.guild.name}`)
-                    .addFields(
-                        {name: '1. Why do you want to become a staff member?', value: a1 },
-                        {name: '2. How Old Are You?', value: a2 },
-                        {name: '3. How can we trust you?', value: a3 },
-                        {name: '4. How can you contribute to Public Azura?', value: a4 },
-                        {name: '5. Don’t abuse your position, understood?', value: a5 }
-                    )
-                    .setColor('Purple')
-                    .setTimestamp();
-
-                try {
-                    const owner = await client.users.fetch(OWNER_ID);
-                    await owner.send({ embeds: [dmEmb] });
-                } catch (err) {
-                    console.log('❌ Hindi maipadala sa DM:', err);
-                }
-
-                // ✅ SAGOT SA USER - WALA NANG ERROR
-                return interaction.editReply({content:`✅ Application submitted successfully!\nTicket created: ${ticketChannel}\nThank you for applying.`});
-            }
-
             // 📌 CLOSE TICKET
             if(customId==='close_ticket'){
                 const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
@@ -606,12 +564,68 @@ client.on(Events.InteractionCreate, async interaction => {
                 await interaction.reply({content:'🔒 Closing...'});
                 setTimeout(()=>interaction.channel.delete().catch(()=>{}),1500);
             }
+        }
 
-        } catch (err) {
-            console.error('❌ ERROR DETALYADO:', err);
-            if (!interaction.replied && !interaction.deferred) {
-                return interaction.reply({ content: '❌ May naganap na error, subukan ulit.', ephemeral: true });
-            }
+        // 📌 📌 PINAKA-IMPORTANTE: PAG KASUBMIT NG FORM
+        if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
+            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ERROR
+            await interaction.deferReply({ ephemeral: true });
+
+            const a1 = interaction.fields.getTextInputValue('ans1');
+            const a2 = interaction.fields.getTextInputValue('ans2');
+            const a3 = interaction.fields.getTextInputValue('ans3');
+            const a4 = interaction.fields.getTextInputValue('ans4');
+            const a5 = interaction.fields.getTextInputValue('ans5');
+
+            // GUMAWA NG CHANNEL
+            const ticketChannel = await interaction.guild.channels.create({
+                name:`apply-staff-${interaction.user.username}`,
+                type:ChannelType.GuildText,
+                permissionOverwrites:[
+                    {id:interaction.guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
+                    {id:interaction.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
+                    {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
+                ]
+            });
+
+            // ILAGAY ANG SAGOT
+            const ticketEmb = new EmbedBuilder()
+                .setTitle(`📝 STAFF APPLICATION FROM: ${interaction.user.tag}`)
+                .setDescription(`**User ID:** ${interaction.user.id}`)
+                .addFields(
+                    {name: '1. Why do you want to become a staff member?', value: a1 },
+                    {name: '2. How Old Are You?', value: a2 },
+                    {name: '3. How can we trust you?', value: a3 },
+                    {name: '4. How can you contribute to Public Azura?', value: a4 },
+                    {name: '5. Don’t abuse your position, understood?', value: a5 }
+                )
+                .setColor('Green')
+                .setTimestamp();
+
+            const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
+            await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
+
+            // IPADALA SA OWNER
+            try {
+                const owner = await client.users.fetch(OWNER_ID);
+                const dmEmb = new EmbedBuilder()
+                    .setTitle('📥 NEW STAFF APPLICATION')
+                    .setDescription(`**From:** ${interaction.user.tag}`)
+                    .addFields(
+                        {name: 'Q1', value: a1 }, {name: 'Q2', value: a2 }, {name: 'Q3', value: a3 }, {name: 'Q4', value: a4 }, {name: 'Q5', value: a5 }
+                    )
+                    .setColor('Purple');
+                await owner.send({ embeds: [dmEmb] });
+            } catch (err) { console.log('❌ DM Failed:', err) }
+
+            // ✅ MATAGUMPAY NA SAGOT
+            return interaction.editReply({content:`✅ Application submitted!\nTicket: ${ticketChannel}`});
+        }
+
+    } catch (err) {
+        console.error('❌ ERROR:', err);
+        if (!interaction.replied && !interaction.deferred) {
+            return interaction.reply({ content: '❌ Error! Please try again.', ephemeral: true });
         }
     }
 });
