@@ -10,7 +10,7 @@ const path = require('path');
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
-const VERIFY_ROLE_ID = '1509517115265253487'; // PALITAN MO ITO NG TAMANG ROLE ID MO
+const VERIFY_ROLE_ID = '1509517115265253487'; 
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -44,33 +44,23 @@ const client = new Client({
 // 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
-const PREFIX = ','; // ✅ ITO NA ANG GINAGAMIT: KOMA (,)
+const PREFIX = ','; 
 
 // 📌 BOT READY
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
 
-    // ✅ STATUS: Streaming @OfficialServs • oras | Watching PUBLIC AZURA
+    // ✅ STATUS: Streaming @OfficialServs (WALA NG ORAS, TANGGAL NA YUNG WATCHING)
     setInterval(() => {
-        const totalSeconds = Math.floor(client.uptime / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
         const activities = [
             { 
-                name: `@xxx • ${timeDisplay}`,
+                name: `@OfficialServs`,
                 type: ActivityType.Streaming,
                 url: "https://www.twitch.tv/officialservs"
-            },
-            { 
-                name: 'PUBLIC AZURA',  
-                type: ActivityType.Watching 
             }
         ];
-
-        const current = activities[Math.floor((Date.now() / 10000) % 2)];
-        client.user.setActivity(current.name, { type: current.type, url: current.url || null });
+        const current = activities[0];
+        client.user.setActivity(current.name, { type: current.type, url: current.url });
 
     }, 1000);
 });
@@ -80,7 +70,7 @@ client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
         enabled: true,
         logChannel: null,
-        punishment: 'ban', // ban / striproles / kick
+        punishment: 'ban',
         antiBot: true,
         antiBan: true,
         antiKick: true,
@@ -127,14 +117,12 @@ client.on(Events.InteractionCreate, async int => {
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild || message.content.startsWith(PREFIX)) return;
 
-    // Auto Response
     if(autoResponders.has(message.guild.id)){
         const trigger = message.content.toLowerCase().trim();
         const respos = autoResponders.get(message.guild.id);
         if (respos.has(trigger)) message.channel.send({ content: respos.get(trigger) });
     }
 
-    // ✅ LEVEL SYSTEM
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const uid = message.author.id;
@@ -165,7 +153,6 @@ client.on(Events.MessageCreate, async message => {
     }
     serverData.set(uid,uData);
 
-    // 🚫 AUTOMOD: ANTI-LINK
     const anSettings = antiNuke.get(message.guild.id);
     if(anSettings?.antiLink && /(https?:\/\/[^\s]+)/g.test(message.content)){
         if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)){
@@ -199,7 +186,7 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 ✅ COMMAND HANDLER (GAMIT ANG , PREFIX)
+// 📌 ✅ COMMAND HANDLER
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
     if (!message.content.startsWith(PREFIX)) return;
@@ -209,12 +196,8 @@ client.on(Events.MessageCreate, async message => {
     const member = message.member;
     const guild = message.guild;
 
-    // ✅ PERMISSION CHECK
     const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
 
-    // ==========================================
-    // ⚙️ SETUP & PROFILE COMMANDS
-    // ==========================================
     if (command === 'setpfp' && isAdmin) {
         if(!args[0]) return message.reply('❌ Provide image URL!');
         try { await client.user.setAvatar(args[0]); message.reply('✅ Profile Picture Updated!'); } 
@@ -232,9 +215,6 @@ client.on(Events.MessageCreate, async message => {
         catch { message.reply('❌ Error!'); }
     }
 
-    // ==========================================
-    // 📝 LOGGING COMMANDS
-    // ==========================================
     if (command === 'setchannellog' && isAdmin) {
         const ch = message.mentions.channels.first();
         if(!ch) return message.reply('❌ Mention a channel!');
@@ -246,11 +226,7 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'setmsgslog' && isAdmin) return message.reply('✅ Message Logs Enabled');
     if (command === 'setvclog' && isAdmin) return message.reply('✅ Voice Logs Enabled');
     if (command === 'setmodlog' && isAdmin) return message.reply('✅ Mod Logs Enabled');
-    if (command === 'setvclog' && isAdmin) return message.reply('✅ Voice Logs Enabled');
 
-    // ==========================================
-    // 🔨 MODERATION COMMANDS
-    // ==========================================
     if (command === 'ban' && isAdmin) {
         const user = message.mentions.users.first();
         if(!user) return message.reply('❌ Mention user!');
@@ -309,9 +285,6 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'stealemoji' && isAdmin) return message.reply('✅ Emoji Stolen!');
     if (command === 'setprefix' && isAdmin) return message.reply(`✅ Prefix set to: ,`);
 
-    // ==========================================
-    // 🛠️ UTILITY COMMANDS
-    // ==========================================
     if (command === 'afk') return message.reply('✅ AFK Mode Set');
     if (command === 'avatar') {
         const u = message.mentions.users.first() || message.author;
@@ -352,9 +325,6 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'tiktok') return message.reply('🎵 TikTok: @leonexclsv_');
     if (command === 'youtube') return message.reply('📺 YouTube: Uknown');
 
-    // ==========================================
-    // 🤖 AUTOMOD COMMANDS
-    // ==========================================
     if (command === 'automod' && isAdmin) {
         if(!automod.has(guild.id)) automod.set(guild.id, {});
         automod.get(guild.id).enabled = true;
@@ -374,9 +344,6 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'antispam' && isAdmin) return message.reply('✅ Anti-Spam Enabled');
     if (command === 'antiraid' && isAdmin) return message.reply('✅ Anti-Raid Enabled');
 
-    // ==========================================
-    // ✅ VERIFICATION SYSTEM
-    // ==========================================
     if (command === 'verification' && isAdmin) {
         const action = args[0];
         if(action === 'setup'){
@@ -389,9 +356,6 @@ client.on(Events.MessageCreate, async message => {
         if(action === 'status') return message.reply('✅ Verification is ACTIVE');
     }
 
-    // ==========================================
-    // 👋 WELCOME SYSTEM
-    // ==========================================
     if (command === 'welcome' && isAdmin) {
         const act = args[0];
         if(act === 'setup') return message.reply('✅ Welcome System Setup!');
@@ -399,9 +363,6 @@ client.on(Events.MessageCreate, async message => {
         if(act === 'status') return message.reply('✅ Welcome Messages: ON');
     }
 
-    // ==========================================
-    // 🛡️ ANTI-NUKE DASHBOARD
-    // ==========================================
     if (command === 'setup' && isAdmin) {
         const an = antiNuke.get(guild.id) || {};
         const emb = new EmbedBuilder()
@@ -430,9 +391,6 @@ client.on(Events.MessageCreate, async message => {
         return message.reply({embeds:[emb]});
     }
 
-    // ==========================================
-    // 🎟️ TICKET SYSTEM
-    // ==========================================
     if (command === 'ticket-setup' && isAdmin) {
         const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
         const row=new ActionRowBuilder().addComponents(
@@ -444,9 +402,6 @@ client.on(Events.MessageCreate, async message => {
         return message.reply('✅ Ticket System Ready');
     }
 
-    // ==========================================
-    // 🎮 FUN & LEVEL COMMANDS
-    // ==========================================
     if (command === 'ping') return message.reply(`🏓 Pong! ${client.ws.ping}ms`);
     if (command === 'uptime') {
         const d=Math.floor(client.uptime/86400000),h=Math.floor(client.uptime/3600000)%24,m=Math.floor(client.uptime/60000)%60,s=Math.floor(client.uptime/1000)%60;
@@ -489,9 +444,6 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'coinflip') return message.reply(`🪙 ${Math.random()>0.5?'HEAD 🔴':'TAIL 🟡'}`);
     if (command === 'dice') return message.reply(`🎲 ${Math.floor(Math.random()*6)+1}`);
 
-    // ==========================================
-    // 📋 OTHERS
-    // ==========================================
     if (command === 'botinfo') {
         const emb = new EmbedBuilder().setAuthor({name:client.user.tag}).addFields({name:'ID',value:client.user.id},{name:'Servers',value:`${client.guilds.cache.size}`}).setColor('Purple');
         return message.reply({embeds:[emb]});
