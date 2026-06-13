@@ -705,7 +705,12 @@ client.on(Events.ChannelDelete, async channel => {
         type: channel.type,
         topic: channel.topic,
         nsfw: channel.nsfw,
-        parent: channel
+        parent: channel.parent,
+        position: channel.position
+    }).catch(() => {});
+
+    // LOG
+    const logCh = channel.guild.channels.cache.find(c=>c.name
     
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
 client.login(TOKEN);
