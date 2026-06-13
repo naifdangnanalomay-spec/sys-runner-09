@@ -468,7 +468,7 @@ client.on(Events.MessageCreate, async message => {
             antiNukeSettings.set('logChannel', 'officialservs-antinuke-log'); 
 
             const emb = new EmbedBuilder()
-                .setTitle('🛡️ OfficialX Anti-Nuke Dashboard')
+                .setTitle('🛡️ OfficialServs Anti-Nuke Dashboard')
                 .setColor('#2ECC71')
                 .addFields(
                     {name: 'Anti-Nuke Status', value: '✅ **ENABLED**', inline: true},
@@ -705,14 +705,7 @@ client.on(Events.ChannelDelete, async channel => {
         type: channel.type,
         topic: channel.topic,
         nsfw: channel.nsfw,
-        parent: channel.parent,
-        position: channel.position
-    });
-
-    // LOG
-    const logCh = channel.guild.channels.cache.find(c=>c.name===settings.logChannel);
-    if(logCh) logCh.send(`🛡️
-});
+        parent: channel
     
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
 client.login(TOKEN);
