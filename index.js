@@ -236,11 +236,13 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 ✅ ANG PINAKA-IMPORTANTENG BAHAGI - TICKET & APPLY HANDLER
+// ==================================================
+// 📌 ✅ PINAKA-AYOS NA INTERACTION HANDLER (WALA NANG ERROR)
+// ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
 
-        // --- SLASH COMMANDS ---
+        // 🔹 SLASH COMMANDS
         if (interaction.isChatInputCommand()) {
             const command = interaction.commandName;
             const member = interaction.member;
@@ -480,11 +482,11 @@ client.on(Events.InteractionCreate, async interaction => {
             }
         }
 
-        // --- BUTTON CLICKS ---
+        // 🔹 BUTTON HANDLER
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PAG PINDOT SA APPLY STAFF
+            // 📌 PINDOT: APPLY STAFF (ITO ANG INAYOS PARA HINDI ERROR)
             if (customId === 'btn_ticket_apply') {
                 const modal = new ModalBuilder()
                     .setCustomId('apply_staff_modal')
@@ -528,11 +530,14 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 modal.addComponents(r1, r2, r3, r4, r5);
                 
-                // ✅ IPAPAKITA ANG FORM - DITO DATI NAG-EERROR
-                return await interaction.showModal(modal);
+                // ✅ SIGURADONG IPAPAKITA ANG FORM
+                return await interaction.showModal(modal).catch(err => {
+                    console.error("❌ Modal Error:", err);
+                    return interaction.reply({content:"❌ Error opening form!", ephemeral:true});
+                });
             }
 
-            // 📌 SUPPORT & PARTNERSHIP
+            // 📌 PINDOT: SUPPORT / PARTNERSHIP
             if(customId.startsWith('btn_ticket_')){
                 let cat='';
                 if(customId==='btn_ticket_support') cat='➤SUPPORT';
@@ -557,7 +562,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.editReply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
             }
 
-            // 📌 CLOSE TICKET
+            // 📌 PINDOT: CLOSE TICKET
             if(customId==='close_ticket'){
                 const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
                 if(!isAdmin) return interaction.reply({content:'❌ ACCESS DENIED',ephemeral:true});
@@ -566,9 +571,10 @@ client.on(Events.InteractionCreate, async interaction => {
             }
         }
 
-        // 📌 📌 PINAKA-IMPORTANTE: PAG KASUBMIT NG FORM
+        // 🔹 MODAL SUBMIT HANDLER (ITO ANG PINAKA-IMPORTANTE!)
         if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
-            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ERROR
+            
+            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ISIPIN NA ERROR
             await interaction.deferReply({ ephemeral: true });
 
             const a1 = interaction.fields.getTextInputValue('ans1');
@@ -577,7 +583,7 @@ client.on(Events.InteractionCreate, async interaction => {
             const a4 = interaction.fields.getTextInputValue('ans4');
             const a5 = interaction.fields.getTextInputValue('ans5');
 
-            // GUMAWA NG CHANNEL
+            // ✅ GUMAWA NG CHANNEL
             const ticketChannel = await interaction.guild.channels.create({
                 name:`apply-staff-${interaction.user.username}`,
                 type:ChannelType.GuildText,
@@ -588,7 +594,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 ]
             });
 
-            // ILAGAY ANG SAGOT
+            // ✅ ILAGAY ANG SAGOT SA CHANNEL
             const ticketEmb = new EmbedBuilder()
                 .setTitle(`📝 STAFF APPLICATION FROM: ${interaction.user.tag}`)
                 .setDescription(`**User ID:** ${interaction.user.id}`)
@@ -605,7 +611,7 @@ client.on(Events.InteractionCreate, async interaction => {
             const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
             await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
 
-            // IPADALA SA OWNER
+            // ✅ IPADALA SA OWNER SA DM
             try {
                 const owner = await client.users.fetch(OWNER_ID);
                 const dmEmb = new EmbedBuilder()
@@ -618,14 +624,15 @@ client.on(Events.InteractionCreate, async interaction => {
                 await owner.send({ embeds: [dmEmb] });
             } catch (err) { console.log('❌ DM Failed:', err) }
 
-            // ✅ MATAGUMPAY NA SAGOT
-            return interaction.editReply({content:`✅ Application submitted!\nTicket: ${ticketChannel}`});
+            // ✅ MATAGUMPAY NA SAGOT SA USER
+            return interaction.editReply({content:`✅ Application submitted successfully!\nTicket created: ${ticketChannel}`});
         }
 
     } catch (err) {
-        console.error('❌ ERROR:', err);
+        console.error('❌ GLOBAL ERROR:', err);
+        // ✅ PIGILIN ANG "SOMETHING WENT WRONG"
         if (!interaction.replied && !interaction.deferred) {
-            return interaction.reply({ content: '❌ Error! Please try again.', ephemeral: true });
+            return interaction.reply({ content: '❌ May naganap na error, subukan ulit.', ephemeral: true });
         }
     }
 });
