@@ -26,7 +26,7 @@ const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
 const VERIFY_ROLE_ID = '1509517115265253487'; 
-const OWNER_ID = '1250654354344775703'; // ⚠️ ILAGAY MO DITO ANG ID MO PARA SA DM
+const OWNER_ID = '1250654354344775703'; // ✅ ID MO NA
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -455,11 +455,11 @@ client.on(Events.MessageCreate, async message => {
 
 // 📌 TICKET & APPLY STAFF HANDLER
 client.on(Events.InteractionCreate, async int => {
-    if (!int.isButton()) return;
+    if (!int.isButton() && int.type !== Events.ModalSubmit) return;
     const { guild, member, customId } = int;
 
     // 📌 SUPPORT & PARTNERSHIP
-    if(customId.startsWith('btn_ticket_')){
+    if(customId?.startsWith('btn_ticket_')){
         let cat='';
         if(customId==='btn_ticket_support') cat='➤SUPPORT';
         if(customId==='btn_ticket_partner') cat='➤PARTNERSHIP';
@@ -502,7 +502,7 @@ client.on(Events.InteractionCreate, async int => {
         return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
     }
 
-    // 📌 TANGGAPIN ANG SAGOT AT IPA-DM SAYO
+    // 📌 TANGGAPIN ANG SAGOT, GUMAWA NG TICKET, AT IPA-DM SAYO
     if (int.type === Events.ModalSubmit && int.customId === 'apply_staff_modal') {
         const a1 = int.fields.getTextInputValue('ans1');
         const a2 = int.fields.getTextInputValue('ans2');
@@ -510,30 +510,57 @@ client.on(Events.InteractionCreate, async int => {
         const a4 = int.fields.getTextInputValue('ans4');
         const a5 = int.fields.getTextInputValue('ans5');
 
-        // ✅ ANG IPAPADALA SAYO SA DM
-        const emb = new EmbedBuilder()
+        // ✅ GUMAWA NG TICKET CHANNEL PARA SA APPLICATION
+        const ticketChannel = await guild.channels.create({
+            name:`apply-staff-${int.user.username}`,
+            type:ChannelType.GuildText,
+            permissionOverwrites:[
+                {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
+                {id:int.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
+                {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
+            ]
+        });
+
+        // ✅ ILAGAY ANG SAGOT SA LOOB NG TICKET
+        const ticketEmb = new EmbedBuilder()
+            .setTitle(`📝 STAFF APPLICATION FROM: ${int.user.tag}`)
+            .setDescription(`**User ID:** ${int.user.id}`)
+            .addFields(
+                {name: '1. Why do you want to become a staff member?', value: a1 },
+                {name: '2. How Old Are You?', value: a2 },
+                {name: '3. How can we trust you?', value: a3 },
+                {name: '4. How can you contribute to Public Azura?', value: a4 },
+                {name: '5. Don’t abuse your position, understood?', value: a5 }
+            )
+            .setColor('Green')
+            .setTimestamp();
+
+        const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
+        await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
+
+        // ✅ IPADALA SAYO SA DM BILANG RESIBO
+        const dmEmb = new EmbedBuilder()
             .setTitle('📥 NEW STAFF APPLICATION RECEIPT')
             .setDescription(`**From:** ${int.user.tag} | ID: ${int.user.id}\n**Server:** ${int.guild.name}`)
             .addFields(
-                {name: '1. Why do you want to become a staff member?', value: a1 || 'Wala' },
-                {name: '2. How Old Are You?', value: a2 || 'Wala' },
-                {name: '3. How can we trust you?', value: a3 || 'Wala' },
-                {name: '4. How can you contribute to Public Azura?', value: a4 || 'Wala' },
-                {name: '5. Don’t abuse your position, understood?', value: a5 || 'Wala' }
+                {name: '1. Why do you want to become a staff member?', value: a1 },
+                {name: '2. How Old Are You?', value: a2 },
+                {name: '3. How can we trust you?', value: a3 },
+                {name: '4. How can you contribute to Public Azura?', value: a4 },
+                {name: '5. Don’t abuse your position, understood?', value: a5 }
             )
             .setColor('Purple')
             .setTimestamp();
 
-        // ✅ IPAPADALA SAYO SA DM
         try {
             const owner = await client.users.fetch(OWNER_ID);
-            await owner.send({ embeds: [emb] });
+            await owner.send({ embeds: [dmEmb] });
         } catch (err) {
             console.log('❌ Hindi maipadala sa DM:', err);
         }
 
         // ✅ SABIHIN SA NAG-APPLY NA OK NA
-        await int.reply({content:'✅ Application submitted successfully! Thank you for applying.', ephemeral:true});
+        await int.reply({content:`✅ Application submitted successfully!\nTicket created: ${ticketChannel}\nThank you for applying.`, ephemeral:true});
     }
 
     if(customId==='close_ticket'){
