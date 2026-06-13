@@ -94,7 +94,7 @@ client.on(Events.MessageUpdate, async (oldMsg, newMsg) => {
         oldContent: oldMsg.content,
         newContent: newMsg.content,
         author: oldMsg.author.tag,
-        time: new Date().toLocaleString()
+        time: newMsg.toLocaleString()
     });
 });
 
@@ -708,9 +708,6 @@ client.on(Events.ChannelDelete, async channel => {
         parent: channel.parent,
         position: channel.position
     }).catch(() => {});
-
-    // LOG
-    const logCh = channel.guild.channels.cache.find(c=>c.name
     
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
 client.login(TOKEN);
