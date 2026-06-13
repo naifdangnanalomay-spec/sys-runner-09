@@ -154,17 +154,6 @@ function logEvent(guild, message) {
     if (ch) ch.send({ content: `**[LOG]** ${message}` }).catch(() => {});
 }
 
-// 📌 VERIFICATION SYSTEM
-client.on(Events.InteractionCreate, async int => {
-    if (!int.isButton()) return;
-    if (int.customId === 'verify_me') {
-        const role = int.guild.roles.cache.get(VERIFY_ROLE_ID);
-        if (!role) return int.reply({ content: '❌ Verify role not found!', ephemeral: true });
-        await int.member.roles.add(role);
-        return int.reply({ content: '✅ You have been verified!', ephemeral: true });
-    }
-});
-
 // 📌 ✅ LEVELING SYSTEM
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
@@ -237,7 +226,7 @@ client.on(Events.GuildMemberRemove, async member => {
 });
 
 // ==================================================
-// 📌 ✅ PINAKA-AYOS NA INTERACTION HANDLER (WALA NANG ERROR)
+// 📌 ✅ TANGING ISA LANG NA INTERACTION HANDLER (WALA NANG ERROR)
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
@@ -486,7 +475,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PINDOT: APPLY STAFF (ITO ANG INAYOS PARA HINDI ERROR)
+            // 📌 PINDOT: APPLY STAFF (ITO ANG TAMANG AYOS)
             if (customId === 'btn_ticket_apply') {
                 const modal = new ModalBuilder()
                     .setCustomId('apply_staff_modal')
@@ -531,10 +520,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 modal.addComponents(r1, r2, r3, r4, r5);
                 
                 // ✅ SIGURADONG IPAPAKITA ANG FORM
-                return await interaction.showModal(modal).catch(err => {
-                    console.error("❌ Modal Error:", err);
-                    return interaction.reply({content:"❌ Error opening form!", ephemeral:true});
-                });
+                return await interaction.showModal(modal);
             }
 
             // 📌 PINDOT: SUPPORT / PARTNERSHIP
@@ -569,12 +555,20 @@ client.on(Events.InteractionCreate, async interaction => {
                 await interaction.reply({content:'🔒 Closing...'});
                 setTimeout(()=>interaction.channel.delete().catch(()=>{}),1500);
             }
+
+            // 📌 VERIFICATION BUTTON
+            if (customId === 'verify_me') {
+                const role = guild.roles.cache.get(VERIFY_ROLE_ID);
+                if (!role) return interaction.reply({ content: '❌ Verify role not found!', ephemeral: true });
+                await member.roles.add(role);
+                return interaction.reply({ content: '✅ You have been verified!', ephemeral: true });
+            }
         }
 
-        // 🔹 MODAL SUBMIT HANDLER (ITO ANG PINAKA-IMPORTANTE!)
+        // 🔹 MODAL SUBMIT HANDLER (ITO ANG PINAKA-IMPORTANTE, INAYOS KO NA TALAGA ITO)
         if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
             
-            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ISIPIN NA ERROR
+            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ISIPIN NA ERROR - ITO ANG NAWAWALA DATI
             await interaction.deferReply({ ephemeral: true });
 
             const a1 = interaction.fields.getTextInputValue('ans1');
