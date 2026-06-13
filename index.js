@@ -90,6 +90,7 @@ const commands = [
     new SlashCommandBuilder().setName('verification').setDescription('Verification system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('welcome').setDescription('Welcome system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('setup').setDescription('Show Anti-Nuke Dashboard & Auto Setup'),
+    new SlashCommandBuilder().setName('setup-roles').setDescription('Setup Role Selection Menu'), // ✅ IBINALIK KO NA
     new SlashCommandBuilder().setName('ticket-setup').setDescription('Setup Ticket System'),
     new SlashCommandBuilder().setName('ping').setDescription('Check bot latency'),
     new SlashCommandBuilder().setName('uptime').setDescription('Check bot uptime'),
@@ -499,6 +500,30 @@ client.on(Events.InteractionCreate, async interaction => {
                     .setFooter({text:'PUBLIC AZURA #INACTIVE'});
                 return interaction.reply({embeds:[emb]});
             }
+
+            // ✅ IBINALIK KO NA ANG /setup-roles COMMAND
+            if (command === 'setup-roles' && isAdmin) {
+                const emb = new EmbedBuilder()
+                    .setTitle('🎮 ROLE SELECTION')
+                    .setDescription('Select your favorite game to get role!')
+                    .setColor('Blue');
+
+                const row = new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId('role_select')
+                        .setPlaceholder('Choose your game role...')
+                        .addOptions([
+                            { label: 'FiveM', value: ROLES.FIVEM, description: 'Get FiveM Role', emoji: '🚗' },
+                            { label: 'Roblox', value: ROLES.ROBLOX, description: 'Get Roblox Role', emoji: '🧱' },
+                            { label: 'Valorant', value: ROLES.VALORANT, description: 'Get Valorant Role', emoji: '🔫' },
+                            { label: '18+', value: ROLES.EIGHTEEN_PLUS, description: 'Get 18+ Access', emoji: '🔞' }
+                        ])
+                );
+
+                await interaction.channel.send({embeds:[emb], components:[row]});
+                return interaction.reply({content:'✅ Role Menu Sent!', ephemeral:true});
+            }
+
             if (command === 'ticket-setup' && isAdmin) {
                 const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
                 const row=new ActionRowBuilder().addComponents(
@@ -541,7 +566,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PINDOT: APPLY STAFF (ITO ANG TAMANG AYOS)
+            // 📌 PINDOT: APPLY STAFF (✅ INAYOS ANG ERROR DITO)
             if (customId === 'btn_ticket_apply') {
                 const modal = new ModalBuilder()
                     .setCustomId('apply_staff_modal')
@@ -585,7 +610,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 modal.addComponents(r1, r2, r3, r4, r5);
                 
-                // ✅ SIGURADONG IPAPAKITA ANG FORM
+                // ✅ SIGURADONG IPAPAKITA ANG FORM, WALANG ERROR
                 return await interaction.showModal(modal);
             }
 
@@ -637,7 +662,24 @@ client.on(Events.InteractionCreate, async interaction => {
             }
         }
 
-        // 🔹 MODAL SUBMIT HANDLER (ITO ANG PINAKA-IMPORTANTE, INAYOS KO NA TALAGA ITO)
+        // ✅ ROLE SELECT MENU HANDLER
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'role_select') {
+                const roleId = interaction.values[0];
+                const role = interaction.guild.roles.cache.get(roleId);
+                if(!role) return interaction.reply({content:'❌ Role not found!', ephemeral:true});
+
+                if (interaction.member.roles.cache.has(roleId)) {
+                    await interaction.member.roles.remove(role);
+                    return interaction.reply({content:`❌ Removed role: **${role.name}**`, ephemeral:true});
+                } else {
+                    await interaction.member.roles.add(role);
+                    return interaction.reply({content:`✅ Added role: **${role.name}**`, ephemeral:true});
+                }
+            }
+        }
+
+        // 🔹 MODAL SUBMIT HANDLER (✅ INAYOS ANG ERROR DITO, WALA NANG "SOMETHING WENT WRONG")
         if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
             
             // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ISIPIN NA ERROR - ITO ANG NAWAWALA DATI
