@@ -705,7 +705,8 @@ client.on(Events.ChannelDelete, async channel => {
         type: channel.type,
         topic: channel.topic,
         nsfw: channel.nsfw,
-        parent: channel.parent
+        parent: channel.parent,
+        position
 });
     
 // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
