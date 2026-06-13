@@ -46,6 +46,7 @@ const levels = new Map();
 const antiNuke = new Map();
 const logs = new Map();
 const automod = new Map();
+const verifyLogs = new Map(); // ✅ DAGDAG: PARA SA VERIFICATION LOGS
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -88,7 +89,7 @@ const commands = [
     new SlashCommandBuilder().setName('antilink').setDescription('Toggle Anti-Link'),
     new SlashCommandBuilder().setName('verification').setDescription('Verification system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('welcome').setDescription('Welcome system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
-    new SlashCommandBuilder().setName('setup').setDescription('Show Anti-Nuke Dashboard'),
+    new SlashCommandBuilder().setName('setup').setDescription('Show Anti-Nuke Dashboard & Auto Setup'),
     new SlashCommandBuilder().setName('ticket-setup').setDescription('Setup Ticket System'),
     new SlashCommandBuilder().setName('ping').setDescription('Check bot latency'),
     new SlashCommandBuilder().setName('uptime').setDescription('Check bot uptime'),
@@ -132,7 +133,7 @@ client.once('ready', async () => {
 // 📌 ANTI-NUKE / SECURITY SYSTEM
 client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
-        enabled: true, logChannel: null, punishment: 'ban', antiBot: true, antiBan: true, antiKick: true,
+        enabled: true, logChannel: null, punishment: 'Mixed (ban, striproles)', antiBot: true, antiBan: true, antiKick: true,
         antiMemberUpdate: true, antiGuildUpdate: true, antiChannelCreate: true, antiChannelDelete: true,
         antiChannelUpdate: true, antiRoleCreate: true, antiRoleDelete: true, antiRoleUpdate: true,
         antiWebhook: true, antiLink: true
@@ -152,6 +153,21 @@ function logEvent(guild, message) {
     if (!settings || !settings.logChannel) return;
     const ch = guild.channels.cache.get(settings.logChannel);
     if (ch) ch.send({ content: `**[LOG]** ${message}` }).catch(() => {});
+}
+
+// ✅ NEW: VERIFICATION LOG FUNCTION
+function logVerification(guild, user) {
+    const settings = antiNuke.get(guild.id);
+    if (!settings || !settings.logChannel) return;
+    const ch = guild.channels.cache.get(settings.logChannel);
+    if (ch) {
+        const logEmb = new EmbedBuilder()
+            .setTitle('✅ NEW VERIFICATION')
+            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}\n**Time:** <t:${Math.floor(Date.now()/1000)}:F>`)
+            .setColor('Green')
+            .setThumbnail(user.displayAvatarURL({dynamic:true}));
+        ch.send({embeds:[logEmb]}).catch(()=>{});
+    }
 }
 
 // 📌 ✅ LEVELING SYSTEM
@@ -392,8 +408,20 @@ client.on(Events.InteractionCreate, async interaction => {
             if (command === 'verification' && isAdmin) {
                 const action = interaction.options.getString('action');
                 if(action === 'setup'){
-                    const emb = new EmbedBuilder().setTitle('Server Verification').setDescription('Click below to verify!').setColor('Green');
-                    const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('verify_me').setLabel('✅ Verify Me').setStyle(ButtonStyle.Success));
+                    // ✅ EKSAKTO SA SCREENSHOT MO
+                    const emb = new EmbedBuilder()
+                        .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
+                        .setDescription(`**Verify your identity to gain access to the server**\n\n*Click the button below to verify*`)
+                        .setColor('#2f3136')
+                        .setFooter({text:'OfficialX Verify System • 6/7/26, 3:54 AM'});
+
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('verify_me')
+                            .setLabel('✅ Verify Me')
+                            .setStyle(ButtonStyle.Success)
+                    );
+
                     await interaction.channel.send({embeds:[emb],components:[row]});
                     return interaction.reply('✅ Verification panel sent!',{ephemeral:true});
                 }
@@ -407,13 +435,51 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(action === 'status') return interaction.reply('✅ Welcome Messages: ON');
             }
             if (command === 'setup' && isAdmin) {
-                const an = antiNuke.get(guild.id) || {};
+                // ✅ AUTO CREATE LOG CHANNEL IF NOT EXISTS
+                let logChannelId;
+                if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
+                
+                if (!antiNuke.get(guild.id).logChannel) {
+                    try {
+                        const newCh = await guild.channels.create({
+                            name: 'official-antinuke-logs',
+                            type: ChannelType.GuildText,
+                            reason: 'Anti-Nuke Auto Setup'
+                        });
+                        antiNuke.get(guild.id).logChannel = newCh.id;
+                        logChannelId = newCh.id;
+                    } catch (e) {
+                        logChannelId = '❌ Failed to create';
+                    }
+                } else {
+                    logChannelId = antiNuke.get(guild.id).logChannel;
+                }
+
+                // ✅ TURN ON ALL FEATURES AUTOMATICALLY
+                antiNuke.get(guild.id).enabled = true;
+                antiNuke.get(guild.id).punishment = 'Mixed (ban, striproles)';
+                antiNuke.get(guild.id).antiBot = true;
+                antiNuke.get(guild.id).antiBan = true;
+                antiNuke.get(guild.id).antiKick = true;
+                antiNuke.get(guild.id).antiMemberUpdate = true;
+                antiNuke.get(guild.id).antiGuildUpdate = true;
+                antiNuke.get(guild.id).antiChannelCreate = true;
+                antiNuke.get(guild.id).antiChannelDelete = true;
+                antiNuke.get(guild.id).antiChannelUpdate = true;
+                antiNuke.get(guild.id).antiRoleCreate = true;
+                antiNuke.get(guild.id).antiRoleDelete = true;
+                antiNuke.get(guild.id).antiRoleUpdate = true;
+                antiNuke.get(guild.id).antiWebhook = true;
+                antiNuke.get(guild.id).antiLink = true;
+
+                // ✅ DASHBOARD EXACTLY LIKE YOUR SCREENSHOT
+                const an = antiNuke.get(guild.id);
                 const emb = new EmbedBuilder()
-                    .setTitle('🛡️ OfficialServs Anti-Nuke Dashboard')
+                    .setTitle('🛡️ OfficialX Anti-Nuke Dashboard')
                     .addFields(
                         {name:'Anti-Nuke Status', value:an.enabled ? '✅ ONLINE' : '❌ OFFLINE'},
-                        {name:'Log Channel', value:an.logChannel ? `<#${an.logChannel}>` : '❌ Not Set'},
-                        {name:'Punishment', value:an.punishment || 'Mixed'},
+                        {name:'Log Channel', value: `<#${logChannelId}>`},
+                        {name:'Punishment', value:an.punishment},
                         {name:'\u200b', value:'**Anti-Nuke Features:**'},
                         {name:'Anti-Bot', value:an.antiBot ? '✅' : '❌', inline:true},
                         {name:'Anti-Ban', value:an.antiBan ? '✅' : '❌', inline:true},
@@ -556,11 +622,17 @@ client.on(Events.InteractionCreate, async interaction => {
                 setTimeout(()=>interaction.channel.delete().catch(()=>{}),1500);
             }
 
-            // 📌 VERIFICATION BUTTON
+            // 📌 VERIFICATION BUTTON ✅ INAYOS MAY LOGS NA
             if (customId === 'verify_me') {
                 const role = guild.roles.cache.get(VERIFY_ROLE_ID);
                 if (!role) return interaction.reply({ content: '❌ Verify role not found!', ephemeral: true });
+                
+                // ✅ I-ADD ANG ROLE
                 await member.roles.add(role);
+                
+                // ✅ ILAGAY SA LOG CHANNEL
+                logVerification(guild, interaction.user);
+
                 return interaction.reply({ content: '✅ You have been verified!', ephemeral: true });
             }
         }
