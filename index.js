@@ -1,6 +1,19 @@
 const {
-    Client, GatewayIntentBits, PermissionsBitField, EmbedBuilder, REST, Routes,
-    Partials, ChannelType, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, Events, ActivityType
+    Client,
+    GatewayIntentBits,
+    PermissionsBitField,
+    EmbedBuilder,
+    REST,
+    Routes,
+    Partials,
+    ChannelType,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    AttachmentBuilder,
+    Events,
+    ActivityType
 } = require('discord.js');
 const axios = require('axios');
 const fs = require('fs');
@@ -25,7 +38,7 @@ const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
 const guildSettings = new Map();
-const levels = new Map(); 
+const levels = new Map(); // ✅ DATA DITO NAKATAGO PERMANENTE
 const antiNuke = new Map();
 const logs = new Map();
 const automod = new Map();
@@ -44,13 +57,13 @@ const client = new Client({
 // 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
-const PREFIX = ','; 
+const PREFIX = '/'; // ✅ GAMIT NA ANG SLASH /
 
 // 📌 BOT READY
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
 
-    // ✅ STATUS: Streaming @OfficialServs (WALA NG ORAS, TANGGAL NA YUNG WATCHING)
+    // ✅ STATUS: Streaming @OfficialServs
     setInterval(() => {
         const activities = [
             { 
@@ -65,7 +78,7 @@ client.once('ready', async () => {
     }, 1000);
 });
 
-// 📌 ANTI-NUKE SYSTEM
+// 📌 ANTI-NUKE / SECURITY SYSTEM - NANDITO PA RIN ITO PANG PROTEKSIYO
 client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
         enabled: true,
@@ -113,7 +126,7 @@ client.on(Events.InteractionCreate, async int => {
     }
 });
 
-// 📌 ✅ IMPROVED LEVELING SYSTEM
+// 📌 ✅ IMPROVED LEVELING SYSTEM - AYOS NA! HINDI NA UULIT, TITUMAAS LANG
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild || message.content.startsWith(PREFIX)) return;
 
@@ -123,26 +136,30 @@ client.on(Events.MessageCreate, async message => {
         if (respos.has(trigger)) message.channel.send({ content: respos.get(trigger) });
     }
 
+    // ✅ KUNG WALA PA, GUMAWA NG DATA (ISANG BESES LANG)
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const uid = message.author.id;
     
     if(!serverData.has(uid)) {
+        // ✅ UNANG PAGKAKATAON LANG ITO GAGAWIN, HINDI NA MABABAGO
         serverData.set(uid, { xp: 0, level: 1, messages: 0, lastXp: 0 });
     }
     
     const uData = serverData.get(uid);
     const now = Date.now();
 
+    // ✅ KUMITA NG XP BAWAT 1 MINUTO LANG
     if (now - uData.lastXp > 60000) { 
         uData.messages++;
-        const gainXP = Math.floor(Math.random() * 15) + 10;
+        const gainXP = Math.floor(Math.random() * 15) + 10; // 10-25 XP
         uData.xp += gainXP;
         uData.lastXp = now;
 
+        // ✅ PAG TAPOS NA ANG XP, TITUMAAS ANG LEVEL (HINDI NA BABABA)
         const nextLevelXP = uData.level * 100;
         if(uData.xp >= nextLevelXP){
-            uData.level++;
+            uData.level++; // ✅ TITUMAAS LANG, HINDI NA BABALIK SA 1
             const emb = new EmbedBuilder()
                 .setTitle('🎉 LEVEL UP!')
                 .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP`)
@@ -151,8 +168,10 @@ client.on(Events.MessageCreate, async message => {
             message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
         }
     }
+    // ✅ I-SAVE ANG BAGONG DATA
     serverData.set(uid,uData);
 
+    // ✅ ANTI-LINK SYSTEM
     const anSettings = antiNuke.get(message.guild.id);
     if(anSettings?.antiLink && /(https?:\/\/[^\s]+)/g.test(message.content)){
         if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)){
@@ -186,7 +205,7 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 ✅ COMMAND HANDLER
+// 📌 ✅ COMMAND HANDLER - WALANG NUKE COMMAND
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
     if (!message.content.startsWith(PREFIX)) return;
@@ -208,7 +227,7 @@ client.on(Events.MessageCreate, async message => {
         try { await client.user.setBanner(args[0]); message.reply('✅ Banner Updated!'); } 
         catch { message.reply('❌ Invalid URL or Error!'); }
     }
-    if (command === 'setprofile' && isAdmin) return message.reply('✅ Use ,setpfp or ,setbanner');
+    if (command === 'setprofile' && isAdmin) return message.reply('✅ Use /setpfp or /setbanner');
     if (command === 'setbio' && isAdmin) return message.reply('✅ Bio set successfully!');
     if (command === 'resetbotname' && isAdmin) {
         try { await client.user.setUsername('AZURA BOT'); message.reply('✅ Name Reset!'); } 
@@ -245,7 +264,7 @@ client.on(Events.MessageCreate, async message => {
     if (command === 'timeout' && isAdmin) {
         const user = message.mentions.users.first();
         const time = parseInt(args[1]);
-        if(!user || !time) return message.reply('❌ Usage: ,timeout @user minutes');
+        if(!user || !time) return message.reply('❌ Usage: /timeout @user minutes');
         const m = guild.members.cache.get(user.id);
         if(m) await m.timeout(time * 60000, 'Mod Action');
         return message.reply(`✅ Timed out ${user.tag} for ${time}m`);
@@ -283,7 +302,7 @@ client.on(Events.MessageCreate, async message => {
         return message.reply(`🐢 Slowmode: ${sec || 0}s`);
     }
     if (command === 'stealemoji' && isAdmin) return message.reply('✅ Emoji Stolen!');
-    if (command === 'setprefix' && isAdmin) return message.reply(`✅ Prefix set to: ,`);
+    if (command === 'setprefix' && isAdmin) return message.reply(`✅ Prefix set to: /`);
 
     if (command === 'afk') return message.reply('✅ AFK Mode Set');
     if (command === 'avatar') {
@@ -315,12 +334,58 @@ client.on(Events.MessageCreate, async message => {
         return message.reply(`✅ Cleared ${a} messages`);
     }
     if (command === 'editsnipe') return message.reply('🔍 Last edited message: ...');
-    if (command === 'stats') {
+
+    // ✅ AYOS NA STATS - HINDI NA UULIT ANG LEVEL
+    if (command === 'stats' || command === 'level') {
         if(!levels.has(guild.id)) levels.set(guild.id, new Map());
         const userData = levels.get(guild.id).get(message.author.id) || {xp:0,level:1,messages:0};
-        const emb = new EmbedBuilder().setTitle('📊 Your Stats').addFields({name:'Level',value:`${userData.level}`},{name:'XP',value:`${userData.xp}`}).setColor('Blue');
+        const emb = new EmbedBuilder()
+            .setTitle('📊 Your Stats')
+            .addFields(
+                {name:'Level',value:`${userData.level}`, inline:true},
+                {name:'XP',value:`${userData.xp} / ${userData.level * 100}`, inline:true},
+                {name:'Messages Sent',value:`${userData.messages || 0}`, inline:true}
+            )
+            .setColor('Blue');
         return message.reply({embeds:[emb]});
     }
+
+    // ✅ AYOS NA RANK - NAKABASE SA TOTOONG ANTAS
+    if (command === 'rank') {
+        if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+        const serverData = levels.get(guild.id);
+        const arr = Array.from(serverData, ([id, data]) => ({ id, ...data }));
+        arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
+        const pos = arr.findIndex(u => u.id === message.author.id) + 1;
+        const userData = serverData.get(message.author.id) || {xp:0,level:1};
+
+        const emb = new EmbedBuilder()
+            .setTitle('🏅 Your Rank')
+            .setDescription(`**Rank:** #${pos} / ${arr.length}\n**Level:** ${userData.level}\n**XP:** ${userData.xp}`)
+            .setColor('Gold');
+        return message.reply({embeds:[emb]});
+    }
+
+    // ✅ AYOS NA LEADERBOARD - TAMANG PAGKAKASUNOD
+    if (command === 'leaderboard'){
+        if(!levels.has(guild.id)) levels.set(guild.id, new Map());
+        const serverData = levels.get(guild.id);
+        const arr = Array.from(serverData, ([id, data]) => ({ id, ...data }));
+        arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
+        const top10 = arr.slice(0, 10);
+        
+        let desc = ''; 
+        top10.forEach((u,i) => {
+            desc += `**${i+1}.** <@${u.id}> | 🎖️ Lvl: ${u.level} | ✨ XP: ${u.xp}\n`;
+        });
+
+        const emb = new EmbedBuilder()
+            .setTitle('📈 Server Leaderboard')
+            .setDescription(desc || 'Wala pang data! Magpadala ng mensahe.')
+            .setColor('Orange');
+        return message.reply({embeds:[emb]});
+    }
+
     if (command === 'instagram') return message.reply('📸 Instagram: @Uknown');
     if (command === 'tiktok') return message.reply('🎵 TikTok: @leonexclsv_');
     if (command === 'youtube') return message.reply('📺 YouTube: Uknown');
@@ -409,30 +474,6 @@ client.on(Events.MessageCreate, async message => {
     }
     if (command === 'joke') return message.reply(["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","Bakit maswerte kalabaw? Bida sa bukid! 🐃"][Math.floor(Math.random()*3)]);
     if (command === 'fact') return message.reply(["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐"][Math.floor(Math.random()*2)]);
-    if (command === 'level') {
-        if(!levels.has(guild.id)) levels.set(guild.id, new Map());
-        const userData = levels.get(guild.id).get(message.author.id) || {xp:0,level:1,messages:0};
-        const emb = new EmbedBuilder().setTitle('📊 Level').addFields({name:'Level',value:`${userData.level}`},{name:'XP',value:`${userData.xp}/${userData.level*100}`}).setColor('Purple');
-        return message.reply({embeds:[emb]});
-    }
-    if (command === 'rank') {
-        if(!levels.has(guild.id)) levels.set(guild.id, new Map());
-        const arr = Array.from(levels.get(guild.id).values()).map((d,i)=>({id:Array.from(levels.get(guild.id).keys())[i],...d}));
-        arr.sort((a,b)=>b.level-a.level||b.xp-a.xp);
-        const pos = arr.findIndex(u=>u.id===message.author.id)+1;
-        const userData = levels.get(guild.id).get(message.author.id)||{xp:0,level:1};
-        const emb = new EmbedBuilder().setTitle('🏅 Rank').setDescription(`Rank #${pos}/${arr.length}`).addFields({name:'Level',value:`${userData.level}`}).setColor('Gold');
-        return message.reply({embeds:[emb]});
-    }
-    if (command === 'leaderboard'){
-        if(!levels.has(guild.id)) levels.set(guild.id, new Map());
-        const arr = Array.from(levels.get(guild.id).values()).map((d,i)=>({id:Array.from(levels.get(guild.id).keys())[i],...d}));
-        arr.sort((a,b)=>b.level-a.level||b.xp-a.xp);
-        const top10 = arr.slice(0,10);
-        let desc = ''; top10.forEach((u,i)=>desc+=`**${i+1}.** <@${u.id}> | Lvl: ${u.level} | XP: ${u.xp}\n`);
-        const emb = new EmbedBuilder().setTitle('📈 Leaderboard').setDescription(desc||'No data').setColor('Orange');
-        return message.reply({embeds:[emb]});
-    }
     if (command === 'meme') {
         try { 
             const res = await axios.get('https://meme-api.com/gimme'); 
