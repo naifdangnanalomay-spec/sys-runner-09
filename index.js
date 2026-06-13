@@ -287,7 +287,7 @@ client.on(Events.InteractionCreate, async int => {
                 return int.reply({embeds:[new EmbedBuilder().setTitle(`⚠️ Warnings: ${u.username}`).setDescription(list).setColor('Yellow')]});
             }
 
-            // ✅ INAYOS NA /JOKE COMMAND (ITO ANG NAGKAMALI KANINA)
+            // ✅ INAYOS NA /JOKE COMMAND
             if (commandName === 'joke') return int.reply({content:["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","0 to 8: 'Ganda sinturon mo!' 👀","Bakit maswerte kalabaw? Bida sa bukid! 🐃","Dati kana bang gago? Alam ko HAHAHAHAHA 😂","Alam mo ba bakit siya iniwan ka? Kasi ang asim mo! HAHAHAHAHAHA 🤣"][Math.floor(Math.random()*6)]});
 
             if (commandName === 'fact') return int.reply({content:["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐","Tao nakakita lang ng RGB.","Araw 91% Hydrogen. ☀️"][Math.floor(Math.random()*4)]});
@@ -379,7 +379,7 @@ client.on(Events.InteractionCreate, async int => {
                 return int.reply({embeds:[emb]});
             }
 
-            // ✅ /LEADERBOARD - INAYos na
+            // ✅ /LEADERBOARD - INAYOS NA
             if (commandName === 'leaderboard'){
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const serverData = levels.get(guild.id);
@@ -672,7 +672,11 @@ client.on(Events.InteractionCreate, async int => {
         if (int.isStringSelectMenu()) {
             if(int.customId==='menu_support'){
                 const val=int.values[0];
-                const ch=await guild
+                const ch=await guild.channels.create({
+                    name:`ticket-${val}-${int.user.username}`,
+                    type:ChannelType.GuildText,
+                    permissionOverwrites
     }
-// 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
+
+ // 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
 client.login(TOKEN);
