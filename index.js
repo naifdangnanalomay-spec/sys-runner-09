@@ -11,7 +11,9 @@ const {
     StringSelectMenuBuilder,
     ButtonBuilder,
     ButtonStyle,
-    AttachmentBuilder,
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle,
     Events,
     ActivityType
 } = require('discord.js');
@@ -24,6 +26,7 @@ const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
 const STAFF_ROLE_ID = '1508714923696455740'; 
 const VERIFY_ROLE_ID = '1509517115265253487'; 
+const OWNER_ID = '1250654354344775703'; // ⚠️ ILAGAY MO DITO ANG ID MO PARA SA DM
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -38,7 +41,7 @@ const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
 const guildSettings = new Map();
-const levels = new Map(); // ✅ DATA DITO NAKATAGO PERMANENTE
+const levels = new Map();
 const antiNuke = new Map();
 const logs = new Map();
 const automod = new Map();
@@ -57,46 +60,24 @@ const client = new Client({
 // 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
-const PREFIX = '/'; // ✅ GAMIT NA ANG SLASH /
+const PREFIX = '/';
 
 // 📌 BOT READY
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
-
-    // ✅ STATUS: Streaming @OfficialServs
     setInterval(() => {
-        const activities = [
-            { 
-                name: `@OfficialServs`,
-                type: ActivityType.Streaming,
-                url: "https://www.twitch.tv/officialservs"
-            }
-        ];
-        const current = activities[0];
-        client.user.setActivity(current.name, { type: current.type, url: current.url });
-
+        const activities = [{ name: `@OfficialServs`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
+        client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
     }, 1000);
 });
 
-// 📌 ANTI-NUKE / SECURITY SYSTEM - NANDITO PA RIN ITO PANG PROTEKSIYO
+// 📌 ANTI-NUKE / SECURITY SYSTEM
 client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
-        enabled: true,
-        logChannel: null,
-        punishment: 'ban',
-        antiBot: true,
-        antiBan: true,
-        antiKick: true,
-        antiMemberUpdate: true,
-        antiGuildUpdate: true,
-        antiChannelCreate: true,
-        antiChannelDelete: true,
-        antiChannelUpdate: true,
-        antiRoleCreate: true,
-        antiRoleDelete: true,
-        antiRoleUpdate: true,
-        antiWebhook: true,
-        antiLink: true
+        enabled: true, logChannel: null, punishment: 'ban', antiBot: true, antiBan: true, antiKick: true,
+        antiMemberUpdate: true, antiGuildUpdate: true, antiChannelCreate: true, antiChannelDelete: true,
+        antiChannelUpdate: true, antiRoleCreate: true, antiRoleDelete: true, antiRoleUpdate: true,
+        antiWebhook: true, antiLink: true
     });
 });
 
@@ -126,7 +107,7 @@ client.on(Events.InteractionCreate, async int => {
     }
 });
 
-// 📌 ✅ IMPROVED LEVELING SYSTEM - AYOS NA! HINDI NA UULIT, TITUMAAS LANG
+// 📌 ✅ LEVELING SYSTEM
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild || message.content.startsWith(PREFIX)) return;
 
@@ -136,30 +117,24 @@ client.on(Events.MessageCreate, async message => {
         if (respos.has(trigger)) message.channel.send({ content: respos.get(trigger) });
     }
 
-    // ✅ KUNG WALA PA, GUMAWA NG DATA (ISANG BESES LANG)
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const uid = message.author.id;
     
-    if(!serverData.has(uid)) {
-        // ✅ UNANG PAGKAKATAON LANG ITO GAGAWIN, HINDI NA MABABAGO
-        serverData.set(uid, { xp: 0, level: 1, messages: 0, lastXp: 0 });
-    }
+    if(!serverData.has(uid)) serverData.set(uid, { xp: 0, level: 1, messages: 0, lastXp: 0 });
     
     const uData = serverData.get(uid);
     const now = Date.now();
 
-    // ✅ KUMITA NG XP BAWAT 1 MINUTO LANG
     if (now - uData.lastXp > 60000) { 
         uData.messages++;
-        const gainXP = Math.floor(Math.random() * 15) + 10; // 10-25 XP
+        const gainXP = Math.floor(Math.random() * 15) + 10;
         uData.xp += gainXP;
         uData.lastXp = now;
 
-        // ✅ PAG TAPOS NA ANG XP, TITUMAAS ANG LEVEL (HINDI NA BABABA)
         const nextLevelXP = uData.level * 100;
         if(uData.xp >= nextLevelXP){
-            uData.level++; // ✅ TITUMAAS LANG, HINDI NA BABALIK SA 1
+            uData.level++;
             const emb = new EmbedBuilder()
                 .setTitle('🎉 LEVEL UP!')
                 .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP`)
@@ -168,10 +143,8 @@ client.on(Events.MessageCreate, async message => {
             message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
         }
     }
-    // ✅ I-SAVE ANG BAGONG DATA
     serverData.set(uid,uData);
 
-    // ✅ ANTI-LINK SYSTEM
     const anSettings = antiNuke.get(message.guild.id);
     if(anSettings?.antiLink && /(https?:\/\/[^\s]+)/g.test(message.content)){
         if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)){
@@ -205,7 +178,7 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 ✅ COMMAND HANDLER - WALANG NUKE COMMAND
+// 📌 ✅ COMMAND HANDLER - LAHAT GUMAGANA SA /
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
     if (!message.content.startsWith(PREFIX)) return;
@@ -335,7 +308,6 @@ client.on(Events.MessageCreate, async message => {
     }
     if (command === 'editsnipe') return message.reply('🔍 Last edited message: ...');
 
-    // ✅ AYOS NA STATS - HINDI NA UULIT ANG LEVEL
     if (command === 'stats' || command === 'level') {
         if(!levels.has(guild.id)) levels.set(guild.id, new Map());
         const userData = levels.get(guild.id).get(message.author.id) || {xp:0,level:1,messages:0};
@@ -350,7 +322,6 @@ client.on(Events.MessageCreate, async message => {
         return message.reply({embeds:[emb]});
     }
 
-    // ✅ AYOS NA RANK - NAKABASE SA TOTOONG ANTAS
     if (command === 'rank') {
         if(!levels.has(guild.id)) levels.set(guild.id, new Map());
         const serverData = levels.get(guild.id);
@@ -358,7 +329,6 @@ client.on(Events.MessageCreate, async message => {
         arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
         const pos = arr.findIndex(u => u.id === message.author.id) + 1;
         const userData = serverData.get(message.author.id) || {xp:0,level:1};
-
         const emb = new EmbedBuilder()
             .setTitle('🏅 Your Rank')
             .setDescription(`**Rank:** #${pos} / ${arr.length}\n**Level:** ${userData.level}\n**XP:** ${userData.xp}`)
@@ -366,23 +336,15 @@ client.on(Events.MessageCreate, async message => {
         return message.reply({embeds:[emb]});
     }
 
-    // ✅ AYOS NA LEADERBOARD - TAMANG PAGKAKASUNOD
     if (command === 'leaderboard'){
         if(!levels.has(guild.id)) levels.set(guild.id, new Map());
         const serverData = levels.get(guild.id);
         const arr = Array.from(serverData, ([id, data]) => ({ id, ...data }));
         arr.sort((a,b) => b.level - a.level || b.xp - a.xp);
         const top10 = arr.slice(0, 10);
-        
         let desc = ''; 
-        top10.forEach((u,i) => {
-            desc += `**${i+1}.** <@${u.id}> | 🎖️ Lvl: ${u.level} | ✨ XP: ${u.xp}\n`;
-        });
-
-        const emb = new EmbedBuilder()
-            .setTitle('📈 Server Leaderboard')
-            .setDescription(desc || 'Wala pang data! Magpadala ng mensahe.')
-            .setColor('Orange');
+        top10.forEach((u,i) => { desc += `**${i+1}.** <@${u.id}> | 🎖️ Lvl: ${u.level} | ✨ XP: ${u.xp}\n`; });
+        const emb = new EmbedBuilder().setTitle('📈 Server Leaderboard').setDescription(desc || 'Wala pang data! Magpadala ng mensahe.').setColor('Orange');
         return message.reply({embeds:[emb]});
     }
 
@@ -491,16 +453,38 @@ client.on(Events.MessageCreate, async message => {
     }
 });
 
-// 📌 TICKET BUTTON HANDLER
+// 📌 TICKET & APPLY STAFF HANDLER
 client.on(Events.InteractionCreate, async int => {
     if (!int.isButton()) return;
     const { guild, member, customId } = int;
 
+    // 📌 SUPPORT & PARTNERSHIP
     if(customId.startsWith('btn_ticket_')){
         let cat='';
         if(customId==='btn_ticket_support') cat='➤SUPPORT';
-        if(customId==='btn_ticket_apply') cat='➤APPLY STAFF';
         if(customId==='btn_ticket_partner') cat='➤PARTNERSHIP';
+
+        if(customId==='btn_ticket_apply') {
+            // ✅ LAHAT NG 5 TANONG NASA LOOB NA NG FORM
+            const modal = new ModalBuilder()
+                .setCustomId('apply_staff_modal')
+                .setTitle('📝 STAFF APPLICATION - PUBLIC AZURA');
+
+            const q1 = new TextInputBuilder().setCustomId('ans1').setLabel('1. Why do you want to become a staff member?').setStyle(TextInputStyle.Paragraph).setRequired(true);
+            const q2 = new TextInputBuilder().setCustomId('ans2').setLabel('2. How Old Are You?').setStyle(TextInputStyle.Short).setRequired(true);
+            const q3 = new TextInputBuilder().setCustomId('ans3').setLabel('3. How can we trust you?').setStyle(TextInputStyle.Paragraph).setRequired(true);
+            const q4 = new TextInputBuilder().setCustomId('ans4').setLabel('4. How can you contribute to Public Azura?').setStyle(TextInputStyle.Paragraph).setRequired(true);
+            const q5 = new TextInputBuilder().setCustomId('ans5').setLabel('5. Don’t abuse your position, understood?').setStyle(TextInputStyle.Short).setRequired(true);
+
+            const r1 = new ActionRowBuilder().addComponents(q1);
+            const r2 = new ActionRowBuilder().addComponents(q2);
+            const r3 = new ActionRowBuilder().addComponents(q3);
+            const r4 = new ActionRowBuilder().addComponents(q4);
+            const r5 = new ActionRowBuilder().addComponents(q5);
+
+            modal.addComponents(r1, r2, r3, r4, r5);
+            return await int.showModal(modal);
+        }
 
         const ch=await guild.channels.create({
             name:`ticket-${cat.toLowerCase()}-${int.user.username}`,
@@ -518,6 +502,40 @@ client.on(Events.InteractionCreate, async int => {
         return int.reply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
     }
 
+    // 📌 TANGGAPIN ANG SAGOT AT IPA-DM SAYO
+    if (int.type === Events.ModalSubmit && int.customId === 'apply_staff_modal') {
+        const a1 = int.fields.getTextInputValue('ans1');
+        const a2 = int.fields.getTextInputValue('ans2');
+        const a3 = int.fields.getTextInputValue('ans3');
+        const a4 = int.fields.getTextInputValue('ans4');
+        const a5 = int.fields.getTextInputValue('ans5');
+
+        // ✅ ANG IPAPADALA SAYO SA DM
+        const emb = new EmbedBuilder()
+            .setTitle('📥 NEW STAFF APPLICATION RECEIPT')
+            .setDescription(`**From:** ${int.user.tag} | ID: ${int.user.id}\n**Server:** ${int.guild.name}`)
+            .addFields(
+                {name: '1. Why do you want to become a staff member?', value: a1 || 'Wala' },
+                {name: '2. How Old Are You?', value: a2 || 'Wala' },
+                {name: '3. How can we trust you?', value: a3 || 'Wala' },
+                {name: '4. How can you contribute to Public Azura?', value: a4 || 'Wala' },
+                {name: '5. Don’t abuse your position, understood?', value: a5 || 'Wala' }
+            )
+            .setColor('Purple')
+            .setTimestamp();
+
+        // ✅ IPAPADALA SAYO SA DM
+        try {
+            const owner = await client.users.fetch(OWNER_ID);
+            await owner.send({ embeds: [emb] });
+        } catch (err) {
+            console.log('❌ Hindi maipadala sa DM:', err);
+        }
+
+        // ✅ SABIHIN SA NAG-APPLY NA OK NA
+        await int.reply({content:'✅ Application submitted successfully! Thank you for applying.', ephemeral:true});
+    }
+
     if(customId==='close_ticket'){
         const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
         if(!isAdmin) return int.reply({content:'❌ ACCESS DENIED',ephemeral:true});
@@ -526,5 +544,5 @@ client.on(Events.InteractionCreate, async int => {
     }
 });
 
-// 🔑 PARA GUMANA ANG BOT - HUWAG TANGGAL
+// 🔑 LOGIN
 client.login(TOKEN);
