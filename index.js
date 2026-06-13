@@ -413,7 +413,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
                         .setDescription(`**Verify your identity to gain access to the server**\n\n*Click the button below to verify*`)
                         .setColor('#2f3136')
-                        .setFooter({text:'OfficialX Verify System • 6/7/26, 3:54 AM'});
+                        .setFooter({text:'OfficialServs Verify System • 6/7/26, 3:54 AM'});
 
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
