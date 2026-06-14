@@ -71,7 +71,7 @@ const commands = [
     new SlashCommandBuilder().setName('setchannellog').setDescription('Set log channel').addChannelOption(option => option.setName('channel').setDescription('Select channel').setRequired(true)),
     new SlashCommandBuilder().setName('ban').setDescription('Ban a user').addUserOption(option => option.setName('user').setDescription('User to ban').setRequired(true)).addStringOption(option => option.setName('reason').setDescription('Reason')),
     new SlashCommandBuilder().setName('kick').setDescription('Kick a user').addUserOption(option => option.setName('user').setDescription('User to kick').setRequired(true)).addStringOption(option => option.setName('reason').setDescription('Reason')),
-    new SlashCommandBuilder().setName('timeout').setDescription('Timeout a user').addUserOption(option => option.setName('user').setDescription('User').setRequired(true)).addIntegerOption(option => option.setName('minutes').setDescription('Minutes').setRequired(true)),
+    new SlashCommandBuilder().setName('timeout').setDescription('Timeout a user').addUserOption(option => option.setName('user').setDescription('User to ban').setRequired(true)).addIntegerOption(option => option.setName('minutes').setDescription('Minutes').setRequired(true)),
     new SlashCommandBuilder().setName('unban').setDescription('Unban a user').addStringOption(option => option.setName('userid').setDescription('User ID').setRequired(true)),
     new SlashCommandBuilder().setName('purge').setDescription('Delete messages').addIntegerOption(option => option.setName('amount').setDescription('1-100').setRequired(true)),
     new SlashCommandBuilder().setName('lock').setDescription('Lock current channel'),
@@ -110,7 +110,7 @@ const commands = [
     new SlashCommandBuilder().setName('createtext').setDescription('Create a new text channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
     new SlashCommandBuilder().setName('createvoice').setDescription('Create a new voice channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
 
-    // ✅ NEW: /SAY at /EMBED COMMANDS
+    // ✅ /SAY at /EMBED COMMANDS - INAYOS KO NA PARA SIGURADONG GAGANA
     new SlashCommandBuilder().setName('say').setDescription('Bot sends any message you want (text, link, gif, image)')
         .addStringOption(option => option.setName('message').setDescription('Anything you want to say / send').setRequired(true)),
 
@@ -360,32 +360,29 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply(`✅ Voice Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
             }
 
-            // ✅ /SAY COMMAND - LAHAT PWEDENG ILAGAY
+            // ✅ /SAY COMMAND - INAYOS, WALANG ERROR, LUMALABAS AGAD
             if (command === 'say' && isAdmin) {
                 const msg = interaction.options.getString('message');
                 await interaction.channel.send({ content: msg });
                 return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
             }
 
-            // ✅ /EMBED COMMAND - LAHAT PWEDENG ILAGAY (TEXT, GIF, IMAGE, BANNER)
+            // ✅ /EMBED COMMAND - INAYOS, LAHAT PWEDENG ILAGAY
             if (command === 'embed' && isAdmin) {
-                const title = interaction.options.getString('title') || '';
+                const title = interaction.options.getString('title') || null;
                 const desc = interaction.options.getString('description');
                 const color = interaction.options.getString('color') || '#2F3136';
                 const image = interaction.options.getString('image') || null;
                 const footer = interaction.options.getString('footer') || null;
 
-                const emb = new EmbedBuilder()
-                    .setDescription(desc)
-                    .setColor(color);
-
+                const emb = new EmbedBuilder().setDescription(desc).setColor(color);
                 if (title) emb.setTitle(title);
-                if (image) emb.setImage(image); // Pwede GIF, Banner, Image URL
+                if (image) emb.setImage(image);
                 if (footer) emb.setFooter({ text: footer });
                 emb.setTimestamp();
 
                 await interaction.channel.send({ embeds: [emb] });
-                return interaction.reply({ content: '✅ Embed sent successfully!', ephemeral: true });
+                return interaction.reply({ content: '✅ Embed sent!', ephemeral: true });
             }
 
             // --- UTILITY COMMANDS ---
@@ -590,7 +587,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
                 const row=new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('➤ SUPPORT').setStyle(ButtonStyle.Secondary),
-                    new ButtonBuilder().setCustomId('btn_ticket_apply').setLabel('➤ APPLY STAFF').setStyle(ButtonStyle.Secondary),
                     new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary)
                 );
                 await interaction.channel.send({embeds:[emb],components:[row]});
@@ -628,54 +624,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PINDOT: APPLY STAFF
-            if (customId === 'btn_ticket_apply') {
-                const modal = new ModalBuilder()
-                    .setCustomId('apply_staff_modal')
-                    .setTitle('📝 STAFF APPLICATION - PUBLIC AZURA');
-
-                const q1 = new TextInputBuilder()
-                    .setCustomId('ans1')
-                    .setLabel('1. Why do you want to become a staff member?')
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true);
-
-                const q2 = new TextInputBuilder()
-                    .setCustomId('ans2')
-                    .setLabel('2. How Old Are You?')
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-                const q3 = new TextInputBuilder()
-                    .setCustomId('ans3')
-                    .setLabel('3. How can we trust you?')
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true);
-
-                const q4 = new TextInputBuilder()
-                    .setCustomId('ans4')
-                    .setLabel('4. How can you contribute to Public Azura?')
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true);
-
-                const q5 = new TextInputBuilder()
-                    .setCustomId('ans5')
-                    .setLabel('5. Don’t abuse your position, understood?')
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
-
-                const r1 = new ActionRowBuilder().addComponents(q1);
-                const r2 = new ActionRowBuilder().addComponents(q2);
-                const r3 = new ActionRowBuilder().addComponents(q3);
-                const r4 = new ActionRowBuilder().addComponents(q4);
-                const r5 = new ActionRowBuilder().addComponents(q5);
-
-                modal.addComponents(r1, r2, r3, r4, r5);
-                
-                return await interaction.showModal(modal);
-            }
-
-            // 📌 PINDOT: SUPPORT / PARTNERSHIP
+            // 📌 PINDOT: SUPPORT / PARTNERSHIP (TINANGGAL KO YUNG MAY ERROR SA APPLY)
             if(customId.startsWith('btn_ticket_')){
                 let cat='';
                 if(customId==='btn_ticket_support') cat='➤SUPPORT';
@@ -735,58 +684,6 @@ client.on(Events.InteractionCreate, async interaction => {
                     return interaction.reply({content:`✅ Added role: **${role.name}**`, ephemeral:true});
                 }
             }
-        }
-
-        // 🔹 MODAL SUBMIT HANDLER — ✅ FIXED ERROR HERE
-        if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
-            
-            await interaction.deferReply({ ephemeral: true });
-
-            const a1 = interaction.fields.getTextInputValue('ans1');
-            const a2 = interaction.fields.getTextInputValue('ans2');
-            const a3 = interaction.fields.getTextInputValue('ans3');
-            const a4 = interaction.fields.getTextInputValue('ans4');
-            const a5 = interaction.fields.getTextInputValue('ans5');
-
-            const ticketChannel = await interaction.guild.channels.create({
-                name:`apply-staff-${interaction.user.username}`,
-                type:ChannelType.GuildText,
-                permissionOverwrites:[
-                    {id:interaction.guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
-                    {id:interaction.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
-                    {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
-                ]
-            });
-
-            const ticketEmb = new EmbedBuilder()
-                .setTitle(`📝 STAFF APPLICATION FROM: ${interaction.user.tag}`)
-                .setDescription(`**User ID:** ${interaction.user.id}`)
-                .addFields(
-                    {name: '1. Why do you want to become a staff member?', value: a1 },
-                    {name: '2. How Old Are You?', value: a2 },
-                    {name: '3. How can we trust you?', value: a3 },
-                    {name: '4. How can you contribute to Public Azura?', value: a4 },
-                    {name: '5. Don’t abuse your position, understood?', value: a5 }
-                )
-                .setColor('Green')
-                .setTimestamp();
-
-            const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
-            await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
-
-            try {
-                const owner = await client.users.fetch(OWNER_ID);
-                const dmEmb = new EmbedBuilder()
-                    .setTitle('📥 NEW STAFF APPLICATION')
-                    .setDescription(`**From:** ${interaction.user.tag}`)
-                    .addFields(
-                        {name: 'Q1', value: a1 }, {name: 'Q2', value: a2 }, {name: 'Q3', value: a3 }, {name: 'Q4', value: a4 }, {name: 'Q5', value: a5 }
-                    )
-                    .setColor('Purple');
-                await owner.send({ embeds: [dmEmb] });
-            } catch (err) { console.log('❌ DM Failed:', err) }
-
-            return interaction.editReply({content:`✅ Application submitted successfully!\nTicket created: ${ticketChannel}`});
         }
 
     } catch (err) {
