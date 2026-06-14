@@ -103,7 +103,13 @@ const commands = [
     new SlashCommandBuilder().setName('botinfo').setDescription('Bot information'),
     new SlashCommandBuilder().setName('instagram').setDescription('Instagram link'),
     new SlashCommandBuilder().setName('tiktok').setDescription('TikTok link'),
-    new SlashCommandBuilder().setName('youtube').setDescription('YouTube link')
+    new SlashCommandBuilder().setName('youtube').setDescription('YouTube link'),
+    
+    // ✅ NEW COMMANDS FOR CREATING CHANNELS / CATEGORIES / VC
+    new SlashCommandBuilder().setName('createcategory').setDescription('Create a new category').addStringOption(option => option.setName('name').setDescription('Category name').setRequired(true)),
+    new SlashCommandBuilder().setName('createtext').setDescription('Create a new text channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
+    new SlashCommandBuilder().setName('createvoice').setDescription('Create a new voice channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
+    new SlashCommandBuilder().setName('createall').setDescription('Create Category + Text Channel + Voice Channel ALL AT ONCE').addStringOption(option => option.setName('name').setDescription('Base name for all').setRequired(true))
 ];
 
 // 📌 REGISTER SLASH COMMANDS
@@ -319,6 +325,36 @@ client.on(Events.InteractionCreate, async interaction => {
                 const sec = interaction.options.getInteger('seconds') || 0;
                 await interaction.channel.setRateLimitPerUser(sec);
                 return interaction.reply(`🐢 Slowmode: ${sec}s`);
+            }
+
+            // ✅ NEW: COMMANDS TO CREATE CATEGORY / TEXT / VOICE / ALL
+            if (command === 'createcategory' && isAdmin) {
+                const name = interaction.options.getString('name');
+                const cat = await guild.channels.create({ name, type: ChannelType.GuildCategory });
+                return interaction.reply(`✅ Category Created: **${cat.name}**\nID: \`${cat.id}\``);
+            }
+            if (command === 'createtext' && isAdmin) {
+                const name = interaction.options.getString('name');
+                const catId = interaction.options.getString('category');
+                const parent = catId ? guild.channels.cache.get(catId) : null;
+                if (catId && !parent) return interaction.reply('❌ Category not found!');
+                const ch = await guild.channels.create({ name, type: ChannelType.GuildText, parent });
+                return interaction.reply(`✅ Text Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
+            }
+            if (command === 'createvoice' && isAdmin) {
+                const name = interaction.options.getString('name');
+                const catId = interaction.options.getString('category');
+                const parent = catId ? guild.channels.cache.get(catId) : null;
+                if (catId && !parent) return interaction.reply('❌ Category not found!');
+                const ch = await guild.channels.create({ name, type: ChannelType.GuildVoice, parent });
+                return interaction.reply(`✅ Voice Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
+            }
+            if (command === 'createall' && isAdmin) {
+                const name = interaction.options.getString('name');
+                const cat = await guild.channels.create({ name: `📁 ${name}`, type: ChannelType.GuildCategory });
+                const txt = await guild.channels.create({ name: `💬 ${name}-chat`, type: ChannelType.GuildText, parent: cat });
+                const vc = await guild.channels.create({ name: `🔊 ${name}-voice`, type: ChannelType.GuildVoice, parent: cat });
+                return interaction.reply(`✅ **ALL CREATED SUCCESSFULLY:**\n📁 Category: ${cat.name}\n💬 Text: ${txt.name}\n🔊 Voice: ${vc.name}`);
             }
 
             // --- UTILITY COMMANDS ---
@@ -605,7 +641,6 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 modal.addComponents(r1, r2, r3, r4, r5);
                 
-                // ✅ FIX: SIGURADONG IPAPAKITA ANG FORM
                 return await interaction.showModal(modal);
             }
 
@@ -674,7 +709,6 @@ client.on(Events.InteractionCreate, async interaction => {
         // 🔹 MODAL SUBMIT HANDLER — ✅ FIXED ERROR HERE
         if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
             
-            // ✅ FIX: SAGOT AGAD KAY DISCORD PARA HINDI MAG ERROR
             await interaction.deferReply({ ephemeral: true });
 
             const a1 = interaction.fields.getTextInputValue('ans1');
@@ -683,7 +717,6 @@ client.on(Events.InteractionCreate, async interaction => {
             const a4 = interaction.fields.getTextInputValue('ans4');
             const a5 = interaction.fields.getTextInputValue('ans5');
 
-            // ✅ GUMAWA NG CHANNEL
             const ticketChannel = await interaction.guild.channels.create({
                 name:`apply-staff-${interaction.user.username}`,
                 type:ChannelType.GuildText,
@@ -694,7 +727,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 ]
             });
 
-            // ✅ ILAGAY ANG SAGOT SA CHANNEL
             const ticketEmb = new EmbedBuilder()
                 .setTitle(`📝 STAFF APPLICATION FROM: ${interaction.user.tag}`)
                 .setDescription(`**User ID:** ${interaction.user.id}`)
@@ -711,7 +743,6 @@ client.on(Events.InteractionCreate, async interaction => {
             const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
             await ticketChannel.send({embeds:[ticketEmb], components:[closeBtn]});
 
-            // ✅ IPADALA SA OWNER SA DM
             try {
                 const owner = await client.users.fetch(OWNER_ID);
                 const dmEmb = new EmbedBuilder()
@@ -724,13 +755,11 @@ client.on(Events.InteractionCreate, async interaction => {
                 await owner.send({ embeds: [dmEmb] });
             } catch (err) { console.log('❌ DM Failed:', err) }
 
-            // ✅ MATAGUMPAY NA SAGOT SA USER
             return interaction.editReply({content:`✅ Application submitted successfully!\nTicket created: ${ticketChannel}`});
         }
 
     } catch (err) {
         console.error('❌ GLOBAL ERROR:', err);
-        // ✅ PIGILIN ANG "SOMETHING WENT WRONG"
         if (!interaction.replied && !interaction.deferred) {
             return interaction.reply({ content: '❌ May naganap na error, subukan ulit.', ephemeral: true });
         }
