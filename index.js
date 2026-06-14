@@ -16,7 +16,8 @@ const {
     TextInputStyle,
     Events,
     ActivityType,
-    SlashCommandBuilder
+    SlashCommandBuilder,
+    AuditLogEvent
 } = require('discord.js');
 const axios = require('axios');
 const fs = require('fs');
@@ -47,6 +48,9 @@ const antiNuke = new Map();
 const logs = new Map();
 const automod = new Map();
 const verifyLogs = new Map();
+const raidProtection = new Map();
+const tokenGrabberProtection = new Map();
+const imageGrabberProtection = new Map();
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -54,7 +58,8 @@ const client = new Client({
         GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, 
         GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildBans,
         GatewayIntentBits.GuildPresences, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.DirectMessageReactions, GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildModeration
+        GatewayIntentBits.DirectMessageReactions, GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildInvites
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember, Partials.ThreadMember]
 });
@@ -63,7 +68,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS DEFINITION
+// 📌 SLASH COMMANDS DEFINITION — TINANGGAL NA ANG CREATE CATEGORY/TEXT/VOICE
 const commands = [
     new SlashCommandBuilder().setName('setpfp').setDescription('Set bot profile picture').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
     new SlashCommandBuilder().setName('setbanner').setDescription('Set bot banner').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
@@ -86,7 +91,7 @@ const commands = [
     new SlashCommandBuilder().setName('leaderboard').setDescription('Server level leaderboard'),
     new SlashCommandBuilder().setName('automod').setDescription('Toggle Automod'),
     new SlashCommandBuilder().setName('antinsfw').setDescription('Toggle Anti-NSFW'),
-    new SlashCommandBuilder().setName('antilink').setDescription('Toggle Anti-Link'),
+    new SlashCommandBuilder().setName('antilink').setDescription('Toggle Anti-Link (Links allowed but monitored)'),
     new SlashCommandBuilder().setName('verification').setDescription('Verification system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('welcome').setDescription('Welcome system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('setup').setDescription('Show Anti-Nuke Dashboard & Auto Setup'),
@@ -105,12 +110,7 @@ const commands = [
     new SlashCommandBuilder().setName('tiktok').setDescription('TikTok link'),
     new SlashCommandBuilder().setName('youtube').setDescription('YouTube link'),
     
-    // ✅ NEW COMMANDS FOR CREATING CHANNELS / CATEGORIES / VC
-    new SlashCommandBuilder().setName('createcategory').setDescription('Create a new category').addStringOption(option => option.setName('name').setDescription('Category name').setRequired(true)),
-    new SlashCommandBuilder().setName('createtext').setDescription('Create a new text channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
-    new SlashCommandBuilder().setName('createvoice').setDescription('Create a new voice channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
-
-    // ✅ /SAY at /EMBED COMMANDS - INAYOS KO NA PARA SIGURADONG GAGANA
+    // ✅ /SAY at /EMBED COMMANDS
     new SlashCommandBuilder().setName('say').setDescription('Bot sends any message you want (text, link, gif, image)')
         .addStringOption(option => option.setName('message').setDescription('Anything you want to say / send').setRequired(true)),
 
@@ -119,7 +119,12 @@ const commands = [
         .addStringOption(option => option.setName('description').setDescription('Main text / message (can include anything)').setRequired(true))
         .addStringOption(option => option.setName('color').setDescription('Color code or name (e.g. #FF0000, Blue, Green)').setRequired(false))
         .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL (optional)').setRequired(false))
-        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false))
+        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false)),
+
+    // ✅ SECURITY COMMANDS
+    new SlashCommandBuilder().setName('antiraid').setDescription('Toggle Anti-Raid System'),
+    new SlashCommandBuilder().setName('antitoken').setDescription('Toggle Anti-Token Grabber Protection'),
+    new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection')
 ];
 
 // 📌 REGISTER SLASH COMMANDS
@@ -142,61 +147,131 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
     setInterval(() => {
-        const activities = [{ name: `@OfficialServs`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
+        const activities = [{ name: `@OfficialServs | SECURED`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
         client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
     }, 1000);
 });
 
-// 📌 ANTI-NUKE / SECURITY SYSTEM
+// 📌 ANTI-NUKE / SECURITY SYSTEM — PINALAKAS
 client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
-        enabled: true, logChannel: null, punishment: 'Mixed (ban, striproles)', antiBot: true, antiBan: true, antiKick: true,
+        enabled: true, logChannel: null, punishment: 'BAN & STRIP ROLES', antiBot: true, antiBan: true, antiKick: true,
         antiMemberUpdate: true, antiGuildUpdate: true, antiChannelCreate: true, antiChannelDelete: true,
         antiChannelUpdate: true, antiRoleCreate: true, antiRoleDelete: true, antiRoleUpdate: true,
-        antiWebhook: true, antiLink: true
+        antiWebhook: true, antiLink: false, maxActions: 3, timeWindow: 10000 // 3 actions in 10s = trigger
     });
+
+    raidProtection.set(guild.id, { enabled: true, joinLimit: 5, timeWindow: 10000, joins: [] });
+    tokenGrabberProtection.set(guild.id, { enabled: true, blockedDomains: ['discord.gift', 'discordapp.gift', 'steamgift', 'nitro', 'token', 'grabber', 'steal'] });
+    imageGrabberProtection.set(guild.id, { enabled: true, blockedDomains: ['imgur.io', 'image-grabber', 'stealimg', 'loger', 'logger'] });
 });
 
-// 📌 LOGGING SYSTEM
-client.on(Events.ChannelCreate, channel => logEvent(channel.guild, `📝 Channel Created: ${channel.name}`));
-client.on(Events.ChannelDelete, channel => logEvent(channel.guild, `🗑️ Channel Deleted: ${channel.name}`));
-client.on(Events.RoleCreate, role => logEvent(role.guild, `📝 Role Created: ${role.name}`));
-client.on(Events.RoleDelete, role => logEvent(role.guild, `🗑️ Role Deleted: ${role.name}`));
-client.on(Events.GuildMemberAdd, member => logEvent(member.guild, `👤 Member Joined: ${member.user.tag}`));
-client.on(Events.GuildMemberRemove, member => logEvent(member.guild, `👤 Member Left: ${member.user.tag}`));
-
-function logEvent(guild, message) {
+// 📌 AUDIT LOG MONITOR — DETECT NUKE ACTIONS
+client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
     const settings = antiNuke.get(guild.id);
-    if (!settings || !settings.logChannel) return;
-    const ch = guild.channels.cache.get(settings.logChannel);
-    if (ch) ch.send({ content: `**[LOG]** ${message}` }).catch(() => {});
-}
+    if (!settings || !settings.enabled) return;
 
-// ✅ NEW: VERIFICATION LOG FUNCTION
-function logVerification(guild, user) {
-    const settings = antiNuke.get(guild.id);
-    if (!settings || !settings.logChannel) return;
-    const ch = guild.channels.cache.get(settings.logChannel);
-    if (ch) {
-        const logEmb = new EmbedBuilder()
-            .setTitle('✅ NEW VERIFICATION')
-            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}\n**Time:** <t:${Math.floor(Date.now()/1000)}:F>`)
-            .setColor('Green')
-            .setThumbnail(user.displayAvatarURL({dynamic:true}));
-        ch.send({embeds:[logEmb]}).catch(()=>{});
+    const { action, executor, target } = entry;
+    if (!executor || executor.id === OWNER_ID || executor.id === client.user.id) return;
+
+    const isMod = guild.members.cache.get(executor.id)?.permissions.has(PermissionsBitField.Flags.Administrator);
+    if (isMod) return;
+
+    let trigger = false;
+    let reason = '⚠️ NUKE ACTION DETECTED';
+
+    switch (action) {
+        case AuditLogEvent.ChannelCreate:
+        case AuditLogEvent.ChannelDelete:
+        case AuditLogEvent.ChannelUpdate:
+            if (settings.antiChannelCreate || settings.antiChannelDelete || settings.antiChannelUpdate) trigger = true;
+            break;
+        case AuditLogEvent.RoleCreate:
+        case AuditLogEvent.RoleDelete:
+        case AuditLogEvent.RoleUpdate:
+            if (settings.antiRoleCreate || settings.antiRoleDelete || settings.antiRoleUpdate) trigger = true;
+            break;
+        case AuditLogEvent.MemberBanAdd:
+        case AuditLogEvent.MemberKick:
+            if (settings.antiBan || settings.antiKick) trigger = true;
+            break;
+        case AuditLogEvent.WebhookCreate:
+        case AuditLogEvent.WebhookDelete:
+            if (settings.antiWebhook) trigger = true;
+            break;
+        case AuditLogEvent.GuildUpdate:
+            if (settings.antiGuildUpdate) trigger = true;
+            break;
     }
-}
 
-// 📌 ✅ LEVELING SYSTEM
+    if (trigger) {
+        try {
+            const member = guild.members.cache.get(executor.id);
+            if (member) {
+                await member.ban({ reason: reason });
+                logEvent(guild, `🚨 **SECURITY ACTION:** Banned ${executor.tag} | ${reason}`);
+            }
+            // Revert deleted channels/roles if possible
+            if (action === AuditLogEvent.ChannelDelete && target) {
+                await guild.channels.create({ name: target.name, type: target.type, parent: target.parentId }).catch(() => {});
+            }
+        } catch (e) {}
+    }
+});
+
+// 📌 ANTI-RAID SYSTEM
+client.on(Events.GuildMemberAdd, async (member) => {
+    const raid = raidProtection.get(member.guild.id);
+    if (!raid || !raid.enabled) return;
+
+    const now = Date.now();
+    raid.joins.push(now);
+    raid.joins = raid.joins.filter(t => now - t < raid.timeWindow);
+
+    if (raid.joins.length > raid.joinLimit) {
+        logEvent(member.guild, `🚨 **RAID DETECTED:** Too many joins in short time — Locking server & banning new joiners`);
+        member.guild.channels.cache.forEach(ch => {
+            if (ch.isTextBased()) ch.permissionOverwrites.edit(member.guild.id, { SendMessages: false }).catch(() => {});
+        });
+        try { await member.ban({ reason: 'Raid Protection' }); } catch (e) {}
+    }
+
+    // Welcome system
+    try {
+        const set = guildSettings.get(member.guild.id);
+        if(set?.welcome) {
+            const msg = set.welcome.replace(/{user}/g,`<@${member.id}>`).replace(/{server}/g,member.guild.name);
+            const emb = new EmbedBuilder().setTitle('👤 New Member!').setDescription(msg).setColor('Green');
+            const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
+            if(ch) ch.send({embeds:[emb]}).catch(()=>{});
+        }
+    } catch(e){}
+});
+
+client.on(Events.GuildMemberRemove, async member => {
+    try {
+        const set = guildSettings.get(member.guild.id);
+        if(set?.leave) {
+            const msg = set.leave.replace(/{user}/g,`${member.user.tag}`).replace(/{server}/g,member.guild.name);
+            const emb = new EmbedBuilder().setTitle('😢 Member Left').setDescription(msg).setColor('Red');
+            const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
+            if(ch) ch.send({embeds:[emb]}).catch(()=>{});
+        }
+    } catch(e){}
+});
+
+// 📌 MESSAGE SECURITY — ANTI TOKEN/IMAGE GRABBER + LINK MONITOR
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
 
+    // Auto Responders
     if(autoResponders.has(message.guild.id)){
         const trigger = message.content.toLowerCase().trim();
         const respos = autoResponders.get(message.guild.id);
         if (respos.has(trigger)) message.channel.send({ content: respos.get(trigger) });
     }
 
+    // LEVELING SYSTEM
     if(!levels.has(message.guild.id)) levels.set(message.guild.id, new Map());
     const serverData = levels.get(message.guild.id);
     const uid = message.author.id;
@@ -225,45 +300,70 @@ client.on(Events.MessageCreate, async message => {
     }
     serverData.set(uid,uData);
 
-    const anSettings = antiNuke.get(message.guild.id);
-    if(anSettings?.antiLink && /(https?:\/\/[^\s]+)/g.test(message.content)){
-        if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)){
-            await message.delete().catch(()=>{});
-            return message.channel.send({content:`❌ <@${message.author.id}> Links are not allowed here!`,ephemeral:true});
+    // ✅ ANTI TOKEN GRABBER
+    const tokenProtect = tokenGrabberProtection.get(message.guild.id);
+    if (tokenProtect?.enabled) {
+        const content = message.content.toLowerCase();
+        if (tokenProtect.blockedDomains.some(domain => content.includes(domain)) || /[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}/.test(content)) {
+            await message.delete().catch(() => {});
+            return message.channel.send({content:`❌ <@${message.author.id}> Token grabber / suspicious link detected!`,ephemeral:true});
         }
+    }
+
+    // ✅ ANTI IMAGE GRABBER
+    const imgProtect = imageGrabberProtection.get(message.guild.id);
+    if (imgProtect?.enabled) {
+        const content = message.content.toLowerCase();
+        if (imgProtect.blockedDomains.some(domain => content.includes(domain))) {
+            await message.delete().catch(() => {});
+            return message.channel.send({content:`❌ <@${message.author.id}> Image grabber / logger detected!`,ephemeral:true});
+        }
+    }
+
+    // ✅ LINKS ALLOWED BUT MONITORED — NO DELETION, JUST LOG
+    const anSettings = antiNuke.get(message.guild.id);
+    if (/(https?:\/\/[^\s]+)/g.test(message.content)) {
+        logEvent(message.guild, `🔗 Link sent by ${message.author.tag}: ${message.content}`);
     }
 });
 
-// 📌 WELCOME & LEAVE
-client.on(Events.GuildMemberAdd, async member => {
-    try {
-        const set = guildSettings.get(member.guild.id);
-        if(set?.welcome) {
-            const msg = set.welcome.replace(/{user}/g,`<@${member.id}>`).replace(/{server}/g,member.guild.name);
-            const emb = new EmbedBuilder().setTitle('👤 New Member!').setDescription(msg).setColor('Green');
-            const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
-            if(ch) ch.send({embeds:[emb]}).catch(()=>{});
-        }
-    } catch(e){}
-});
-client.on(Events.GuildMemberRemove, async member => {
-    try {
-        const set = guildSettings.get(member.guild.id);
-        if(set?.leave) {
-            const msg = set.leave.replace(/{user}/g,`${member.user.tag}`).replace(/{server}/g,member.guild.name);
-            const emb = new EmbedBuilder().setTitle('😢 Member Left').setDescription(msg).setColor('Red');
-            const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
-            if(ch) ch.send({embeds:[emb]}).catch(()=>{});
-        }
-    } catch(e){}
-});
+// 📌 LOGGING SYSTEM
+client.on(Events.ChannelCreate, channel => logEvent(channel.guild, `📝 Channel Created: ${channel.name} | By: ${channel.guild.members.cache.get(channel.lastMessage?.authorId)?.tag || 'Unknown'}`));
+client.on(Events.ChannelDelete, channel => logEvent(channel.guild, `🗑️ Channel Deleted: ${channel.name}`));
+client.on(Events.RoleCreate, role => logEvent(role.guild, `📝 Role Created: ${role.name}`));
+client.on(Events.RoleDelete, role => logEvent(role.guild, `🗑️ Role Deleted: ${role.name}`));
+client.on(Events.GuildMemberAdd, member => logEvent(member.guild, `👤 Member Joined: ${member.user.tag}`));
+client.on(Events.GuildMemberRemove, member => logEvent(member.guild, `👤 Member Left: ${member.user.tag}`));
+client.on(Events.WebhookCreate, webhook => logEvent(webhook.guild, `⚠️ Webhook Created: ${webhook.name}`));
+client.on(Events.WebhookDelete, webhook => logEvent(webhook.guild, `⚠️ Webhook Deleted: ${webhook.name}`));
+
+function logEvent(guild, message) {
+    const settings = antiNuke.get(guild.id);
+    if (!settings || !settings.logChannel) return;
+    const ch = guild.channels.cache.get(settings.logChannel);
+    if (ch) ch.send({ content: `**[SECURITY LOG]** ${message}` }).catch(() => {});
+}
+
+// ✅ VERIFICATION LOG FUNCTION
+function logVerification(guild, user) {
+    const settings = antiNuke.get(guild.id);
+    if (!settings || !settings.logChannel) return;
+    const ch = guild.channels.cache.get(settings.logChannel);
+    if (ch) {
+        const logEmb = new EmbedBuilder()
+            .setTitle('✅ NEW VERIFICATION')
+            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}\n**Time:** <t:${Math.floor(Date.now()/1000)}:F>`)
+            .setColor('Green')
+            .setThumbnail(user.displayAvatarURL({dynamic:true}));
+        ch.send({embeds:[logEmb]}).catch(()=>{});
+    }
+}
 
 // ==================================================
-// 📌 ✅ TANGING ISA LANG NA INTERACTION HANDLER (WALA NANG ERROR)
+// 📌 ✅ INTERACTION HANDLER
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
-
         // 🔹 SLASH COMMANDS
         if (interaction.isChatInputCommand()) {
             const command = interaction.commandName;
@@ -337,37 +437,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply(`🐢 Slowmode: ${sec}s`);
             }
 
-            // ✅ CATEGORY CREATOR
-            if (command === 'createcategory' && isAdmin) {
-                const name = interaction.options.getString('name');
-                const cat = await guild.channels.create({ name, type: ChannelType.GuildCategory });
-                return interaction.reply(`✅ Category Created: **${cat.name}**\nID: \`${cat.id}\``);
-            }
-            if (command === 'createtext' && isAdmin) {
-                const name = interaction.options.getString('name');
-                const catId = interaction.options.getString('category');
-                const parent = catId ? guild.channels.cache.get(catId) : null;
-                if (catId && !parent) return interaction.reply('❌ Category not found!');
-                const ch = await guild.channels.create({ name, type: ChannelType.GuildText, parent });
-                return interaction.reply(`✅ Text Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
-            }
-            if (command === 'createvoice' && isAdmin) {
-                const name = interaction.options.getString('name');
-                const catId = interaction.options.getString('category');
-                const parent = catId ? guild.channels.cache.get(catId) : null;
-                if (catId && !parent) return interaction.reply('❌ Category not found!');
-                const ch = await guild.channels.create({ name, type: ChannelType.GuildVoice, parent });
-                return interaction.reply(`✅ Voice Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
-            }
-
-            // ✅ /SAY COMMAND - INAYOS, WALANG ERROR, LUMALABAS AGAD
+            // ✅ /SAY COMMAND
             if (command === 'say' && isAdmin) {
                 const msg = interaction.options.getString('message');
                 await interaction.channel.send({ content: msg });
                 return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
             }
 
-            // ✅ /EMBED COMMAND - INAYOS, LAHAT PWEDENG ILAGAY
+            // ✅ /EMBED COMMAND
             if (command === 'embed' && isAdmin) {
                 const title = interaction.options.getString('title') || null;
                 const desc = interaction.options.getString('description');
@@ -455,8 +532,8 @@ client.on(Events.InteractionCreate, async interaction => {
             // --- AUTOMOD ---
             if (command === 'automod' && isAdmin) {
                 if(!automod.has(guild.id)) automod.set(guild.id, {});
-                automod.get(guild.id).enabled = true;
-                return interaction.reply('✅ Automod Enabled');
+                automod.get(guild.id).enabled = !automod.get(guild.id).enabled;
+                return interaction.reply(`✅ Automod: ${automod.get(guild.id).enabled ? 'ON' : 'OFF'}`);
             }
             if (command === 'antinsfw' && isAdmin) {
                 if(!automod.has(guild.id)) automod.set(guild.id, {});
@@ -466,7 +543,24 @@ client.on(Events.InteractionCreate, async interaction => {
             if (command === 'antilink' && isAdmin) {
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
                 antiNuke.get(guild.id).antiLink = !antiNuke.get(guild.id).antiLink;
-                return interaction.reply(`✅ Anti-Link: ${antiNuke.get(guild.id).antiLink ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ Anti-Link: ${antiNuke.get(guild.id).antiLink ? 'ON' : 'OFF'} | *Links still allowed but monitored*`);
+            }
+
+            // --- SECURITY COMMANDS ---
+            if (command === 'antiraid' && isAdmin) {
+                const data = raidProtection.get(guild.id);
+                data.enabled = !data.enabled;
+                return interaction.reply(`✅ Anti-Raid: ${data.enabled ? 'ON' : 'OFF'}`);
+            }
+            if (command === 'antitoken' && isAdmin) {
+                const data = tokenGrabberProtection.get(guild.id);
+                data.enabled = !data.enabled;
+                return interaction.reply(`✅ Anti-Token Grabber: ${data.enabled ? 'ON' : 'OFF'}`);
+            }
+            if (command === 'antiimage' && isAdmin) {
+                const data = imageGrabberProtection.get(guild.id);
+                data.enabled = !data.enabled;
+                return interaction.reply(`✅ Anti-Image Grabber: ${data.enabled ? 'ON' : 'OFF'}`);
             }
 
             // --- SYSTEM SETUP ---
@@ -477,7 +571,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
                         .setDescription(`**Verify your identity to gain access to the server**\n\n*Click the button below to verify*`)
                         .setColor('#2f3136')
-                        .setFooter({text:'OfficialServs Verify System • 6/7/26, 3:54 AM'});
+                        .setFooter({text:'OfficialServs Verify System • SECURED'});
 
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
@@ -519,7 +613,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 }
 
                 antiNuke.get(guild.id).enabled = true;
-                antiNuke.get(guild.id).punishment = 'Mixed (ban, striproles)';
+                antiNuke.get(guild.id).punishment = 'BAN & STRIP ROLES';
                 antiNuke.get(guild.id).antiBot = true;
                 antiNuke.get(guild.id).antiBan = true;
                 antiNuke.get(guild.id).antiKick = true;
@@ -532,16 +626,16 @@ client.on(Events.InteractionCreate, async interaction => {
                 antiNuke.get(guild.id).antiRoleDelete = true;
                 antiNuke.get(guild.id).antiRoleUpdate = true;
                 antiNuke.get(guild.id).antiWebhook = true;
-                antiNuke.get(guild.id).antiLink = true;
+                antiNuke.get(guild.id).antiLink = false;
 
                 const an = antiNuke.get(guild.id);
                 const emb = new EmbedBuilder()
-                    .setTitle('🛡️ OfficialX Anti-Nuke Dashboard')
+                    .setTitle('🛡️ OfficialX Anti-Nuke Dashboard — MAX SECURITY')
                     .addFields(
                         {name:'Anti-Nuke Status', value:an.enabled ? '✅ ONLINE' : '❌ OFFLINE'},
                         {name:'Log Channel', value: `<#${logChannelId}>`},
                         {name:'Punishment', value:an.punishment},
-                        {name:'\u200b', value:'**Anti-Nuke Features:**'},
+                        {name:'\u200b', value:'**SECURITY FEATURES:**'},
                         {name:'Anti-Bot', value:an.antiBot ? '✅' : '❌', inline:true},
                         {name:'Anti-Ban', value:an.antiBan ? '✅' : '❌', inline:true},
                         {name:'Anti-Kick', value:an.antiKick ? '✅' : '❌', inline:true},
@@ -554,10 +648,12 @@ client.on(Events.InteractionCreate, async interaction => {
                         {name:'Anti-Role Delete', value:an.antiRoleDelete ? '✅' : '❌', inline:true},
                         {name:'Anti-Role Update', value:an.antiRoleUpdate ? '✅' : '❌', inline:true},
                         {name:'Anti-Webhook', value:an.antiWebhook ? '✅' : '❌', inline:true},
-                        {name:'Anti-Link', value:an.antiLink ? '✅' : '❌', inline:true}
+                        {name:'Anti-Raid', value:raidProtection.get(guild.id).enabled ? '✅' : '❌', inline:true},
+                        {name:'Anti-Token Grabber', value:tokenGrabberProtection.get(guild.id).enabled ? '✅' : '❌', inline:true},
+                        {name:'Anti-Image Grabber', value:imageGrabberProtection.get(guild.id).enabled ? '✅' : '❌', inline:true}
                     )
-                    .setColor('Grey')
-                    .setFooter({text:'PUBLIC AZURA #INACTIVE'});
+                    .setColor('Red')
+                    .setFooter({text:'AZURA BOT • FULLY SECURED'});
                 return interaction.reply({embeds:[emb]});
             }
 
@@ -624,7 +720,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PINDOT: SUPPORT / PARTNERSHIP (TINANGGAL KO YUNG MAY ERROR SA APPLY)
+            // 📌 PINDOT: SUPPORT / PARTNERSHIP
             if(customId.startsWith('btn_ticket_')){
                 let cat='';
                 if(customId==='btn_ticket_support') cat='➤SUPPORT';
