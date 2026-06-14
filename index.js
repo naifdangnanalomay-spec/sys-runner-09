@@ -46,7 +46,7 @@ const levels = new Map();
 const antiNuke = new Map();
 const logs = new Map();
 const automod = new Map();
-const verifyLogs = new Map(); // ✅ DAGDAG: PARA SA VERIFICATION LOGS
+const verifyLogs = new Map();
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -90,7 +90,7 @@ const commands = [
     new SlashCommandBuilder().setName('verification').setDescription('Verification system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('welcome').setDescription('Welcome system setup').addStringOption(option => option.setName('action').setDescription('setup/disable/status').setRequired(true)),
     new SlashCommandBuilder().setName('setup').setDescription('Show Anti-Nuke Dashboard & Auto Setup'),
-    new SlashCommandBuilder().setName('setup-roles').setDescription('Setup Role Selection Menu'), // ✅ IBINALIK KO NA
+    new SlashCommandBuilder().setName('setup-roles').setDescription('Setup Role Selection Menu'),
     new SlashCommandBuilder().setName('ticket-setup').setDescription('Setup Ticket System'),
     new SlashCommandBuilder().setName('ping').setDescription('Check bot latency'),
     new SlashCommandBuilder().setName('uptime').setDescription('Check bot uptime'),
@@ -409,7 +409,6 @@ client.on(Events.InteractionCreate, async interaction => {
             if (command === 'verification' && isAdmin) {
                 const action = interaction.options.getString('action');
                 if(action === 'setup'){
-                    // ✅ EKSAKTO SA SCREENSHOT MO
                     const emb = new EmbedBuilder()
                         .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
                         .setDescription(`**Verify your identity to gain access to the server**\n\n*Click the button below to verify*`)
@@ -436,7 +435,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(action === 'status') return interaction.reply('✅ Welcome Messages: ON');
             }
             if (command === 'setup' && isAdmin) {
-                // ✅ AUTO CREATE LOG CHANNEL IF NOT EXISTS
                 let logChannelId;
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
                 
@@ -456,7 +454,6 @@ client.on(Events.InteractionCreate, async interaction => {
                     logChannelId = antiNuke.get(guild.id).logChannel;
                 }
 
-                // ✅ TURN ON ALL FEATURES AUTOMATICALLY
                 antiNuke.get(guild.id).enabled = true;
                 antiNuke.get(guild.id).punishment = 'Mixed (ban, striproles)';
                 antiNuke.get(guild.id).antiBot = true;
@@ -473,7 +470,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 antiNuke.get(guild.id).antiWebhook = true;
                 antiNuke.get(guild.id).antiLink = true;
 
-                // ✅ DASHBOARD EXACTLY LIKE YOUR SCREENSHOT
                 const an = antiNuke.get(guild.id);
                 const emb = new EmbedBuilder()
                     .setTitle('🛡️ OfficialX Anti-Nuke Dashboard')
@@ -501,7 +497,6 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-            // ✅ IBINALIK KO NA ANG /setup-roles COMMAND
             if (command === 'setup-roles' && isAdmin) {
                 const emb = new EmbedBuilder()
                     .setTitle('🎮 ROLE SELECTION')
@@ -566,7 +561,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isButton()) {
             const { customId, guild, member } = interaction;
 
-            // 📌 PINDOT: APPLY STAFF (✅ INAYOS ANG ERROR DITO)
+            // 📌 PINDOT: APPLY STAFF
             if (customId === 'btn_ticket_apply') {
                 const modal = new ModalBuilder()
                     .setCustomId('apply_staff_modal')
@@ -610,7 +605,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 modal.addComponents(r1, r2, r3, r4, r5);
                 
-                // ✅ SIGURADONG IPAPAKITA ANG FORM, WALANG ERROR
+                // ✅ FIX: SIGURADONG IPAPAKITA ANG FORM
                 return await interaction.showModal(modal);
             }
 
@@ -647,15 +642,12 @@ client.on(Events.InteractionCreate, async interaction => {
                 setTimeout(()=>interaction.channel.delete().catch(()=>{}),1500);
             }
 
-            // 📌 VERIFICATION BUTTON ✅ INAYOS MAY LOGS NA
+            // 📌 VERIFICATION BUTTON
             if (customId === 'verify_me') {
                 const role = guild.roles.cache.get(VERIFY_ROLE_ID);
                 if (!role) return interaction.reply({ content: '❌ Verify role not found!', ephemeral: true });
                 
-                // ✅ I-ADD ANG ROLE
                 await member.roles.add(role);
-                
-                // ✅ ILAGAY SA LOG CHANNEL
                 logVerification(guild, interaction.user);
 
                 return interaction.reply({ content: '✅ You have been verified!', ephemeral: true });
@@ -679,10 +671,10 @@ client.on(Events.InteractionCreate, async interaction => {
             }
         }
 
-        // 🔹 MODAL SUBMIT HANDLER (✅ INAYOS ANG ERROR DITO, WALA NANG "SOMETHING WENT WRONG")
+        // 🔹 MODAL SUBMIT HANDLER — ✅ FIXED ERROR HERE
         if (interaction.type === Events.ModalSubmit && interaction.customId === 'apply_staff_modal') {
             
-            // ✅ SAGOT AGAD KAY DISCORD PARA HINDI ISIPIN NA ERROR - ITO ANG NAWAWALA DATI
+            // ✅ FIX: SAGOT AGAD KAY DISCORD PARA HINDI MAG ERROR
             await interaction.deferReply({ ephemeral: true });
 
             const a1 = interaction.fields.getTextInputValue('ans1');
