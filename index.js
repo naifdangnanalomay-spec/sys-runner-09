@@ -109,7 +109,17 @@ const commands = [
     new SlashCommandBuilder().setName('createcategory').setDescription('Create a new category').addStringOption(option => option.setName('name').setDescription('Category name').setRequired(true)),
     new SlashCommandBuilder().setName('createtext').setDescription('Create a new text channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
     new SlashCommandBuilder().setName('createvoice').setDescription('Create a new voice channel').addStringOption(option => option.setName('name').setDescription('Channel name').setRequired(true)).addStringOption(option => option.setName('category').setDescription('Put inside category ID (optional)').setRequired(false)),
-    new SlashCommandBuilder().setName('createall').setDescription('Create Category + Text Channel + Voice Channel ALL AT ONCE').addStringOption(option => option.setName('name').setDescription('Base name for all').setRequired(true))
+
+    // ✅ NEW: /SAY at /EMBED COMMANDS
+    new SlashCommandBuilder().setName('say').setDescription('Bot sends any message you want (text, link, gif, image)')
+        .addStringOption(option => option.setName('message').setDescription('Anything you want to say / send').setRequired(true)),
+
+    new SlashCommandBuilder().setName('embed').setDescription('Send beautiful embed message (all types allowed: text, gif, banner, image)')
+        .addStringOption(option => option.setName('title').setDescription('Title of embed (optional)').setRequired(false))
+        .addStringOption(option => option.setName('description').setDescription('Main text / message (can include anything)').setRequired(true))
+        .addStringOption(option => option.setName('color').setDescription('Color code or name (e.g. #FF0000, Blue, Green)').setRequired(false))
+        .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL (optional)').setRequired(false))
+        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false))
 ];
 
 // 📌 REGISTER SLASH COMMANDS
@@ -327,7 +337,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply(`🐢 Slowmode: ${sec}s`);
             }
 
-            // ✅ NEW: COMMANDS TO CREATE CATEGORY / TEXT / VOICE / ALL
+            // ✅ CATEGORY CREATOR
             if (command === 'createcategory' && isAdmin) {
                 const name = interaction.options.getString('name');
                 const cat = await guild.channels.create({ name, type: ChannelType.GuildCategory });
@@ -349,12 +359,33 @@ client.on(Events.InteractionCreate, async interaction => {
                 const ch = await guild.channels.create({ name, type: ChannelType.GuildVoice, parent });
                 return interaction.reply(`✅ Voice Channel Created: **${ch.name}**\nID: \`${ch.id}\`\nCategory: ${parent || 'None'}`);
             }
-            if (command === 'createall' && isAdmin) {
-                const name = interaction.options.getString('name');
-                const cat = await guild.channels.create({ name: `📁 ${name}`, type: ChannelType.GuildCategory });
-                const txt = await guild.channels.create({ name: `💬 ${name}-chat`, type: ChannelType.GuildText, parent: cat });
-                const vc = await guild.channels.create({ name: `🔊 ${name}-voice`, type: ChannelType.GuildVoice, parent: cat });
-                return interaction.reply(`✅ **ALL CREATED SUCCESSFULLY:**\n📁 Category: ${cat.name}\n💬 Text: ${txt.name}\n🔊 Voice: ${vc.name}`);
+
+            // ✅ /SAY COMMAND - LAHAT PWEDENG ILAGAY
+            if (command === 'say' && isAdmin) {
+                const msg = interaction.options.getString('message');
+                await interaction.channel.send({ content: msg });
+                return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
+            }
+
+            // ✅ /EMBED COMMAND - LAHAT PWEDENG ILAGAY (TEXT, GIF, IMAGE, BANNER)
+            if (command === 'embed' && isAdmin) {
+                const title = interaction.options.getString('title') || '';
+                const desc = interaction.options.getString('description');
+                const color = interaction.options.getString('color') || '#2F3136';
+                const image = interaction.options.getString('image') || null;
+                const footer = interaction.options.getString('footer') || null;
+
+                const emb = new EmbedBuilder()
+                    .setDescription(desc)
+                    .setColor(color);
+
+                if (title) emb.setTitle(title);
+                if (image) emb.setImage(image); // Pwede GIF, Banner, Image URL
+                if (footer) emb.setFooter({ text: footer });
+                emb.setTimestamp();
+
+                await interaction.channel.send({ embeds: [emb] });
+                return interaction.reply({ content: '✅ Embed sent successfully!', ephemeral: true });
             }
 
             // --- UTILITY COMMANDS ---
