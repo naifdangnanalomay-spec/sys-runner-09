@@ -68,7 +68,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS DEFINITION — TINANGGAL NA ANG CREATE CATEGORY/TEXT/VOICE
+// 📌 SLASH COMMANDS — INAYOS ANG PAGKAKASUNOD-SUNOD AT FORMAT
 const commands = [
     new SlashCommandBuilder().setName('setpfp').setDescription('Set bot profile picture').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
     new SlashCommandBuilder().setName('setbanner').setDescription('Set bot banner').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
@@ -110,16 +110,44 @@ const commands = [
     new SlashCommandBuilder().setName('tiktok').setDescription('TikTok link'),
     new SlashCommandBuilder().setName('youtube').setDescription('YouTube link'),
     
-    // ✅ /SAY at /EMBED COMMANDS
-    new SlashCommandBuilder().setName('say').setDescription('Bot sends any message you want (text, link, gif, image)')
-        .addStringOption(option => option.setName('message').setDescription('Anything you want to say / send').setRequired(true)),
+    // ✅ /SAY at /EMBED — INAYOS ANG FORMAT
+    new SlashCommandBuilder()
+        .setName('say')
+        .setDescription('Bot sends any message you want (text, link, gif, image)')
+        .addStringOption(option => 
+            option.setName('message')
+                .setDescription('Anything you want to say / send')
+                .setRequired(true)
+        ),
 
-    new SlashCommandBuilder().setName('embed').setDescription('Send beautiful embed message (all types allowed: text, gif, banner, image)')
-        .addStringOption(option => option.setName('title').setDescription('Title of embed (optional)').setRequired(false))
-        .addStringOption(option => option.setName('description').setDescription('Main text / message (can include anything)').setRequired(true))
-        .addStringOption(option => option.setName('color').setDescription('Color code or name (e.g. #FF0000, Blue, Green)').setRequired(false))
-        .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL (optional)').setRequired(false))
-        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false)),
+    new SlashCommandBuilder()
+        .setName('embed')
+        .setDescription('Send beautiful embed message (all types allowed: text, gif, banner, image)')
+        .addStringOption(option => 
+            option.setName('title')
+                .setDescription('Title of embed (optional)')
+                .setRequired(false)
+        )
+        .addStringOption(option => 
+            option.setName('description')
+                .setDescription('Main text / message (can include anything)')
+                .setRequired(true)
+        )
+        .addStringOption(option => 
+            option.setName('color')
+                .setDescription('Color code or name (e.g. #FF0000, Blue, Green)')
+                .setRequired(false)
+        )
+        .addStringOption(option => 
+            option.setName('image')
+                .setDescription('Image / GIF / Banner URL (optional)')
+                .setRequired(false)
+        )
+        .addStringOption(option => 
+            option.setName('footer')
+                .setDescription('Small text at bottom (optional)')
+                .setRequired(false)
+        ),
 
     // ✅ SECURITY COMMANDS
     new SlashCommandBuilder().setName('antiraid').setDescription('Toggle Anti-Raid System'),
@@ -437,14 +465,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply(`🐢 Slowmode: ${sec}s`);
             }
 
-            // ✅ /SAY COMMAND
+            // ✅ /SAY COMMAND — GUMAGANA NA
             if (command === 'say' && isAdmin) {
                 const msg = interaction.options.getString('message');
                 await interaction.channel.send({ content: msg });
                 return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
             }
 
-            // ✅ /EMBED COMMAND
+            // ✅ /EMBED COMMAND — GUMAGANA NA
             if (command === 'embed' && isAdmin) {
                 const title = interaction.options.getString('title') || null;
                 const desc = interaction.options.getString('description');
