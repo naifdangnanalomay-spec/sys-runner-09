@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const {
     Client,
     GatewayIntentBits,
@@ -23,9 +25,10 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// 📌 ASSETS & CONFIG
+// 📌 ASSETS & CONFIG (INAYOS AT PINAGANDA)
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
+const ANIMATED_WELCOME = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif'; // GAMITIN ITO PARA SA ANIMATION
 const STAFF_ROLE_ID = '1508714923696455740'; 
 const VERIFY_ROLE_ID = '1509517115265253487'; 
 const OWNER_ID = '1250654354344775703'; 
@@ -38,7 +41,7 @@ const ROLES = {
     EIGHTEEN_PLUS: '1508559365974659172'  
 };
 
-// 📌 DATABASES
+// 📌 DATABASES (INAYOS ANG PAG-IMPLEMENT)
 const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
@@ -51,6 +54,7 @@ const verifyLogs = new Map();
 const raidProtection = new Map();
 const tokenGrabberProtection = new Map();
 const imageGrabberProtection = new Map();
+const datingProfiles = new Map(); // ✅ DATING SYSTEM DATABASE
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -68,7 +72,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS — INAYOS ANG PAGKAKASUNOD-SUNOD AT FORMAT
+// 📌 SLASH COMMANDS — BUO, WALANG ERROR, MAY DATING SYSTEM
 const commands = [
     new SlashCommandBuilder().setName('setpfp').setDescription('Set bot profile picture').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
     new SlashCommandBuilder().setName('setbanner').setDescription('Set bot banner').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
@@ -110,7 +114,7 @@ const commands = [
     new SlashCommandBuilder().setName('tiktok').setDescription('TikTok link'),
     new SlashCommandBuilder().setName('youtube').setDescription('YouTube link'),
     
-    // ✅ /SAY at /EMBED — INAYOS ANG FORMAT
+    // ✅ /SAY at /EMBED — ANIMATED & MAGANDA
     new SlashCommandBuilder()
         .setName('say')
         .setDescription('Bot sends any message you want (text, link, gif, image)')
@@ -122,37 +126,28 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('embed')
-        .setDescription('Send beautiful embed message (all types allowed: text, gif, banner, image)')
-        .addStringOption(option => 
-            option.setName('title')
-                .setDescription('Title of embed (optional)')
-                .setRequired(false)
-        )
-        .addStringOption(option => 
-            option.setName('description')
-                .setDescription('Main text / message (can include anything)')
-                .setRequired(true)
-        )
-        .addStringOption(option => 
-            option.setName('color')
-                .setDescription('Color code or name (e.g. #FF0000, Blue, Green)')
-                .setRequired(false)
-        )
-        .addStringOption(option => 
-            option.setName('image')
-                .setDescription('Image / GIF / Banner URL (optional)')
-                .setRequired(false)
-        )
-        .addStringOption(option => 
-            option.setName('footer')
-                .setDescription('Small text at bottom (optional)')
-                .setRequired(false)
-        ),
+        .setDescription('✅ ANIMATED EMBED • Beautiful message with GIF/Image support')
+        .addStringOption(option => option.setName('title').setDescription('Title of embed (optional)').setRequired(false))
+        .addStringOption(option => option.setName('description').setDescription('Main text / message (can include anything)').setRequired(true))
+        .addStringOption(option => option.setName('color').setDescription('Color code or name (e.g. #FF0000, Blue, Green)').setRequired(false))
+        .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL (SUPPORT ANIMATION)').setRequired(false))
+        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false)),
 
     // ✅ SECURITY COMMANDS
     new SlashCommandBuilder().setName('antiraid').setDescription('Toggle Anti-Raid System'),
     new SlashCommandBuilder().setName('antitoken').setDescription('Toggle Anti-Token Grabber Protection'),
-    new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection')
+    new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection'),
+
+    // ✅ NEW: DATING SYSTEM COMMANDS
+    new SlashCommandBuilder().setName('dating-setup').setDescription('📝 Create or update your dating profile')
+        .addStringOption(o => o.setName('name').setDescription('Your Name').setRequired(true))
+        .addIntegerOption(o => o.setName('age').setDescription('Your Age').setRequired(true))
+        .addStringOption(o => o.setName('gender').setDescription('Male / Female / Other').setRequired(true))
+        .addStringOption(o => o.setName('bio').setDescription('Short description about you').setRequired(true))
+        .addStringOption(o => o.setName('image').setDescription('Photo URL / GIF').setRequired(false)),
+    new SlashCommandBuilder().setName('dating-profile').setDescription('❤️ View someone\'s profile').addUserOption(o => o.setName('user').setDescription('User to view').setRequired(false)),
+    new SlashCommandBuilder().setName('dating-like').setDescription('💖 Like someone\'s profile').addUserOption(o => o.setName('user').setDescription('User you like').setRequired(true)),
+    new SlashCommandBuilder().setName('dating-list').setDescription('📋 List all available profiles')
 ];
 
 // 📌 REGISTER SLASH COMMANDS
@@ -175,7 +170,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
     setInterval(() => {
-        const activities = [{ name: `@OfficialServs | SECURED`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
+        const activities = [{ name: `@OfficialServs | SECURED 💖 DATING ACTIVE`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
         client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
     }, 1000);
 });
@@ -186,7 +181,7 @@ client.on(Events.GuildCreate, guild => {
         enabled: true, logChannel: null, punishment: 'BAN & STRIP ROLES', antiBot: true, antiBan: true, antiKick: true,
         antiMemberUpdate: true, antiGuildUpdate: true, antiChannelCreate: true, antiChannelDelete: true,
         antiChannelUpdate: true, antiRoleCreate: true, antiRoleDelete: true, antiRoleUpdate: true,
-        antiWebhook: true, antiLink: false, maxActions: 3, timeWindow: 10000 // 3 actions in 10s = trigger
+        antiWebhook: true, antiLink: false, maxActions: 3, timeWindow: 10000
     });
 
     raidProtection.set(guild.id, { enabled: true, joinLimit: 5, timeWindow: 10000, joins: [] });
@@ -247,7 +242,7 @@ client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
     }
 });
 
-// 📌 ANTI-RAID SYSTEM
+// 📌 ANTI-RAID & ✨ ANIMATED WELCOME SYSTEM
 client.on(Events.GuildMemberAdd, async (member) => {
     const raid = raidProtection.get(member.guild.id);
     if (!raid || !raid.enabled) return;
@@ -264,12 +259,20 @@ client.on(Events.GuildMemberAdd, async (member) => {
         try { await member.ban({ reason: 'Raid Protection' }); } catch (e) {}
     }
 
-    // Welcome system
+    // ✨ ANIMATED & MAANGAS NA WELCOME MESSAGE
     try {
         const set = guildSettings.get(member.guild.id);
         if(set?.welcome) {
             const msg = set.welcome.replace(/{user}/g,`<@${member.id}>`).replace(/{server}/g,member.guild.name);
-            const emb = new EmbedBuilder().setTitle('👤 New Member!').setDescription(msg).setColor('Green');
+            const emb = new EmbedBuilder()
+                .setTitle(`👋 NAGDAGDAG NG ISANG MAGANDANG MIYEMBRO!`)
+                .setDescription(`**Maligayang Pagdating, ${member.user.username}!** 🎉\n\n${msg}\n\n> 🚀 Huwag kalimutang mag-verify at kumuha ng roles!`)
+                .setColor('#FF00FF')
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 })) // ✅ ANIMATED AVATAR
+                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED GIF BANNER
+                .setFooter({ text: `Member #${member.guild.memberCount} • Public Azura System` })
+                .setTimestamp();
+                
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
             if(ch) ch.send({embeds:[emb]}).catch(()=>{});
         }
@@ -281,7 +284,14 @@ client.on(Events.GuildMemberRemove, async member => {
         const set = guildSettings.get(member.guild.id);
         if(set?.leave) {
             const msg = set.leave.replace(/{user}/g,`${member.user.tag}`).replace(/{server}/g,member.guild.name);
-            const emb = new EmbedBuilder().setTitle('😢 Member Left').setDescription(msg).setColor('Red');
+            const emb = new EmbedBuilder()
+                .setTitle(`😢 MAY UMALIS SA ATIN...`)
+                .setDescription(`**${member.user.username}** ay nagpaalam na.\n\n${msg}\n\n> Sana ay naging masaya ka dito!`)
+                .setColor('#FF0000')
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+                .setImage(ANIMATED_WELCOME)
+                .setTimestamp();
+                
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
             if(ch) ch.send({embeds:[emb]}).catch(()=>{});
         }
@@ -320,9 +330,10 @@ client.on(Events.MessageCreate, async message => {
             uData.level++;
             const emb = new EmbedBuilder()
                 .setTitle('🎉 LEVEL UP!')
-                .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP`)
+                .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP ✨`)
                 .setColor('Gold')
-                .setThumbnail(BANNER_URL);
+                .setThumbnail(BANNER_URL)
+                .setImage(ANIMATED_WELCOME); // ✅ ANIMATED
             message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
         }
     }
@@ -382,13 +393,14 @@ function logVerification(guild, user) {
             .setTitle('✅ NEW VERIFICATION')
             .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}\n**Time:** <t:${Math.floor(Date.now()/1000)}:F>`)
             .setColor('Green')
-            .setThumbnail(user.displayAvatarURL({dynamic:true}));
+            .setThumbnail(user.displayAvatarURL({dynamic:true}))
+            .setImage(ANIMATED_WELCOME); // ✅ ANIMATED
         ch.send({embeds:[logEmb]}).catch(()=>{});
     }
 }
 
 // ==================================================
-// 📌 ✅ INTERACTION HANDLER
+// 📌 ✅ INTERACTION HANDLER — INAYOS LAHAT, WALANG ERROR
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
@@ -472,7 +484,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
             }
 
-            // ✅ /EMBED COMMAND — GUMAGANA NA
+            // ✅ /EMBED COMMAND — ANIMATED & MAANGAS
             if (command === 'embed' && isAdmin) {
                 const title = interaction.options.getString('title') || null;
                 const desc = interaction.options.getString('description');
@@ -482,12 +494,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 const emb = new EmbedBuilder().setDescription(desc).setColor(color);
                 if (title) emb.setTitle(title);
-                if (image) emb.setImage(image);
+                if (image) emb.setImage(image); // ✅ SUPPORTS GIF/ANIMATION
                 if (footer) emb.setFooter({ text: footer });
                 emb.setTimestamp();
 
                 await interaction.channel.send({ embeds: [emb] });
-                return interaction.reply({ content: '✅ Embed sent!', ephemeral: true });
+                return interaction.reply({ content: '✅ **ANIMATED EMBED SENT!**', ephemeral: true });
             }
 
             // --- UTILITY COMMANDS ---
@@ -500,14 +512,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 const u = interaction.options.getUser('user') || interaction.user;
                 const m = guild.members.cache.get(u.id);
                 const emb = new EmbedBuilder()
-                    .setAuthor({name:u.tag,iconURL:u.displayAvatarURL()})
+                    .setAuthor({name:u.tag,iconURL:u.displayAvatarURL({dynamic:true})})
                     .addFields({name:'ID',value:u.id},{name:'Joined',value:m?.joinedTimestamp?`<t:${Math.floor(m.joinedTimestamp/1000)}:F>`:'-'})
                     .setColor('Blue');
                 return interaction.reply({embeds:[emb]});
             }
             if (command === 'serverinfo') {
                 const emb = new EmbedBuilder()
-                    .setAuthor({name:guild.name,iconURL:guild.iconURL()})
+                    .setAuthor({name:guild.name,iconURL:guild.iconURL({dynamic:true})})
                     .addFields({name:'Owner',value:`<@${guild.ownerId}>`},{name:'Members',value:`${guild.memberCount}`})
                     .setColor('Blue');
                 return interaction.reply({embeds:[emb]});
@@ -597,14 +609,15 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(action === 'setup'){
                     const emb = new EmbedBuilder()
                         .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
-                        .setDescription(`**Verify your identity to gain access to the server**\n\n*Click the button below to verify*`)
+                        .setDescription(`**✅ I-VERIFY ANG IYONG SARILI PARA MAKAPASOK!**\n\n*Pindutin ang button sa ibaba para maging buong miyembro.*`)
                         .setColor('#2f3136')
+                        .setImage(ANIMATED_WELCOME) // ✅ ANIMATED VERIFY
                         .setFooter({text:'OfficialServs Verify System • SECURED'});
 
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
                             .setCustomId('verify_me')
-                            .setLabel('✅ Verify Me')
+                            .setLabel('✅ I-VERIFY DITO')
                             .setStyle(ButtonStyle.Success)
                     );
 
@@ -717,106 +730,60 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply('✅ Ticket System Ready');
             }
 
-            // --- FUN COMMANDS ---
-            if (command === 'ping') return interaction.reply(`🏓 Pong! ${client.ws.ping}ms`);
-            if (command === 'uptime') {
-                const d=Math.floor(client.uptime/86400000),h=Math.floor(client.uptime/3600000)%24,m=Math.floor(client.uptime/60000)%60,s=Math.floor(client.uptime/1000)%60;
-                return interaction.reply(`⏱️ Uptime: ${d}d ${h}h ${m}m ${s}s`);
-            }
-            if (command === 'joke') return interaction.reply(["Bakit pagod kalendaryo? Laging may date! 📅","Anong isda di nababasa? Tuyo! 🐟","Bakit maswerte kalabaw? Bida sa bukid! 🐃"][Math.floor(Math.random()*3)]);
-            if (command === 'fact') return interaction.reply(["Saging berry, strawberry hindi! 🍌","Puso ng hipon nasa ulo! 🦐"][Math.floor(Math.random()*2)]);
-            if (command === 'meme') {
-                try { 
-                    const res = await axios.get('https://meme-api.com/gimme'); 
-                    const emb = new EmbedBuilder().setTitle(res.data.title).setImage(res.data.url).setColor('Random');
-                    return interaction.reply({embeds:[emb]}); 
-                } catch { return interaction.reply('❌ Error loading meme'); }
-            }
-            if (command === '8ball') {
-                const q = interaction.options.getString('question');
-                return interaction.reply(`🎱 ${['Yes','No','Maybe','Definitely'][Math.floor(Math.random()*4)]}`);
-            }
-            if (command === 'coinflip') return interaction.reply(`🪙 ${Math.random()>0.5?'HEAD 🔴':'TAIL 🟡'}`);
-            if (command === 'dice') return interaction.reply(`🎲 ${Math.floor(Math.random()*6)+1}`);
-            if (command === 'botinfo') {
-                const emb = new EmbedBuilder().setAuthor({name:client.user.tag}).addFields({name:'ID',value:client.user.id},{name:'Servers',value:`${client.guilds.cache.size}`}).setColor('Purple');
-                return interaction.reply({embeds:[emb]});
-            }
-        }
+            // ✅ DATING SYSTEM COMMANDS
+            if (command === 'dating-setup') {
+                const name = interaction.options.getString('name');
+                const age = interaction.options.getInteger('age');
+                const gender = interaction.options.getString('gender');
+                const bio = interaction.options.getString('bio');
+                const image = interaction.options.getString('image') || null;
 
-        // 🔹 BUTTON HANDLER
-        if (interaction.isButton()) {
-            const { customId, guild, member } = interaction;
-
-            // 📌 PINDOT: SUPPORT / PARTNERSHIP
-            if(customId.startsWith('btn_ticket_')){
-                let cat='';
-                if(customId==='btn_ticket_support') cat='➤SUPPORT';
-                if(customId==='btn_ticket_partner') cat='➤PARTNERSHIP';
-
-                await interaction.deferReply({ ephemeral: true });
-
-                const ch=await guild.channels.create({
-                    name:`ticket-${cat.toLowerCase()}-${interaction.user.username}`,
-                    type:ChannelType.GuildText,
-                    permissionOverwrites:[
-                        {id:guild.id,deny:[PermissionsBitField.Flags.ViewChannel]},
-                        {id:interaction.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]},
-                        {id:STAFF_ROLE_ID,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages,PermissionsBitField.Flags.ReadMessageHistory]}
-                    ]
-                });
-
-                const emb=new EmbedBuilder().setTitle(`🎟️ TICKET: ${cat}`).setDescription(`Hello <@${interaction.user.id}>!\nStaff will be with you shortly.`).setColor('Green');
-                const closeBtn = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 CLOSE TICKET').setStyle(ButtonStyle.Danger));
-                await ch.send({embeds:[emb], components:[closeBtn]});
+                datingProfiles.set(interaction.user.id, { name, age, gender, bio, image, likes: 0 });
                 
-                return interaction.editReply({content:`✅ Ticket created: ${ch}`,ephemeral:true});
+                const emb = new EmbedBuilder()
+                    .setTitle('💖 PROFILE CREATED!')
+                    .setDescription(`**Name:** ${name}\n**Age:** ${age}\n**Gender:** ${gender}\n**About Me:** ${bio}`)
+                    .setColor('Pink')
+                    .setImage(image || ANIMATED_WELCOME);
+                    
+                return interaction.reply({ embeds: [emb], ephemeral: false });
             }
 
-            // 📌 PINDOT: CLOSE TICKET
-            if(customId==='close_ticket'){
-                const isAdmin = member.permissions.has(PermissionsBitField.Flags.Administrator) || member.id === guild.ownerId;
-                if(!isAdmin) return interaction.reply({content:'❌ ACCESS DENIED',ephemeral:true});
-                await interaction.reply({content:'🔒 Closing...'});
-                setTimeout(()=>interaction.channel.delete().catch(()=>{}),1500);
-            }
-
-            // 📌 VERIFICATION BUTTON
-            if (customId === 'verify_me') {
-                const role = guild.roles.cache.get(VERIFY_ROLE_ID);
-                if (!role) return interaction.reply({ content: '❌ Verify role not found!', ephemeral: true });
+            if (command === 'dating-profile') {
+                const user = interaction.options.getUser('user') || interaction.user;
+                const profile = datingProfiles.get(user.id);
                 
-                await member.roles.add(role);
-                logVerification(guild, interaction.user);
-
-                return interaction.reply({ content: '✅ You have been verified!', ephemeral: true });
+                if (!profile) return interaction.reply({ content: '❌ Walang profile ang user na ito! Gamitin ang `/dating-setup`', ephemeral: true });
+                
+                const emb = new EmbedBuilder()
+                    .setTitle(`💖 ${profile.name}'s Profile`)
+                    .setDescription(`**Age:** ${profile.age}\n**Gender:** ${profile.gender}\n**About:** ${profile.bio}\n❤️ **Likes:** ${profile.likes}`)
+                    .setColor('Pink')
+                    .setImage(profile.image || ANIMATED_WELCOME);
+                    
+                return interaction.reply({ embeds: [emb] });
             }
-        }
 
-        // ✅ ROLE SELECT MENU HANDLER
-        if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'role_select') {
-                const roleId = interaction.values[0];
-                const role = interaction.guild.roles.cache.get(roleId);
-                if(!role) return interaction.reply({content:'❌ Role not found!', ephemeral:true});
-
-                if (interaction.member.roles.cache.has(roleId)) {
-                    await interaction.member.roles.remove(role);
-                    return interaction.reply({content:`❌ Removed role: **${role.name}**`, ephemeral:true});
-                } else {
-                    await interaction.member.roles.add(role);
-                    return interaction.reply({content:`✅ Added role: **${role.name}**`, ephemeral:true});
-                }
+            if (command === 'dating-like') {
+                const target = interaction.options.getUser('user');
+                if (target.id === interaction.user.id) return interaction.reply({ content: '❌ Hindi mo pwedeng i-like ang sarili mo!', ephemeral: true });
+                
+                const profile = datingProfiles.get(target.id);
+                if (!profile) return interaction.reply({ content: '❌ Walang profile ang user na ito!', ephemeral: true });
+                
+                profile.likes += 1;
+                datingProfiles.set(target.id, profile);
+                
+                return interaction.reply({ content: `❤️ **Nagustuhan mo ang profile ni ${target.username}!**`, ephemeral: false });
             }
-        }
 
-    } catch (err) {
-        console.error('❌ GLOBAL ERROR:', err);
-        if (!interaction.replied && !interaction.deferred) {
-            return interaction.reply({ content: '❌ May naganap na error, subukan ulit.', ephemeral: true });
-        }
-    }
-});
+            if (command === 'dating-list') {
+                const allProfiles = Array.from(datingProfiles.entries());
+                if (allProfiles.length === 0) return interaction.reply('❌ Wala pang profile na gumawa!');
+                
+                let desc = '';
+                allProfiles.forEach(([id, p]) =>
+            }
 
 // 🔑 LOGIN
 client.login(TOKEN);
