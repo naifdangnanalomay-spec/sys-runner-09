@@ -13,9 +13,6 @@ const {
     StringSelectMenuBuilder,
     ButtonBuilder,
     ButtonStyle,
-    ModalBuilder,
-    TextInputBuilder,
-    TextInputStyle,
     Events,
     ActivityType,
     SlashCommandBuilder,
@@ -25,13 +22,10 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// 📌 ASSETS & CONFIG (INAYOS AT PINAGANDA)
+// 📌 ASSETS & CONFIG
 const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
 const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
-const ANIMATED_WELCOME = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif'; // GAMITIN ITO PARA SA ANIMATION
-const STAFF_ROLE_ID = '1508714923696455740'; 
-const VERIFY_ROLE_ID = '1509517115265253487'; 
-const OWNER_ID = '1250654354344775703'; 
+const ANIMATED_WELCOME = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif'; 
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -41,7 +35,13 @@ const ROLES = {
     EIGHTEEN_PLUS: '1508559365974659172'  
 };
 
-// 📌 DATABASES (INAYOS ANG PAG-IMPLEMENT)
+// 📌 CONFIG IDs
+const STAFF_ROLE_ID = '1508714923696455740'; 
+const VERIFY_ROLE_ID = '1509517115265253487'; 
+const OWNER_ID = '1250654354344775703'; 
+const CLIENT_ID = '1507007071634329703'; 
+
+// 📌 DATABASES
 const warns = new Map();
 const autoResponders = new Map();
 const reminders = new Map();
@@ -54,7 +54,7 @@ const verifyLogs = new Map();
 const raidProtection = new Map();
 const tokenGrabberProtection = new Map();
 const imageGrabberProtection = new Map();
-const datingProfiles = new Map(); // ✅ DATING SYSTEM DATABASE
+const datingProfiles = new Map(); 
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -70,9 +70,8 @@ const client = new Client({
 
 // 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
-const CLIENT_ID = '1507007071634329703'; 
 
-// 📌 SLASH COMMANDS — BUO, WALANG ERROR, MAY DATING SYSTEM
+// 📌 SLASH COMMANDS — FULL LIST
 const commands = [
     new SlashCommandBuilder().setName('setpfp').setDescription('Set bot profile picture').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
     new SlashCommandBuilder().setName('setbanner').setDescription('Set bot banner').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
@@ -114,31 +113,31 @@ const commands = [
     new SlashCommandBuilder().setName('tiktok').setDescription('TikTok link'),
     new SlashCommandBuilder().setName('youtube').setDescription('YouTube link'),
     
-    // ✅ /SAY at /EMBED — ANIMATED & MAGANDA
+    // ✅ /SAY at /EMBED
     new SlashCommandBuilder()
         .setName('say')
-        .setDescription('Bot sends any message you want (text, link, gif, image)')
+        .setDescription('Bot sends any message you want')
         .addStringOption(option => 
             option.setName('message')
-                .setDescription('Anything you want to say / send')
+                .setDescription('Anything you want to say')
                 .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName('embed')
-        .setDescription('✅ ANIMATED EMBED • Beautiful message with GIF/Image support')
+        .setDescription('Beautiful message with GIF/Image support')
         .addStringOption(option => option.setName('title').setDescription('Title of embed (optional)').setRequired(false))
-        .addStringOption(option => option.setName('description').setDescription('Main text / message (can include anything)').setRequired(true))
-        .addStringOption(option => option.setName('color').setDescription('Color code or name (e.g. #FF0000, Blue, Green)').setRequired(false))
-        .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL (SUPPORT ANIMATION)').setRequired(false))
-        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom (optional)').setRequired(false)),
+        .addStringOption(option => option.setName('description').setDescription('Main text / message').setRequired(true))
+        .addStringOption(option => option.setName('color').setDescription('Color code or name').setRequired(false))
+        .addStringOption(option => option.setName('image').setDescription('Image / GIF / Banner URL').setRequired(false))
+        .addStringOption(option => option.setName('footer').setDescription('Small text at bottom').setRequired(false)),
 
     // ✅ SECURITY COMMANDS
     new SlashCommandBuilder().setName('antiraid').setDescription('Toggle Anti-Raid System'),
     new SlashCommandBuilder().setName('antitoken').setDescription('Toggle Anti-Token Grabber Protection'),
     new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection'),
 
-    // ✅ NEW: DATING SYSTEM COMMANDS
+    // ✅ DATING SYSTEM
     new SlashCommandBuilder().setName('dating-setup').setDescription('📝 Create or update your dating profile')
         .addStringOption(o => o.setName('name').setDescription('Your Name').setRequired(true))
         .addIntegerOption(o => o.setName('age').setDescription('Your Age').setRequired(true))
@@ -175,7 +174,7 @@ client.once('ready', async () => {
     }, 1000);
 });
 
-// 📌 ANTI-NUKE / SECURITY SYSTEM — PINALAKAS
+// 📌 ANTI-NUKE / SECURITY SYSTEM
 client.on(Events.GuildCreate, guild => {
     antiNuke.set(guild.id, {
         enabled: true, logChannel: null, punishment: 'BAN & STRIP ROLES', antiBot: true, antiBan: true, antiKick: true,
@@ -189,7 +188,7 @@ client.on(Events.GuildCreate, guild => {
     imageGrabberProtection.set(guild.id, { enabled: true, blockedDomains: ['imgur.io', 'image-grabber', 'stealimg', 'loger', 'logger'] });
 });
 
-// 📌 AUDIT LOG MONITOR — DETECT NUKE ACTIONS
+// 📌 AUDIT LOG MONITOR
 client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
     const settings = antiNuke.get(guild.id);
     if (!settings || !settings.enabled) return;
@@ -234,32 +233,26 @@ client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
                 await member.ban({ reason: reason });
                 logEvent(guild, `🚨 **SECURITY ACTION:** Banned ${executor.tag} | ${reason}`);
             }
-            // Revert deleted channels/roles if possible
-            if (action === AuditLogEvent.ChannelDelete && target) {
-                await guild.channels.create({ name: target.name, type: target.type, parent: target.parentId }).catch(() => {});
-            }
         } catch (e) {}
     }
 });
 
-// 📌 ANTI-RAID & ✨ ANIMATED WELCOME SYSTEM
+// 📌 ✨ ANIMATED WELCOME SYSTEM
 client.on(Events.GuildMemberAdd, async (member) => {
     const raid = raidProtection.get(member.guild.id);
-    if (!raid || !raid.enabled) return;
-
-    const now = Date.now();
-    raid.joins.push(now);
-    raid.joins = raid.joins.filter(t => now - t < raid.timeWindow);
-
-    if (raid.joins.length > raid.joinLimit) {
-        logEvent(member.guild, `🚨 **RAID DETECTED:** Too many joins in short time — Locking server & banning new joiners`);
-        member.guild.channels.cache.forEach(ch => {
-            if (ch.isTextBased()) ch.permissionOverwrites.edit(member.guild.id, { SendMessages: false }).catch(() => {});
-        });
-        try { await member.ban({ reason: 'Raid Protection' }); } catch (e) {}
+    if (raid?.enabled) {
+        const now = Date.now();
+        raid.joins.push(now);
+        raid.joins = raid.joins.filter(t => now - t < raid.timeWindow);
+        if (raid.joins.length > raid.joinLimit) {
+            member.guild.channels.cache.forEach(ch => {
+                if (ch.isTextBased()) ch.permissionOverwrites.edit(member.guild.id, { SendMessages: false }).catch(()=>{});
+            });
+            try { await member.ban({ reason: 'Raid Protection' }); } catch (e) {}
+        }
     }
 
-    // ✨ ANIMATED & MAANGAS NA WELCOME MESSAGE
+    // ✨ SUPER ANIMATED WELCOME MESSAGE
     try {
         const set = guildSettings.get(member.guild.id);
         if(set?.welcome) {
@@ -268,9 +261,9 @@ client.on(Events.GuildMemberAdd, async (member) => {
                 .setTitle(`👋 NAGDAGDAG NG ISANG MAGANDANG MIYEMBRO!`)
                 .setDescription(`**Maligayang Pagdating, ${member.user.username}!** 🎉\n\n${msg}\n\n> 🚀 Huwag kalimutang mag-verify at kumuha ng roles!`)
                 .setColor('#FF00FF')
-                .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 })) // ✅ ANIMATED AVATAR
-                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED GIF BANNER
-                .setFooter({ text: `Member #${member.guild.memberCount} • Public Azura System` })
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED GIF
+                .setFooter({ text: `Member #${member.guild.memberCount} • AZURA SYSTEM` })
                 .setTimestamp();
                 
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
@@ -286,10 +279,10 @@ client.on(Events.GuildMemberRemove, async member => {
             const msg = set.leave.replace(/{user}/g,`${member.user.tag}`).replace(/{server}/g,member.guild.name);
             const emb = new EmbedBuilder()
                 .setTitle(`😢 MAY UMALIS SA ATIN...`)
-                .setDescription(`**${member.user.username}** ay nagpaalam na.\n\n${msg}\n\n> Sana ay naging masaya ka dito!`)
+                .setDescription(`**${member.user.username}** ay nagpaalam na.\n\n${msg}`)
                 .setColor('#FF0000')
                 .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-                .setImage(ANIMATED_WELCOME)
+                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED
                 .setTimestamp();
                 
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
@@ -298,7 +291,7 @@ client.on(Events.GuildMemberRemove, async member => {
     } catch(e){}
 });
 
-// 📌 MESSAGE SECURITY — ANTI TOKEN/IMAGE GRABBER + LINK MONITOR
+// 📌 MESSAGE HANDLER & LEVELING
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
 
@@ -332,8 +325,7 @@ client.on(Events.MessageCreate, async message => {
                 .setTitle('🎉 LEVEL UP!')
                 .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP ✨`)
                 .setColor('Gold')
-                .setThumbnail(BANNER_URL)
-                .setImage(ANIMATED_WELCOME); // ✅ ANIMATED
+                .setImage(ANIMATED_WELCOME);
             message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
         }
     }
@@ -345,7 +337,7 @@ client.on(Events.MessageCreate, async message => {
         const content = message.content.toLowerCase();
         if (tokenProtect.blockedDomains.some(domain => content.includes(domain)) || /[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}/.test(content)) {
             await message.delete().catch(() => {});
-            return message.channel.send({content:`❌ <@${message.author.id}> Token grabber / suspicious link detected!`,ephemeral:true});
+            return message.channel.send({content:`❌ <@${message.author.id}> Token grabber detected!`,ephemeral:true});
         }
     }
 
@@ -355,19 +347,13 @@ client.on(Events.MessageCreate, async message => {
         const content = message.content.toLowerCase();
         if (imgProtect.blockedDomains.some(domain => content.includes(domain))) {
             await message.delete().catch(() => {});
-            return message.channel.send({content:`❌ <@${message.author.id}> Image grabber / logger detected!`,ephemeral:true});
+            return message.channel.send({content:`❌ <@${message.author.id}> Image grabber detected!`,ephemeral:true});
         }
-    }
-
-    // ✅ LINKS ALLOWED BUT MONITORED — NO DELETION, JUST LOG
-    const anSettings = antiNuke.get(message.guild.id);
-    if (/(https?:\/\/[^\s]+)/g.test(message.content)) {
-        logEvent(message.guild, `🔗 Link sent by ${message.author.tag}: ${message.content}`);
     }
 });
 
 // 📌 LOGGING SYSTEM
-client.on(Events.ChannelCreate, channel => logEvent(channel.guild, `📝 Channel Created: ${channel.name} | By: ${channel.guild.members.cache.get(channel.lastMessage?.authorId)?.tag || 'Unknown'}`));
+client.on(Events.ChannelCreate, channel => logEvent(channel.guild, `📝 Channel Created: ${channel.name}`));
 client.on(Events.ChannelDelete, channel => logEvent(channel.guild, `🗑️ Channel Deleted: ${channel.name}`));
 client.on(Events.RoleCreate, role => logEvent(role.guild, `📝 Role Created: ${role.name}`));
 client.on(Events.RoleDelete, role => logEvent(role.guild, `🗑️ Role Deleted: ${role.name}`));
@@ -391,7 +377,7 @@ function logVerification(guild, user) {
     if (ch) {
         const logEmb = new EmbedBuilder()
             .setTitle('✅ NEW VERIFICATION')
-            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}\n**Time:** <t:${Math.floor(Date.now()/1000)}:F>`)
+            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}`)
             .setColor('Green')
             .setThumbnail(user.displayAvatarURL({dynamic:true}))
             .setImage(ANIMATED_WELCOME); // ✅ ANIMATED
@@ -400,10 +386,20 @@ function logVerification(guild, user) {
 }
 
 // ==================================================
-// 📌 ✅ INTERACTION HANDLER — INAYOS LAHAT, WALANG ERROR
+// 📌 ✅ INTERACTION HANDLER — FULL FIXED
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
+        // 🔹 BUTTON HANDLER (VERIFY)
+        if (interaction.isButton()) {
+            if (interaction.customId === 'verify_me') {
+                const member = interaction.member;
+                await member.roles.add(VERIFY_ROLE_ID);
+                await interaction.reply({ content: '✅ **VERIFIED SUCCESSFULLY! Welcome to the server!**', ephemeral: true });
+                logVerification(interaction.guild, interaction.user);
+            }
+        }
+
         // 🔹 SLASH COMMANDS
         if (interaction.isChatInputCommand()) {
             const command = interaction.commandName;
@@ -477,14 +473,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply(`🐢 Slowmode: ${sec}s`);
             }
 
-            // ✅ /SAY COMMAND — GUMAGANA NA
+            // ✅ /SAY COMMAND
             if (command === 'say' && isAdmin) {
                 const msg = interaction.options.getString('message');
                 await interaction.channel.send({ content: msg });
                 return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
             }
 
-            // ✅ /EMBED COMMAND — ANIMATED & MAANGAS
+            // ✅ /EMBED COMMAND
             if (command === 'embed' && isAdmin) {
                 const title = interaction.options.getString('title') || null;
                 const desc = interaction.options.getString('description');
@@ -494,15 +490,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 const emb = new EmbedBuilder().setDescription(desc).setColor(color);
                 if (title) emb.setTitle(title);
-                if (image) emb.setImage(image); // ✅ SUPPORTS GIF/ANIMATION
+                if (image) emb.setImage(image);
                 if (footer) emb.setFooter({ text: footer });
                 emb.setTimestamp();
 
                 await interaction.channel.send({ embeds: [emb] });
-                return interaction.reply({ content: '✅ **ANIMATED EMBED SENT!**', ephemeral: true });
+                return interaction.reply({ content: '✅ Embed Sent!', ephemeral: true });
             }
 
-            // --- UTILITY COMMANDS ---
+            // --- UTILITY ---
             if (command === 'afk') return interaction.reply('✅ AFK Mode Set');
             if (command === 'avatar') {
                 const u = interaction.options.getUser('user') || interaction.user;
@@ -525,7 +521,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-            // --- LEVELING COMMANDS ---
+            // --- LEVELING ---
             if (command === 'stats' || command === 'level') {
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const userData = levels.get(guild.id).get(interaction.user.id) || {xp:0,level:1,messages:0};
@@ -560,7 +556,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 const top10 = arr.slice(0, 10);
                 let desc = ''; 
                 top10.forEach((u,i) => { desc += `**${i+1}.** <@${u.id}> | 🎖️ Lvl: ${u.level} | ✨ XP: ${u.xp}\n`; });
-                const emb = new EmbedBuilder().setTitle('📈 Server Leaderboard').setDescription(desc || 'Wala pang data! Magpadala ng mensahe.').setColor('Orange');
+                const emb = new EmbedBuilder().setTitle('📈 Server Leaderboard').setDescription(desc || 'Wala pang data!').setColor('Orange');
                 return interaction.reply({embeds:[emb]});
             }
 
@@ -583,10 +579,10 @@ client.on(Events.InteractionCreate, async interaction => {
             if (command === 'antilink' && isAdmin) {
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
                 antiNuke.get(guild.id).antiLink = !antiNuke.get(guild.id).antiLink;
-                return interaction.reply(`✅ Anti-Link: ${antiNuke.get(guild.id).antiLink ? 'ON' : 'OFF'} | *Links still allowed but monitored*`);
+                return interaction.reply(`✅ Anti-Link: ${antiNuke.get(guild.id).antiLink ? 'ON' : 'OFF'}`);
             }
 
-            // --- SECURITY COMMANDS ---
+            // --- SECURITY ---
             if (command === 'antiraid' && isAdmin) {
                 const data = raidProtection.get(guild.id);
                 data.enabled = !data.enabled;
@@ -612,7 +608,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .setDescription(`**✅ I-VERIFY ANG IYONG SARILI PARA MAKAPASOK!**\n\n*Pindutin ang button sa ibaba para maging buong miyembro.*`)
                         .setColor('#2f3136')
                         .setImage(ANIMATED_WELCOME) // ✅ ANIMATED VERIFY
-                        .setFooter({text:'OfficialServs Verify System • SECURED'});
+                        .setFooter({text:'AZURA VERIFY SYSTEM • SECURED'});
 
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
@@ -627,12 +623,17 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(action === 'disable') return interaction.reply('✅ Verification Disabled');
                 if(action === 'status') return interaction.reply('✅ Verification is ACTIVE');
             }
+
             if (command === 'welcome' && isAdmin) {
                 const action = interaction.options.getString('action');
-                if(action === 'setup') return interaction.reply('✅ Welcome System Setup!');
+                if(action === 'setup') {
+                    guildSettings.set(guild.id, {welcome: "Welcome to the server! Enjoy your stay!"});
+                    return interaction.reply('✅ Welcome System Setup & ANIMATED!');
+                }
                 if(action === 'disable') return interaction.reply('✅ Welcome Disabled');
                 if(action === 'status') return interaction.reply('✅ Welcome Messages: ON');
             }
+
             if (command === 'setup' && isAdmin) {
                 let logChannelId;
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
@@ -720,17 +721,25 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content:'✅ Role Menu Sent!', ephemeral:true});
             }
 
+            // ✅ TICKET SETUP — ANIMATED & MAGANDA
             if (command === 'ticket-setup' && isAdmin) {
-                const emb=new EmbedBuilder().setTitle('🎟️ | AZURA SUPPORT').setDescription('Select category below:').setImage(TICKET_GIF).setThumbnail(BANNER_URL).setColor('#2F3136').setFooter({text:'AZURA BOT',iconURL:BANNER_URL});
+                const emb=new EmbedBuilder()
+                    .setTitle('🎟️ | AZURA SUPPORT TICKET')
+                    .setDescription('>>> Welcome to AZURA Support!\nPlease select a category below to open a ticket.\n\n🔹 **Support** - For help & issues\n🔹 **Partnership** - For ads & collab')
+                    .setColor('#2F3136')
+                    .setImage(TICKET_GIF) // ✅ ANIMATED GIF
+                    .setThumbnail(BANNER_URL)
+                    .setFooter({text:'AZURA BOT • OFFICIAL SERVES', iconURL:BANNER_URL});
+                
                 const row=new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('➤ SUPPORT').setStyle(ButtonStyle.Secondary),
-                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary)
+                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('📩 SUPPORT').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('🤝 PARTNERSHIP').setStyle(ButtonStyle.Secondary)
                 );
                 await interaction.channel.send({embeds:[emb],components:[row]});
-                return interaction.reply('✅ Ticket System Ready');
+                return interaction.reply({content:'✅ Ticket System Setup Complete! ANIMATED ✨', ephemeral:true});
             }
 
-            // ✅ DATING SYSTEM COMMANDS
+            // ✅ DATING SYSTEM
             if (command === 'dating-setup') {
                 const name = interaction.options.getString('name');
                 const age = interaction.options.getInteger('age');
@@ -782,8 +791,25 @@ client.on(Events.InteractionCreate, async interaction => {
                 if (allProfiles.length === 0) return interaction.reply('❌ Wala pang profile na gumawa!');
                 
                 let desc = '';
-                allProfiles.forEach(([id, p]) =>
+                allProfiles.forEach(([id, p]) => {
+                    desc += `💖 **${p.name}** • <@${id}>\n🔞 Age: ${p.age} | ❤️ Likes: ${p.likes}\n\n`;
+                });
+                
+                const emb = new EmbedBuilder()
+                    .setTitle('📋 ALL DATING PROFILES')
+                    .setDescription(desc)
+                    .setColor('Magenta')
+                    .setImage(ANIMATED_WELCOME);
+                    
+                return interaction.reply({ embeds: [emb] });
             }
 
-// 🔑 LOGIN
+        }
+    } catch (error) {
+        console.error(error);
+        interaction.reply({ content: '❌ There was an error executing this command!', ephemeral: true }).catch(()=>{});
+    }
+});
+
+// 🟢 LOGIN BOT
 client.login(TOKEN);
