@@ -832,5 +832,5 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 });
 
-// 📌 TAPOS NA! ITO ANG HULING LINYA — WAG GALAWIN!
+// LOGIN BOT
 client.login(TOKEN);
