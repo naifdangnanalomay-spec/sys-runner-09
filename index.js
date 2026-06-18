@@ -655,7 +655,7 @@ client.on(Events.InteractionCreate, async interaction => {
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
                             .setCustomId('verify_me')
-                            .setLabel('✅ I-VERIFY DITO')
+                            .setLabel('✅ VERIFY ME')
                             .setStyle(ButtonStyle.Success)
                             .setEmoji('🔓')
                     );
@@ -770,16 +770,16 @@ client.on(Events.InteractionCreate, async interaction => {
                        // ✅ TICKET SETUP — INAYOS AT PINAGANDA
             if (command === 'ticket-setup' && isAdmin) {
                 const emb=new EmbedBuilder()
-                    .setTitle('🎟️ **AZURA SUPPORT SYSTEM**')
+                    .setTitle('🎟️ **PUBLIC AZURA SUPPORT SYSTEM**')
                     .setDescription(`> 📌 **Kailangan mo ba ng tulong?**\n> Pumili ng kategorya sa ibaba para magbukas ng ticket.\n\n> 🔹 **SUPPORT** - Para sa mga tanong o problema\n> 🔹 **PARTNERSHIP** - Para sa mga ads at samahan`)
                     .setColor('#4A148C') // Deep Purple
                     .setImage(TICKET_GIF) // ✅ BAGONG ANIMATED TICKET GIF
                     .setThumbnail(BANNER_URL)
-                    .setFooter({text:'AZURA BOT • OFFICIAL SUPPORT', iconURL: BANNER_URL});
+                    .setFooter({text:'PUBLIC AZURA BOT • OFFICIAL SUPPORT', iconURL: BANNER_URL});
                 
                 const row=new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('📩 SUPPORT').setStyle(ButtonStyle.Primary).setEmoji('🛠️'),
-                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('🤝 PARTNERSHIP').setStyle(ButtonStyle.Secondary).setEmoji('💼')
+                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('➤ SUPPORT').setStyle(ButtonStyle.Primary).setEmoji('🛠️'),
+                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary).setEmoji('💼')
                 );
                 await interaction.channel.send({embeds:[emb],components:[row]});
                 return interaction.reply({content:'✅ **Ticket System Setup Complete! ANIMATED & PREMIUM ✨**', ephemeral:true});
@@ -812,7 +812,7 @@ client.on(Events.InteractionCreate, async interaction => {
             }
             if (command === 'botinfo') {
                 const emb = new EmbedBuilder()
-                    .setTitle('🤖 **AZURA BOT INFORMATION**')
+                    .setTitle('🤖 **PUBLIC AZURA BOT INFORMATION**')
                     .setDescription('Premium & Secure Bot made for you ✨')
                     .addFields(
                         {name:'👑 Owner',value:'<@1250654354344775703>',inline:true},
