@@ -155,7 +155,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
     setInterval(() => {
-        const activities = [{ name: `@OfficialServs | SECURED 💖`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
+        const activities = [{ name: `🗲OfficialServs | 🗲SECURED SERVER🛡️`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
         client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
     }, 1000);
 });
