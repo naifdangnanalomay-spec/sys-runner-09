@@ -767,7 +767,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content:'✅ **Role Menu Created Successfully!**', ephemeral:true});
             }
 
-            // ✅ TICKET SETUP — INAYOS AT PINAGANDA
+                       // ✅ TICKET SETUP — INAYOS AT PINAGANDA
             if (command === 'ticket-setup' && isAdmin) {
                 const emb=new EmbedBuilder()
                     .setTitle('🎟️ **AZURA SUPPORT SYSTEM**')
@@ -785,7 +785,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content:'✅ **Ticket System Setup Complete! ANIMATED & PREMIUM ✨**', ephemeral:true});
             }
 
-                        // --- FUN COMMANDS ---
+            // --- FUN COMMANDS ---
             if (command === 'ping') return interaction.reply(`🏓 Pong! Latency: **${Date.now() - interaction.createdTimestamp}ms**`);
             if (command === 'uptime') {
                 const d = Math.floor(client.uptime / 86400000);
@@ -824,11 +824,13 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({embeds:[emb]});
             }
 
-        } catch (err) {
-            console.error(err);
-            return interaction.reply({content:'❌ **May naganap na error!**',ephemeral:true});
-        }
-    });
+        } // <-- ITO ANG KULANG MO KANINA! PANG SARA SA LAHAT NG COMMANDS
+
+    } catch (err) {
+        console.error(err);
+        return interaction.reply({content:'❌ **May naganap na error!**',ephemeral:true});
+    }
+});
 
 // 📌 TAPOS NA! ITO ANG HULING LINYA — WAG GALAWIN!
 client.login(TOKEN);
