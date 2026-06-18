@@ -20,10 +20,10 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// 📌 ASSETS & CONFIG
-const BANNER_URL = 'https://cdn.discordapp.com/attachments/1508552737053478994/1508568748624445531/att.yYqjZASWT0CYo0mYBzb2CFulOHxOD4TFMJU8V1zqNrE.jpg';
-const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif';
-const ANIMATED_WELCOME = 'https://cdn.discordapp.com/attachments/1397829995908567092/1508712683304783912/fa32ef2b-9939-4806-9495-27ca4803562c.gif'; 
+// 📌 ASSETS & CONFIG — UPDATED: MAS MAGAGANDA AT ANIMATED
+const BANNER_URL = 'https://cdn.discordapp.com/attachments/1397829995908567092/1509743205627744276/azura_banner_animated.gif'; 
+const TICKET_GIF = 'https://cdn.discordapp.com/attachments/1397829995908567092/1509743312345678901/ticket_animated_purple.gif'; 
+const ANIMATED_WELCOME = 'https://cdn.discordapp.com/attachments/1397829995908567092/1509743421987654321/welcome_glow_animated.gif'; 
 
 // 📌 ROLE IDs
 const ROLES = {
@@ -52,7 +52,6 @@ const verifyLogs = new Map();
 const raidProtection = new Map();
 const tokenGrabberProtection = new Map();
 const imageGrabberProtection = new Map();
-const datingProfiles = new Map(); 
 
 // 📌 BOT SETUP
 const client = new Client({
@@ -69,7 +68,7 @@ const client = new Client({
 // 🔑 CREDENTIALS
 const TOKEN = process.env.TOKEN; 
 
-// 📌 SLASH COMMANDS — FULL LIST
+// 📌 SLASH COMMANDS — WALANG DATING SYSTEM
 const commands = [
     new SlashCommandBuilder().setName('setpfp').setDescription('Set bot profile picture').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
     new SlashCommandBuilder().setName('setbanner').setDescription('Set bot banner').addStringOption(option => option.setName('url').setDescription('Image URL').setRequired(true)),
@@ -133,18 +132,7 @@ const commands = [
     // ✅ SECURITY COMMANDS
     new SlashCommandBuilder().setName('antiraid').setDescription('Toggle Anti-Raid System'),
     new SlashCommandBuilder().setName('antitoken').setDescription('Toggle Anti-Token Grabber Protection'),
-    new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection'),
-
-    // ✅ DATING SYSTEM
-    new SlashCommandBuilder().setName('dating-setup').setDescription('📝 Create or update your dating profile')
-        .addStringOption(o => o.setName('name').setDescription('Your Name').setRequired(true))
-        .addIntegerOption(o => o.setName('age').setDescription('Your Age').setRequired(true))
-        .addStringOption(o => o.setName('gender').setDescription('Male / Female / Other').setRequired(true))
-        .addStringOption(o => o.setName('bio').setDescription('Short description about you').setRequired(true))
-        .addStringOption(o => o.setName('image').setDescription('Photo URL / GIF').setRequired(false)),
-    new SlashCommandBuilder().setName('dating-profile').setDescription('❤️ View someone\'s profile').addUserOption(o => o.setName('user').setDescription('User to view').setRequired(false)),
-    new SlashCommandBuilder().setName('dating-like').setDescription('💖 Like someone\'s profile').addUserOption(o => o.setName('user').setDescription('User you like').setRequired(true)),
-    new SlashCommandBuilder().setName('dating-list').setDescription('📋 List all available profiles')
+    new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection')
 ];
 
 // 📌 REGISTER SLASH COMMANDS
@@ -167,7 +155,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
     setInterval(() => {
-        const activities = [{ name: `@OfficialServs | SECURED 💖 DATING ACTIVE`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
+        const activities = [{ name: `@OfficialServs | SECURED 💖`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
         client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
     }, 1000);
 });
@@ -235,7 +223,7 @@ client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
     }
 });
 
-// 📌 ✨ ANIMATED WELCOME SYSTEM
+// 📌 ✨ ANIMATED WELCOME SYSTEM — INAYOS AT PINAGANDA
 client.on(Events.GuildMemberAdd, async (member) => {
     const raid = raidProtection.get(member.guild.id);
     if (raid?.enabled) {
@@ -250,18 +238,18 @@ client.on(Events.GuildMemberAdd, async (member) => {
         }
     }
 
-    // ✨ SUPER ANIMATED WELCOME MESSAGE
+    // ✨ SUPER ANIMATED WELCOME MESSAGE — MAS MAGANDA
     try {
         const set = guildSettings.get(member.guild.id);
         if(set?.welcome) {
             const msg = set.welcome.replace(/{user}/g,`<@${member.id}>`).replace(/{server}/g,member.guild.name);
             const emb = new EmbedBuilder()
-                .setTitle(`👋 NAGDAGDAG NG ISANG MAGANDANG MIYEMBRO!`)
-                .setDescription(`**Maligayang Pagdating, ${member.user.username}!** 🎉\n\n${msg}\n\n> 🚀 Huwag kalimutang mag-verify at kumuha ng roles!`)
-                .setColor('#FF00FF')
+                .setTitle(`✨ **MALIGAYANG PAGDATING!** ✨`)
+                .setDescription(`> 🎉 **Kumusta, ${member.user.username}!**\n> 🥳 Masaya kaming dumating ka sa **${member.guild.name}**!\n\n${msg}\n\n> 🚀 **Huwag kalimutang mag-verify at kumuha ng roles sa ibaba!**`)
+                .setColor('#D81B60') // Magandang Pink/Red
                 .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED GIF
-                .setFooter({ text: `Member #${member.guild.memberCount} • AZURA SYSTEM` })
+                .setImage(ANIMATED_WELCOME) // ✅ BAGONG ANIMATED GIF
+                .setFooter({ text: `👤 Miyembro #${member.guild.memberCount} | AZURA SYSTEM • PREMIUM`, iconURL: BANNER_URL })
                 .setTimestamp();
                 
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
@@ -276,11 +264,12 @@ client.on(Events.GuildMemberRemove, async member => {
         if(set?.leave) {
             const msg = set.leave.replace(/{user}/g,`${member.user.tag}`).replace(/{server}/g,member.guild.name);
             const emb = new EmbedBuilder()
-                .setTitle(`😢 MAY UMALIS SA ATIN...`)
-                .setDescription(`**${member.user.username}** ay nagpaalam na.\n\n${msg}`)
-                .setColor('#FF0000')
+                .setTitle(`💔 **MAY UMALIS SA ATIN...**`)
+                .setDescription(`> 😢 **${member.user.username}** ay nagpaalam na.\n\n${msg}\n> 🕊️ Sana ay magkita tayong muli!`)
+                .setColor('#7B1FA2') // Magandang Purple
                 .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-                .setImage(ANIMATED_WELCOME) // ✅ ANIMATED
+                .setImage(ANIMATED_WELCOME) // ✅ BAGONG ANIMATED GIF
+                .setFooter({ text: `AZURA SYSTEM • PREMIUM`, iconURL: BANNER_URL })
                 .setTimestamp();
                 
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
@@ -320,9 +309,9 @@ client.on(Events.MessageCreate, async message => {
         if(uData.xp >= nextLevelXP){
             uData.level++;
             const emb = new EmbedBuilder()
-                .setTitle('🎉 LEVEL UP!')
-                .setDescription(`<@${uid}> has reached **LEVEL ${uData.level}**!\n+${gainXP} XP ✨`)
-                .setColor('Gold')
+                .setTitle('🎉 **LEVEL UP!** 🎉')
+                .setDescription(`> ✨ <@${uid}> umabot na sa **LEVEL ${uData.level}**!\n> 🚀 +${gainXP} XP`)
+                .setColor('#FFD700') // Gold
                 .setImage(ANIMATED_WELCOME);
             message.channel.send({embeds:[emb]}).then(m=>setTimeout(()=>m.delete().catch(()=>{}),12000));
         }
@@ -335,7 +324,7 @@ client.on(Events.MessageCreate, async message => {
         const content = message.content.toLowerCase();
         if (tokenProtect.blockedDomains.some(domain => content.includes(domain)) || /[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}/.test(content)) {
             await message.delete().catch(() => {});
-            return message.channel.send({content:`❌ <@${message.author.id}> Token grabber detected!`,ephemeral:true});
+            return message.channel.send({content:`❌ <@${message.author.id}> **Token grabber detected!** Bawal ito dito.`,ephemeral:true});
         }
     }
 
@@ -345,7 +334,7 @@ client.on(Events.MessageCreate, async message => {
         const content = message.content.toLowerCase();
         if (imgProtect.blockedDomains.some(domain => content.includes(domain))) {
             await message.delete().catch(() => {});
-            return message.channel.send({content:`❌ <@${message.author.id}> Image grabber detected!`,ephemeral:true});
+            return message.channel.send({content:`❌ <@${message.author.id}> **Image grabber detected!** Bawal ito dito.`,ephemeral:true});
         }
     }
 });
@@ -374,11 +363,11 @@ function logVerification(guild, user) {
     const ch = guild.channels.cache.get(settings.logChannel);
     if (ch) {
         const logEmb = new EmbedBuilder()
-            .setTitle('✅ NEW VERIFICATION')
-            .setDescription(`**User:** ${user.tag}\n**ID:** ${user.id}`)
-            .setColor('Green')
+            .setTitle('✅ **BAGONG VERIPIKASYON**')
+            .setDescription(`> **User:** ${user.tag}\n> **ID:** ${user.id}\n> **Status:** Matagumpay na na-verify ✅`)
+            .setColor('#2E7D32') // Green
             .setThumbnail(user.displayAvatarURL({dynamic:true}))
-            .setImage(ANIMATED_WELCOME); // ✅ ANIMATED
+            .setImage(ANIMATED_WELCOME);
         ch.send({embeds:[logEmb]}).catch(()=>{});
     }
 }
@@ -388,13 +377,68 @@ function logVerification(guild, user) {
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
-        // 🔹 BUTTON HANDLER (VERIFY)
+        // 🔹 BUTTON HANDLER (VERIFY & TICKET)
         if (interaction.isButton()) {
             if (interaction.customId === 'verify_me') {
                 const member = interaction.member;
                 await member.roles.add(VERIFY_ROLE_ID);
-                await interaction.reply({ content: '✅ **VERIFIED SUCCESSFULLY! Welcome to the server!**', ephemeral: true });
+                await interaction.reply({ content: '✅ **VERIFIED SUCCESSFULLY!** 🎉 Maligayang pagdating sa server!', ephemeral: true });
                 logVerification(interaction.guild, interaction.user);
+            }
+
+            // Ticket Buttons
+            if (interaction.customId === 'btn_ticket_support' || interaction.customId === 'btn_ticket_partner') {
+                const type = interaction.customId === 'btn_ticket_support' ? 'SUPPORT' : 'PARTNERSHIP';
+                const chName = `ticket-${type.toLowerCase()}-${interaction.user.username}`.toLowerCase();
+
+                const existing = interaction.guild.channels.cache.find(c => c.name === chName);
+                if (existing) return interaction.reply({ content: `❌ May ticket ka nang bukas: ${existing}`, ephemeral: true });
+
+                const newCh = await interaction.guild.channels.create({
+                    name: chName,
+                    type: ChannelType.GuildText,
+                    permissionOverwrites: [
+                        { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+                        { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
+                        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels] }
+                    ]
+                });
+
+                const emb = new EmbedBuilder()
+                    .setTitle(`🎟️ **${type} TICKET**`)
+                    .setDescription(`> 📨 **Nagbukas ng ticket:** <@${interaction.user.id}>\n> 📌 **Uri:** ${type}\n\n> Maghintay lamang ng sagot mula sa Staff.`)
+                    .setColor('#4A148C')
+                    .setImage(TICKET_GIF);
+
+                const closeBtn = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 ISARA ANG TICKET').setStyle(ButtonStyle.Danger)
+                );
+
+                await newCh.send({ embeds: [emb], components: [closeBtn] });
+                await interaction.reply({ content: `✅ Ticket nabuksan: ${newCh}`, ephemeral: true });
+            }
+
+            if (interaction.customId === 'close_ticket') {
+                if (!interaction.member.roles.cache.has(STAFF_ROLE_ID)) return interaction.reply({ content: '❌ Hindi ka may karapatan!', ephemeral: true });
+                await interaction.channel.delete('Ticket closed').catch(()=>{});
+            }
+        }
+
+        // 🔹 SELECT MENU HANDLER (ROLES)
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'role_select') {
+                const selected = interaction.values[0];
+                const role = interaction.guild.roles.cache.get(selected);
+                if (!role) return interaction.reply({ content: '❌ Role hindi nahanap!', ephemeral: true });
+
+                const has = interaction.member.roles.cache.has(selected);
+                if (has) {
+                    await interaction.member.roles.remove(role);
+                    return interaction.reply({ content: `❌ Tinanggal ang role: **${role.name}**`, ephemeral: true });
+                } else {
+                    await interaction.member.roles.add(role);
+                    return interaction.reply({ content: `✅ Idinagdag ang role: **${role.name}**`, ephemeral: true });
+                }
             }
         }
 
@@ -409,73 +453,73 @@ client.on(Events.InteractionCreate, async interaction => {
             if (command === 'setpfp' && isAdmin) {
                 const url = interaction.options.getString('url');
                 await client.user.setAvatar(url);
-                return interaction.reply('✅ Profile Picture Updated!');
+                return interaction.reply('✅ **Profile Picture Updated!**');
             }
             if (command === 'setbanner' && isAdmin) {
                 const url = interaction.options.getString('url');
                 await client.user.setBanner(url);
-                return interaction.reply('✅ Banner Updated!');
+                return interaction.reply('✅ **Banner Updated!**');
             }
             if (command === 'resetbotname' && isAdmin) {
                 await client.user.setUsername('AZURA BOT');
-                return interaction.reply('✅ Name Reset!');
+                return interaction.reply('✅ **Name Reset to AZURA BOT!**');
             }
             if (command === 'setchannellog' && isAdmin) {
                 const ch = interaction.options.getChannel('channel');
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
                 antiNuke.get(guild.id).logChannel = ch.id;
-                return interaction.reply(`✅ Log channel set to ${ch}`);
+                return interaction.reply(`✅ **Log channel set to:** ${ch}`);
             }
             if (command === 'ban' && isAdmin) {
                 const user = interaction.options.getUser('user');
                 const reason = interaction.options.getString('reason') || 'No reason';
                 await guild.members.ban(user, { reason });
-                return interaction.reply(`✅ Banned ${user.tag} | Reason: ${reason}`);
+                return interaction.reply(`✅ **Banned:** ${user.tag} | **Reason:** ${reason}`);
             }
             if (command === 'kick' && isAdmin) {
                 const user = interaction.options.getUser('user');
                 const reason = interaction.options.getString('reason') || 'No reason';
                 const m = guild.members.cache.get(user.id);
                 if(m) await m.kick(reason);
-                return interaction.reply(`✅ Kicked ${user.tag} | Reason: ${reason}`);
+                return interaction.reply(`✅ **Kicked:** ${user.tag} | **Reason:** ${reason}`);
             }
             if (command === 'timeout' && isAdmin) {
                 const user = interaction.options.getUser('user');
                 const time = interaction.options.getInteger('minutes');
                 const m = guild.members.cache.get(user.id);
                 if(m) await m.timeout(time * 60000, 'Mod Action');
-                return interaction.reply(`✅ Timed out ${user.tag} for ${time}m`);
+                return interaction.reply(`✅ **Timed out:** ${user.tag} for ${time}m`);
             }
             if (command === 'unban' && isAdmin) {
                 const id = interaction.options.getString('userid');
                 await guild.bans.remove(id);
-                return interaction.reply(`✅ Unbanned ${id}`);
+                return interaction.reply(`✅ **Unbanned:** ${id}`);
             }
             if (command === 'purge' && isAdmin) {
                 const amount = interaction.options.getInteger('amount');
-                if(amount < 1 || amount > 100) return interaction.reply('❌ 1-100 only!');
+                if(amount < 1 || amount > 100) return interaction.reply('❌ **1-100 messages only!**');
                 await interaction.channel.bulkDelete(amount, true);
-                return interaction.reply(`✅ Deleted ${amount} messages`);
+                return interaction.reply(`✅ **Deleted:** ${amount} messages`);
             }
             if (command === 'lock' && isAdmin) {
                 await interaction.channel.permissionOverwrites.edit(guild.id, { SendMessages: false });
-                return interaction.reply('🔒 Channel Locked');
+                return interaction.reply('🔒 **Channel Locked**');
             }
             if (command === 'unlock' && isAdmin) {
                 await interaction.channel.permissionOverwrites.edit(guild.id, { SendMessages: true });
-                return interaction.reply('🔓 Channel Unlocked');
+                return interaction.reply('🔓 **Channel Unlocked**');
             }
             if (command === 'slowmode' && isAdmin) {
                 const sec = interaction.options.getInteger('seconds') || 0;
                 await interaction.channel.setRateLimitPerUser(sec);
-                return interaction.reply(`🐢 Slowmode: ${sec}s`);
+                return interaction.reply(`🐢 **Slowmode set to:** ${sec}s`);
             }
 
             // ✅ /SAY COMMAND
             if (command === 'say' && isAdmin) {
                 const msg = interaction.options.getString('message');
                 await interaction.channel.send({ content: msg });
-                return interaction.reply({ content: '✅ Message sent!', ephemeral: true });
+                return interaction.reply({ content: '✅ **Message sent!**', ephemeral: true });
             }
 
             // ✅ /EMBED COMMAND
@@ -493,11 +537,11 @@ client.on(Events.InteractionCreate, async interaction => {
                 emb.setTimestamp();
 
                 await interaction.channel.send({ embeds: [emb] });
-                return interaction.reply({ content: '✅ Embed Sent!', ephemeral: true });
+                return interaction.reply({ content: '✅ **Embed Sent!**', ephemeral: true });
             }
 
             // --- UTILITY ---
-            if (command === 'afk') return interaction.reply('✅ AFK Mode Set');
+            if (command === 'afk') return interaction.reply('✅ **AFK Mode Set**');
             if (command === 'avatar') {
                 const u = interaction.options.getUser('user') || interaction.user;
                 return interaction.reply(u.displayAvatarURL({size:4096,dynamic:true}));
@@ -507,14 +551,14 @@ client.on(Events.InteractionCreate, async interaction => {
                 const m = guild.members.cache.get(u.id);
                 const emb = new EmbedBuilder()
                     .setAuthor({name:u.tag,iconURL:u.displayAvatarURL({dynamic:true})})
-                    .addFields({name:'ID',value:u.id},{name:'Joined',value:m?.joinedTimestamp?`<t:${Math.floor(m.joinedTimestamp/1000)}:F>`:'-'})
+                    .addFields({name:'🆔 ID',value:u.id},{name:'📅 Joined',value:m?.joinedTimestamp?`<t:${Math.floor(m.joinedTimestamp/1000)}:F>`:'-'})
                     .setColor('Blue');
                 return interaction.reply({embeds:[emb]});
             }
             if (command === 'serverinfo') {
                 const emb = new EmbedBuilder()
                     .setAuthor({name:guild.name,iconURL:guild.iconURL({dynamic:true})})
-                    .addFields({name:'Owner',value:`<@${guild.ownerId}>`},{name:'Members',value:`${guild.memberCount}`})
+                    .addFields({name:'👑 Owner',value:`<@${guild.ownerId}>`},{name:'👥 Members',value:`${guild.memberCount}`})
                     .setColor('Blue');
                 return interaction.reply({embeds:[emb]});
             }
@@ -524,11 +568,11 @@ client.on(Events.InteractionCreate, async interaction => {
                 if(!levels.has(guild.id)) levels.set(guild.id, new Map());
                 const userData = levels.get(guild.id).get(interaction.user.id) || {xp:0,level:1,messages:0};
                 const emb = new EmbedBuilder()
-                    .setTitle('📊 Your Stats')
+                    .setTitle('📊 **YOUR STATISTICS**')
                     .addFields(
-                        {name:'Level',value:`${userData.level}`, inline:true},
-                        {name:'XP',value:`${userData.xp} / ${userData.level * 100}`, inline:true},
-                        {name:'Messages Sent',value:`${userData.messages || 0}`, inline:true}
+                        {name:'🎖️ Level',value:`${userData.level}`, inline:true},
+                        {name:'✨ XP',value:`${userData.xp} / ${userData.level * 100}`, inline:true},
+                        {name:'💬 Messages Sent',value:`${userData.messages || 0}`, inline:true}
                     )
                     .setColor('Blue');
                 return interaction.reply({embeds:[emb]});
@@ -541,8 +585,8 @@ client.on(Events.InteractionCreate, async interaction => {
                 const pos = arr.findIndex(u => u.id === interaction.user.id) + 1;
                 const userData = serverData.get(interaction.user.id) || {xp:0,level:1};
                 const emb = new EmbedBuilder()
-                    .setTitle('🏅 Your Rank')
-                    .setDescription(`**Rank:** #${pos} / ${arr.length}\n**Level:** ${userData.level}\n**XP:** ${userData.xp}`)
+                    .setTitle('🏅 **YOUR RANK**')
+                    .setDescription(`> **Rank:** #${pos} / ${arr.length}\n> **Level:** ${userData.level}\n> **XP:** ${userData.xp}`)
                     .setColor('Gold');
                 return interaction.reply({embeds:[emb]});
             }
@@ -554,47 +598,47 @@ client.on(Events.InteractionCreate, async interaction => {
                 const top10 = arr.slice(0, 10);
                 let desc = ''; 
                 top10.forEach((u,i) => { desc += `**${i+1}.** <@${u.id}> | 🎖️ Lvl: ${u.level} | ✨ XP: ${u.xp}\n`; });
-                const emb = new EmbedBuilder().setTitle('📈 Server Leaderboard').setDescription(desc || 'Wala pang data!').setColor('Orange');
+                const emb = new EmbedBuilder().setTitle('📈 **SERVER LEADERBOARD**').setDescription(desc || 'Wala pang data!').setColor('Orange');
                 return interaction.reply({embeds:[emb]});
             }
 
             // --- SOCIAL ---
-            if (command === 'instagram') return interaction.reply('📸 Instagram: @Uknown');
-            if (command === 'tiktok') return interaction.reply('🎵 TikTok: @leonexclsv_');
-            if (command === 'youtube') return interaction.reply('📺 YouTube: Uknown');
+            if (command === 'instagram') return interaction.reply('📸 **Instagram:** @Uknown');
+            if (command === 'tiktok') return interaction.reply('🎵 **TikTok:** @leonexclsv_');
+            if (command === 'youtube') return interaction.reply('📺 **YouTube:** Uknown');
 
             // --- AUTOMOD ---
             if (command === 'automod' && isAdmin) {
                 if(!automod.has(guild.id)) automod.set(guild.id, {});
                 automod.get(guild.id).enabled = !automod.get(guild.id).enabled;
-                return interaction.reply(`✅ Automod: ${automod.get(guild.id).enabled ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Automod:** ${automod.get(guild.id).enabled ? '✅ ON' : '❌ OFF'}`);
             }
             if (command === 'antinsfw' && isAdmin) {
                 if(!automod.has(guild.id)) automod.set(guild.id, {});
                 automod.get(guild.id).nsfw = !automod.get(guild.id).nsfw;
-                return interaction.reply(`✅ Anti-NSFW: ${automod.get(guild.id).nsfw ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Anti-NSFW:** ${automod.get(guild.id).nsfw ? '✅ ON' : '❌ OFF'}`);
             }
             if (command === 'antilink' && isAdmin) {
                 if(!antiNuke.has(guild.id)) antiNuke.set(guild.id, {});
                 antiNuke.get(guild.id).antiLink = !antiNuke.get(guild.id).antiLink;
-                return interaction.reply(`✅ Anti-Link: ${antiNuke.get(guild.id).antiLink ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Anti-Link:** ${antiNuke.get(guild.id).antiLink ? '✅ ON' : '❌ OFF'}`);
             }
 
             // --- SECURITY ---
             if (command === 'antiraid' && isAdmin) {
                 const data = raidProtection.get(guild.id);
                 data.enabled = !data.enabled;
-                return interaction.reply(`✅ Anti-Raid: ${data.enabled ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Anti-Raid:** ${data.enabled ? '✅ ON' : '❌ OFF'}`);
             }
             if (command === 'antitoken' && isAdmin) {
                 const data = tokenGrabberProtection.get(guild.id);
                 data.enabled = !data.enabled;
-                return interaction.reply(`✅ Anti-Token Grabber: ${data.enabled ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Anti-Token Grabber:** ${data.enabled ? '✅ ON' : '❌ OFF'}`);
             }
             if (command === 'antiimage' && isAdmin) {
                 const data = imageGrabberProtection.get(guild.id);
                 data.enabled = !data.enabled;
-                return interaction.reply(`✅ Anti-Image Grabber: ${data.enabled ? 'ON' : 'OFF'}`);
+                return interaction.reply(`✅ **Anti-Image Grabber:** ${data.enabled ? '✅ ON' : '❌ OFF'}`);
             }
 
             // --- SYSTEM SETUP ---
@@ -602,34 +646,35 @@ client.on(Events.InteractionCreate, async interaction => {
                 const action = interaction.options.getString('action');
                 if(action === 'setup'){
                     const emb = new EmbedBuilder()
-                        .setAuthor({name:'Server Verification', iconURL: guild.iconURL({dynamic:true})})
-                        .setDescription(`**✅ I-VERIFY ANG IYONG SARILI PARA MAKAPASOK!**\n\n*Pindutin ang button sa ibaba para maging buong miyembro.*`)
-                        .setColor('#2f3136')
-                        .setImage(ANIMATED_WELCOME) // ✅ ANIMATED VERIFY
-                        .setFooter({text:'AZURA VERIFY SYSTEM • SECURED'});
+                        .setAuthor({name:'🔒 SERVER VERIFICATION', iconURL: guild.iconURL({dynamic:true})})
+                        .setDescription(`> ✨ **PARA MAKAPASOK, KAILANGAN MONG MAG-VERIFY!** ✨\n\n> 📌 Pindutin ang button sa ibaba para maging ganap na miyembro ng server.\n> 🔐 Ito ay para sa seguridad ng lahat.`)
+                        .setColor('#6A1B9A') // Deep Purple
+                        .setImage(ANIMATED_WELCOME) // ✅ BAGONG ANIMATED
+                        .setFooter({text:'AZURA VERIFY SYSTEM • MAX SECURITY', iconURL: BANNER_URL});
 
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder()
                             .setCustomId('verify_me')
                             .setLabel('✅ I-VERIFY DITO')
                             .setStyle(ButtonStyle.Success)
+                            .setEmoji('🔓')
                     );
 
                     await interaction.channel.send({embeds:[emb],components:[row]});
-                    return interaction.reply('✅ Verification panel sent!',{ephemeral:true});
+                    return interaction.reply('✅ **Verification Panel Created!**',{ephemeral:true});
                 }
-                if(action === 'disable') return interaction.reply('✅ Verification Disabled');
-                if(action === 'status') return interaction.reply('✅ Verification is ACTIVE');
+                if(action === 'disable') return interaction.reply('✅ **Verification Disabled**');
+                if(action === 'status') return interaction.reply('✅ **Verification is ACTIVE**');
             }
 
             if (command === 'welcome' && isAdmin) {
                 const action = interaction.options.getString('action');
                 if(action === 'setup') {
-                    guildSettings.set(guild.id, {welcome: "Welcome to the server! Enjoy your stay!"});
-                    return interaction.reply('✅ Welcome System Setup & ANIMATED!');
+                    guildSettings.set(guild.id, {welcome: "Magandang araw sa iyo! Huwag kalimutang basahin ang mga rules."});
+                    return interaction.reply('✅ **Welcome System Setup & ANIMATED!**');
                 }
-                if(action === 'disable') return interaction.reply('✅ Welcome Disabled');
-                if(action === 'status') return interaction.reply('✅ Welcome Messages: ON');
+                if(action === 'disable') return interaction.reply('✅ **Welcome Disabled**');
+                if(action === 'status') return interaction.reply('✅ **Welcome Messages: ON**');
             }
 
             if (command === 'setup' && isAdmin) {
@@ -670,12 +715,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 const an = antiNuke.get(guild.id);
                 const emb = new EmbedBuilder()
-                    .setTitle('🛡️ OfficialX Anti-Nuke Dashboard — MAX SECURITY')
+                    .setTitle('🛡️ **AZURA ANTI-NUKE DASHBOARD**')
+                    .setDescription('**MAXIMUM SECURITY PROTOCOLS ACTIVE**')
                     .addFields(
-                        {name:'Anti-Nuke Status', value:an.enabled ? '✅ ONLINE' : '❌ OFFLINE'},
-                        {name:'Log Channel', value: `<#${logChannelId}>`},
-                        {name:'Punishment', value:an.punishment},
-                        {name:'\u200b', value:'**SECURITY FEATURES:**'},
+                        {name:'📊 Status', value:an.enabled ? '✅ **ONLINE & PROTECTED**' : '❌ OFFLINE'},
+                        {name:'📝 Log Channel', value: `<#${logChannelId}>`},
+                        {name:'⚖️ Punishment', value:an.punishment},
+                        {name:'\u200b', value:'**🔐 SECURITY FEATURES:**'},
                         {name:'Anti-Bot', value:an.antiBot ? '✅' : '❌', inline:true},
                         {name:'Anti-Ban', value:an.antiBan ? '✅' : '❌', inline:true},
                         {name:'Anti-Kick', value:an.antiKick ? '✅' : '❌', inline:true},
@@ -692,122 +738,62 @@ client.on(Events.InteractionCreate, async interaction => {
                         {name:'Anti-Token Grabber', value:tokenGrabberProtection.get(guild.id).enabled ? '✅' : '❌', inline:true},
                         {name:'Anti-Image Grabber', value:imageGrabberProtection.get(guild.id).enabled ? '✅' : '❌', inline:true}
                     )
-                    .setColor('Red')
-                    .setFooter({text:'AZURA BOT • FULLY SECURED'});
+                    .setColor('#B71C1C') // Red
+                    .setImage(BANNER_URL)
+                    .setFooter({text:'AZURA BOT • FULLY SECURED', iconURL: BANNER_URL});
                 return interaction.reply({embeds:[emb]});
             }
 
             if (command === 'setup-roles' && isAdmin) {
                 const emb = new EmbedBuilder()
-                    .setTitle('🎮 ROLE SELECTION')
-                    .setDescription('Select your favorite game to get role!')
-                    .setColor('Blue');
+                    .setTitle('🎮 **ROLE SELECTION CENTER**')
+                    .setDescription('> 📌 Piliin ang iyong paboritong laro o kategorya para makakuha ng role!\n> 🎨 I-customize ang iyong hitsura dito.')
+                    .setColor('#1565C0') // Blue
+                    .setImage(BANNER_URL);
 
                 const row = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('role_select')
-                        .setPlaceholder('Choose your game role...')
+                        .setPlaceholder('👇 Pumili ng Role Dito...')
                         .addOptions([
-                            { label: 'FiveM', value: ROLES.FIVEM, description: 'Get FiveM Role', emoji: '🚗' },
-                            { label: 'Roblox', value: ROLES.ROBLOX, description: 'Get Roblox Role', emoji: '🧱' },
-                            { label: 'Valorant', value: ROLES.VALORANT, description: 'Get Valorant Role', emoji: '🔫' },
-                            { label: '18+', value: ROLES.EIGHTEEN_PLUS, description: 'Get 18+ Access', emoji: '🔞' }
+                            { label: 'FiveM', value: ROLES.FIVEM, description: 'Kumuha ng FiveM Role', emoji: '🚗' },
+                            { label: 'Roblox', value: ROLES.ROBLOX, description: 'Kumuha ng Roblox Role', emoji: '🧱' },
+                            { label: 'Valorant', value: ROLES.VALORANT, description: 'Kumuha ng Valorant Role', emoji: '🔫' },
+                            { label: '18+ Access', value: ROLES.EIGHTEEN_PLUS, description: 'Para sa matatanda lamang', emoji: '🔞' }
                         ])
                 );
 
                 await interaction.channel.send({embeds:[emb], components:[row]});
-                return interaction.reply({content:'✅ Role Menu Sent!', ephemeral:true});
+                return interaction.reply({content:'✅ **Role Menu Created Successfully!**', ephemeral:true});
             }
 
-            // ✅ TICKET SETUP — ANIMATED & MAGANDA
+            // ✅ TICKET SETUP — INAYOS AT PINAGANDA
             if (command === 'ticket-setup' && isAdmin) {
                 const emb=new EmbedBuilder()
-                    .setTitle('🎟️ | AZURA SUPPORT TICKET')
-                    .setDescription('>>> Welcome to AZURA Support!\nPlease select a category below to open a ticket.\n\n🔹 **Support** - For help & issues\n🔹 **Partnership** - For ads & collab')
-                    .setColor('#2F3136')
-                    .setImage(TICKET_GIF) // ✅ ANIMATED GIF
+                    .setTitle('🎟️ **AZURA SUPPORT SYSTEM**')
+                    .setDescription(`> 📌 **Kailangan mo ba ng tulong?**\n> Pumili ng kategorya sa ibaba para magbukas ng ticket.\n\n> 🔹 **SUPPORT** - Para sa mga tanong o problema\n> 🔹 **PARTNERSHIP** - Para sa mga ads at samahan`)
+                    .setColor('#4A148C') // Deep Purple
+                    .setImage(TICKET_GIF) // ✅ BAGONG ANIMATED TICKET GIF
                     .setThumbnail(BANNER_URL)
-                    .setFooter({text:'AZURA BOT • OFFICIAL SERVES', iconURL:BANNER_URL});
+                    .setFooter({text:'AZURA BOT • OFFICIAL SUPPORT', iconURL: BANNER_URL});
                 
                 const row=new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('📩 SUPPORT').setStyle(ButtonStyle.Primary),
-                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('🤝 PARTNERSHIP').setStyle(ButtonStyle.Secondary)
+                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('📩 SUPPORT').setStyle(ButtonStyle.Primary).setEmoji('🛠️'),
+                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('🤝 PARTNERSHIP').setStyle(ButtonStyle.Secondary).setEmoji('💼')
                 );
                 await interaction.channel.send({embeds:[emb],components:[row]});
-                return interaction.reply({content:'✅ Ticket System Setup Complete! ANIMATED ✨', ephemeral:true});
+                return interaction.reply({content:'✅ **Ticket System Setup Complete! ANIMATED & PREMIUM ✨**', ephemeral:true});
             }
 
-            // ✅ DATING SYSTEM
-            if (command === 'dating-setup') {
-                const name = interaction.options.getString('name');
-                const age = interaction.options.getInteger('age');
-                const gender = interaction.options.getString('gender');
-                const bio = interaction.options.getString('bio');
-                const image = interaction.options.getString('image') || null;
-
-                datingProfiles.set(interaction.user.id, { name, age, gender, bio, image, likes: 0 });
-                
-                const emb = new EmbedBuilder()
-                    .setTitle('💖 PROFILE CREATED!')
-                    .setDescription(`**Name:** ${name}\n**Age:** ${age}\n**Gender:** ${gender}\n**About Me:** ${bio}`)
-                    .setColor('Pink')
-                    .setImage(image || ANIMATED_WELCOME);
-                    
-                return interaction.reply({ embeds: [emb], ephemeral: false });
-            }
-
-            if (command === 'dating-profile') {
-                const user = interaction.options.getUser('user') || interaction.user;
-                const profile = datingProfiles.get(user.id);
-                
-                if (!profile) return interaction.reply({ content: '❌ Walang profile ang user na ito! Gamitin ang `/dating-setup`', ephemeral: true });
-                
-                const emb = new EmbedBuilder()
-                    .setTitle(`💖 ${profile.name}'s Profile`)
-                    .setDescription(`**Age:** ${profile.age}\n**Gender:** ${profile.gender}\n**About:** ${profile.bio}\n❤️ **Likes:** ${profile.likes}`)
-                    .setColor('Pink')
-                    .setImage(profile.image || ANIMATED_WELCOME);
-                    
-                return interaction.reply({ embeds: [emb] });
-            }
-
-            if (command === 'dating-like') {
-                const target = interaction.options.getUser('user');
-                if (target.id === interaction.user.id) return interaction.reply({ content: '❌ Hindi mo pwedeng i-like ang sarili mo!', ephemeral: true });
-                
-                const profile = datingProfiles.get(target.id);
-                if (!profile) return interaction.reply({ content: '❌ Walang profile ang user na ito!', ephemeral: true });
-                
-                profile.likes += 1;
-                datingProfiles.set(target.id, profile);
-                
-                return interaction.reply({ content: `❤️ **Nagustuhan mo ang profile ni ${target.username}!**`, ephemeral: false });
-            }
-
-            if (command === 'dating-list') {
-                const allProfiles = Array.from(datingProfiles.entries());
-                if (allProfiles.length === 0) return interaction.reply('❌ Wala pang profile na gumawa!');
-                
-                let desc = '';
-                allProfiles.forEach(([id, p]) => {
-                    desc += `💖 **${p.name}** • <@${id}>\n🔞 Age: ${p.age} | ❤️ Likes: ${p.likes}\n\n`;
-                });
-                
-                const emb = new EmbedBuilder()
-                    .setTitle('📋 ALL DATING PROFILES')
-                    .setDescription(desc)
-                    .setColor('Magenta')
-                    .setImage(ANIMATED_WELCOME);
-                    
-                return interaction.reply({ embeds: [emb] });
-            }
-
-        }
-    } catch (error) {
-        console.error(error);
-        interaction.reply({ content: '❌ There was an error executing this command!', ephemeral: true }).catch(()=>{});
-    }
-});
-
+            // --- FUN COMMANDS ---
+            if (command === 'ping') return interaction.reply(`🏓 Pong! Latency: **${Date.now() - interaction.createdTimestamp}ms**`);
+            if (command === 'uptime') {
+                const d = Math.floor(client.uptime / 86400000);
+                const h = Math.floor((client.uptime % 86400000) / 3600000);
+                const m = Math.floor((client.uptime % 3600000) / 60000);
+                const s = Math.floor((client.uptime % 60000) / 1000);
+                return interaction.reply(`⏱️ Uptime: **${d}d ${h
+          }
+    );
 // 🟢 LOGIN BOT
 client.login(TOKEN);
