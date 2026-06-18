@@ -785,14 +785,50 @@ client.on(Events.InteractionCreate, async interaction => {
                 return interaction.reply({content:'✅ **Ticket System Setup Complete! ANIMATED & PREMIUM ✨**', ephemeral:true});
             }
 
-            // --- FUN COMMANDS ---
+                        // --- FUN COMMANDS ---
             if (command === 'ping') return interaction.reply(`🏓 Pong! Latency: **${Date.now() - interaction.createdTimestamp}ms**`);
             if (command === 'uptime') {
                 const d = Math.floor(client.uptime / 86400000);
                 const h = Math.floor((client.uptime % 86400000) / 3600000);
                 const m = Math.floor((client.uptime % 3600000) / 60000);
                 const s = Math.floor((client.uptime % 60000) / 1000);
-                return interaction.reply(`⏱️ Uptime: **${d}d ${h}h ${m}m ${s}s
+                return interaction.reply(`⌛ Uptime: **${d}d ${h}h ${m}m ${s}s**`);
             }
-// 🟢 LOGIN BOT
+            if (command === 'joke') return interaction.reply('😂 **Joke:** Bakit masarap ang kape? Kasi giniling! ☕');
+            if (command === 'fact') return interaction.reply('🧠 **Did you know:** Ang puso ng hipon ay nasa ulo niya! 🦐');
+            if (command === 'meme') return interaction.reply('🤣 **Meme:** *Naglo-load ang meme...* 🖼️');
+            if (command === '8ball') {
+                const ans = ['Oo ✅','Hindi ❌','Siguro 🤔','Huwag mong gawin ❌','Sigurado ako ✅'];
+                const rand = ans[Math.floor(Math.random() * ans.length)];
+                return interaction.reply(`🎱 **Sagot:** ${rand}`);
+            }
+            if (command === 'coinflip') {
+                const res = Math.random() > 0.5 ? '🔵 Heads' : '🔴 Tails';
+                return interaction.reply(`🪙 **Result:** ${res}`);
+            }
+            if (command === 'dice') {
+                const num = Math.floor(Math.random() * 6) + 1;
+                return interaction.reply(`🎲 **Roll:** ${num}`);
+            }
+            if (command === 'botinfo') {
+                const emb = new EmbedBuilder()
+                    .setTitle('🤖 **AZURA BOT INFORMATION**')
+                    .setDescription('Premium & Secure Bot made for you ✨')
+                    .addFields(
+                        {name:'👑 Owner',value:'<@1250654354344775703>',inline:true},
+                        {name:'📦 Version',value:'2.0.0',inline:true},
+                        {name:'⚡ Library',value:'discord.js v14',inline:true}
+                    )
+                    .setColor('#9C27B0')
+                    .setImage(BANNER_URL);
+                return interaction.reply({embeds:[emb]});
+            }
+
+        } catch (err) {
+            console.error(err);
+            return interaction.reply({content:'❌ **May naganap na error!**',ephemeral:true});
+        }
+    });
+
+// 📌 TAPOS NA! ITO ANG HULING LINYA — WAG GALAWIN!
 client.login(TOKEN);
