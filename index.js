@@ -792,8 +792,7 @@ client.on(Events.InteractionCreate, async interaction => {
                 const h = Math.floor((client.uptime % 86400000) / 3600000);
                 const m = Math.floor((client.uptime % 3600000) / 60000);
                 const s = Math.floor((client.uptime % 60000) / 1000);
-                return interaction.reply(`⏱️ Uptime: **${d}d ${h
-          }
-    );
+                return interaction.reply(`⏱️ Uptime: **${d}d ${h}h ${m}m ${s}s
+            }
 // 🟢 LOGIN BOT
 client.login(TOKEN);
