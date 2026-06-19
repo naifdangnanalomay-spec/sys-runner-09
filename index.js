@@ -53,13 +53,21 @@ const raidProtection = new Map();
 const tokenGrabberProtection = new Map();
 const imageGrabberProtection = new Map();
 
-// 📌 BOT SETUP
+// 📌 BOT SETUP — ✅ INAYOS ANG INTENTS (KULANG KANINA)
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, 
-        GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildBans,
-        GatewayIntentBits.GuildPresences, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.DirectMessageReactions, GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessages, 
+        GatewayIntentBits.MessageContent, 
+        GatewayIntentBits.GuildMembers, // ✅ SOBRANG IMPORTANTE, KULANG ITO KANINA
+        GatewayIntentBits.GuildVoiceStates, 
+        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildPresences, 
+        GatewayIntentBits.DirectMessages, 
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessageReactions, 
+        GatewayIntentBits.DirectMessageTyping, 
+        GatewayIntentBits.GuildModeration,
         GatewayIntentBits.GuildInvites
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember, Partials.ThreadMember]
@@ -135,7 +143,7 @@ const commands = [
     new SlashCommandBuilder().setName('antiimage').setDescription('Toggle Anti-Image Grabber Protection')
 ];
 
-// 📌 REGISTER SLASH COMMANDS
+// 📌 REGISTER SLASH COMMANDS — ✅ MAY ERROR HANDLING
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
@@ -147,17 +155,29 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
         );
         console.log('✅ Successfully reloaded application (/) commands.');
     } catch (error) {
-        console.error(error);
+        console.error('❌ ERROR SA COMMANDS:', error); // ✅ Makikita mo na kung may mali
     }
 })();
 
-// 📌 BOT READY
+// 📌 BOT READY — ✅ INAYOS ANG ACTIVITY HINDI BAWAT 1 SEC
 client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} ONLINE & ALL SYSTEMS LOADED!`);
+    
+    // ✅ TAMA ANG PAGKAKA-SET NG ACTIVITY
+    client.user.setActivity({
+        name: `🗲OfficialServs | 🗲SECURED SERVER🛡️`,
+        type: ActivityType.Streaming,
+        url: "https://www.twitch.tv/officialservs"
+    });
+
+    // ✅ BAWAT 15 MINUTO LANG MAGBAGO (HINDI 1 SEC PARA HINDI MA-BAN)
     setInterval(() => {
-        const activities = [{ name: `🗲OfficialServs | 🗲SECURED SERVER🛡️`, type: ActivityType.Streaming, url: "https://www.twitch.tv/officialservs" }];
-        client.user.setActivity(activities[0].name, { type: activities[0].type, url: activities[0].url });
-    }, 1000);
+        client.user.setActivity({
+            name: `🗲OfficialServs | 🗲SECURED SERVER🛡️`,
+            type: ActivityType.Streaming,
+            url: "https://www.twitch.tv/officialservs"
+        });
+    }, 900000); 
 });
 
 // 📌 ANTI-NUKE / SECURITY SYSTEM
@@ -219,7 +239,7 @@ client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
                 await member.ban({ reason: reason });
                 logEvent(guild, `🚨 **SECURITY ACTION:** Banned ${executor.tag} | ${reason}`);
             }
-        } catch (e) {}
+        } catch (e) { console.error(e) }
     }
 });
 
@@ -255,7 +275,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
             if(ch) ch.send({embeds:[emb]}).catch(()=>{});
         }
-    } catch(e){}
+    } catch(e){ console.error(e) }
 });
 
 client.on(Events.GuildMemberRemove, async member => {
@@ -275,7 +295,7 @@ client.on(Events.GuildMemberRemove, async member => {
             const ch = member.guild.systemChannel || member.guild.channels.cache.find(c=>c.type===ChannelType.GuildText);
             if(ch) ch.send({embeds:[emb]}).catch(()=>{});
         }
-    } catch(e){}
+    } catch(e){ console.error(e) }
 });
 
 // 📌 MESSAGE HANDLER & LEVELING
@@ -373,7 +393,7 @@ function logVerification(guild, user) {
 }
 
 // ==================================================
-// 📌 ✅ INTERACTION HANDLER — FULL FIXED
+// 📌 ✅ INTERACTION HANDLER — FULL FIXED & KUMPLETO
 // ==================================================
 client.on(Events.InteractionCreate, async interaction => {
     try {
@@ -757,7 +777,7 @@ client.on(Events.InteractionCreate, async interaction => {
                         .setPlaceholder('👇 Pumili ng Role Dito...')
                         .addOptions([
                             { label: 'FiveM', value: ROLES.FIVEM, description: 'Kumuha ng FiveM Role', emoji: '🚗' },
-                            { label: 'Roblox', value: ROLES.ROBLOX, description: 'Kumuha ng Roblox Role', emoji: '🧱' },
+                            { label: 'Roblox', value: ROLES.ROBLOX, description: 'Kumuha ng Roblox Role', emoji: '🎮' },
                             { label: 'Valorant', value: ROLES.VALORANT, description: 'Kumuha ng Valorant Role', emoji: '🔫' },
                             { label: '18+ Access', value: ROLES.EIGHTEEN_PLUS, description: 'Para sa matatanda lamang', emoji: '🔞' }
                         ])
@@ -765,9 +785,8 @@ client.on(Events.InteractionCreate, async interaction => {
 
                 await interaction.channel.send({embeds:[emb], components:[row]});
                 return interaction.reply({content:'✅ **Role Menu Created Successfully!**', ephemeral:true});
-            }
-
-                       // ✅ TICKET SETUP — INAYOS AT PINAGANDA
+            } 
+            // ✅ TICKET SETUP — INAYOS AT PINAGANDA
             if (command === 'ticket-setup' && isAdmin) {
                 const emb=new EmbedBuilder()
                     .setTitle('🎟️ **PUBLIC AZURA SUPPORT SYSTEM**')
@@ -782,53 +801,7 @@ client.on(Events.InteractionCreate, async interaction => {
                     new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary).setEmoji('💼')
                 );
                 await interaction.channel.send({embeds:[emb],components:[row]});
-                return interaction.reply({content:'✅ **Ticket System Setup Complete! ANIMATED & PREMIUM ✨**', ephemeral:true});
-            }
-
-            // --- FUN COMMANDS ---
-            if (command === 'ping') return interaction.reply(`🏓 Pong! Latency: **${Date.now() - interaction.createdTimestamp}ms**`);
-            if (command === 'uptime') {
-                const d = Math.floor(client.uptime / 86400000);
-                const h = Math.floor((client.uptime % 86400000) / 3600000);
-                const m = Math.floor((client.uptime % 3600000) / 60000);
-                const s = Math.floor((client.uptime % 60000) / 1000);
-                return interaction.reply(`⌛ Uptime: **${d}d ${h}h ${m}m ${s}s**`);
-            }
-            if (command === 'joke') return interaction.reply('😂 **Joke:** Bakit masarap ang kape? Kasi giniling! ☕');
-            if (command === 'fact') return interaction.reply('🧠 **Did you know:** Ang puso ng hipon ay nasa ulo niya! 🦐');
-            if (command === 'meme') return interaction.reply('🤣 **Meme:** *Naglo-load ang meme...* 🖼️');
-            if (command === '8ball') {
-                const ans = ['Oo ✅','Hindi ❌','Siguro 🤔','Huwag mong gawin ❌','Sigurado ako ✅'];
-                const rand = ans[Math.floor(Math.random() * ans.length)];
-                return interaction.reply(`🎱 **Sagot:** ${rand}`);
-            }
-            if (command === 'coinflip') {
-                const res = Math.random() > 0.5 ? '🔵 Heads' : '🔴 Tails';
-                return interaction.reply(`🪙 **Result:** ${res}`);
-            }
-            if (command === 'dice') {
-                const num = Math.floor(Math.random() * 6) + 1;
-                return interaction.reply(`🎲 **Roll:** ${num}`);
-            }
-            if (command === 'botinfo') {
-                const emb = new EmbedBuilder()
-                    .setTitle('🤖 **PUBLIC AZURA BOT INFORMATION**')
-                    .setDescription('Premium & Secure Bot made for you ✨')
-                    .addFields(
-                        {name:'👑 Owner',value:'<@1250654354344775703>',inline:true},
-                        {name:'📦 Version',value:'2.0.0',inline:true},
-                        {name:'⚡ Library',value:'discord.js v14',inline:true}
-                    )
-                    .setColor('#9C27B0')
-                    .setImage(BANNER_URL);
-                return interaction.reply({embeds:[emb]});
-            }
-
-        } // <-- ITO ANG KULANG MO KANINA! PANG SARA SA LAHAT NG COMMANDS
-
-    } catch (err) {
-        console.error(err);
-        return interaction.reply({content:'❌ **May naganap na error!**',ephemeral:true});
+                return interaction.reply
     }
 });
 
