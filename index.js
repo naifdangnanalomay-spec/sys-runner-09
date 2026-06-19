@@ -789,19 +789,9 @@ client.on(Events.InteractionCreate, async interaction => {
             
             // ✅ TICKET SETUP — KUMPLETO NA ITO BOSS
             if (command === 'ticket-setup' && isAdmin) {
-                const emb=new EmbedBuilder()
+                const emb = new EmbedBuilder()
                     .setTitle('🎟️ **PUBLIC AZURA SUPPORT SYSTEM**')
-                    .setDescription(`> 📌 **Kailangan mo ba ng tulong?**\n> Pumili ng kategorya sa ibaba para magbukas ng ticket.\n\n> 🔹 **SUPPORT** - Para sa mga tanong o problema\n> 🔹 **PARTNERSHIP** - Para sa mga ads at samahan`)
-                    .setColor('#4A148C') // Deep Purple
-                    .setImage(TICKET_GIF) // ✅ BAGONG ANIMATED TICKET GIF
-                    .setThumbnail(BANNER_URL)
-                    .setFooter({text:'PUBLIC AZURA BOT • OFFICIAL SUPPORT', iconURL: BANNER_URL});
-                
-                const row=new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_ticket_support').setLabel('➤ SUPPORT').setStyle(ButtonStyle.Primary).setEmoji('🛠️'),
-                    new ButtonBuilder().setCustomId('btn_ticket_partner').setLabel('➤ PARTNERSHIP').setStyle(ButtonStyle.Secondary).setEmoji('💼')
-                );
-                await interaction.channel.send({embeds:[emb],components:[
+                    .setDescription(`> 📌 **Kailangan mo ba ng tulong?**\n> Pumili ng kategorya sa ibaba para magbukas ng ticket.\n\n> 🔹 **SUPPORT** - Para sa mga tanong o problema\n> 🔹 **PARTNERSHIP** - Para sa mga ads at sam
     }
 });
 
